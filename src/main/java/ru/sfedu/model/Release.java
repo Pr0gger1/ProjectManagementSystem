@@ -2,7 +2,7 @@ package ru.sfedu.model;
 
 import java.util.Date;
 
-public class Release extends ManagementEntity {
+public class Release extends ProjectEntity {
     private Date releaseDate;
 
     Release(String name, String description, Date releaseDate) {

@@ -1,11 +1,12 @@
 package ru.sfedu.model;
 
-public abstract class ManagementEntity {
+public abstract class ProjectEntity {
     protected String name;
     protected int id;
+    protected String projectId;
     protected String description;
 
-    ManagementEntity(String name, String description) {
+    ProjectEntity(String name, String description) {
         this.name = name;
         this.description = description;
     }
@@ -34,7 +35,7 @@ public abstract class ManagementEntity {
         this.description = description;
     }
 
-    public void bindEntityToProject(ManagementEntity entity) {
+    public void bindEntityToProject(ProjectEntity entity) {
 
     }
 

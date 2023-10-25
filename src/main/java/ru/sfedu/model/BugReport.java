@@ -1,6 +1,6 @@
 package ru.sfedu.model;
 
-public class BugReport extends ManagementEntity {
+public class BugReport extends ProjectEntity {
     private Priority priority;
     private Employee author;
     private BugStatus status = BugStatus.OPENED;

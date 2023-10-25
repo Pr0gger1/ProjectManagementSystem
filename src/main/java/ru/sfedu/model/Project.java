@@ -1,13 +1,14 @@
 package ru.sfedu.model;
 
+import java.util.ArrayList;
 import java.util.Date;
 
-public class Project extends ManagementEntity {
+public class Project extends ProjectEntity {
     private Date deadline;
     private EntityStatus status;
     private int managerId;
-    private Task[] tasks;
-    private Employee[] team;
+    private ArrayList<Task> tasks;
+    private ArrayList<Employee> team;
 
     Project(String name, String description) {
         super(name, description);
@@ -29,21 +30,34 @@ public class Project extends ManagementEntity {
         this.managerId = managerId;
     }
 
-    public Task[] getTasks() {
+    public ArrayList<Task> getTasks() {
         return tasks;
     }
 
-    public void setTasks(Task[] tasks) {
+    public void setTasks(ArrayList<Task> tasks) {
         this.tasks = tasks;
     }
 
-    public Employee[] getTeam() {
+    public void addTask(Task task) {
+        this.tasks.add(task);
+    }
+
+    public ArrayList<Employee> getTeam() {
         return team;
     }
 
-    public void setTeam(Employee[] team) {
+    public void setTeam(ArrayList<Employee> team) {
         this.team = team;
     }
+
+    public EntityStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(EntityStatus status) {
+        this.status = status;
+    }
+
 
     @Override
     public String toString() {

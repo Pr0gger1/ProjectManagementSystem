@@ -2,7 +2,7 @@ package ru.sfedu.model;
 
 import java.util.Date;
 
-public class Task extends ManagementEntity {
+public class Task extends ProjectEntity {
     private Date deadline;
     private int executorId;
     private String comment;

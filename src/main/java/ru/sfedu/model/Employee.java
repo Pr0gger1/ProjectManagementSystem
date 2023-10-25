@@ -2,15 +2,21 @@ package ru.sfedu.model;
 
 import java.util.Date;
 
-public class Employee {
+public class Employee extends Person {
     private String position;
     private int phoneNumber;
-    private String fullName;
-    private Date birthday;
-    private int id;
 
-    Employee(String fullName, String position) {
-        this.fullName = fullName;
+    Employee(String firstName, String lastName, String patronymic, String position) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.patronymic = patronymic;
+        this.position = position;
+    }
+
+    Employee(String firstName, String lastName, String position) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.patronymic = "";
         this.position = position;
     }
 
@@ -28,29 +34,5 @@ public class Employee {
 
     public void setPhoneNumber(int phoneNumber) {
         this.phoneNumber = phoneNumber;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public Date getBirthday() {
-        return birthday;
-    }
-
-    public void setBirthday(Date birthday) {
-        this.birthday = birthday;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 }
