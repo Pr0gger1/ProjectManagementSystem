@@ -1,24 +1,31 @@
-package ru.sfedu.model;
+package ru.sfedu.projectmanager.model;
+
+import ru.sfedu.projectmanager.model.enums.WorkStatus;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.GregorianCalendar;
 
-public class Project extends ProjectEntity {
-    private Date deadline;
-    private EntityStatus status;
+public class Project {
+    private GregorianCalendar deadline;
+    private final String name;
+    private final String description;
+    private final String projectId;
+    private WorkStatus status;
     private int managerId;
     private ArrayList<Task> tasks;
     private ArrayList<Employee> team;
 
-    Project(String name, String description) {
-        super(name, description);
+    public Project(String name, String description, String projectId) {
+        this.name = name;
+        this.description = description;
+        this.projectId = projectId;
     }
 
-    public Date getDeadline() {
+    public GregorianCalendar getDeadline() {
         return deadline;
     }
 
-    public void setDeadline(Date deadline) {
+    public void setDeadline(GregorianCalendar deadline) {
         this.deadline = deadline;
     }
 
@@ -41,6 +48,7 @@ public class Project extends ProjectEntity {
     public void addTask(Task task) {
         this.tasks.add(task);
     }
+    public void deleteTask(int taskId) {}
 
     public ArrayList<Employee> getTeam() {
         return team;
@@ -50,14 +58,25 @@ public class Project extends ProjectEntity {
         this.team = team;
     }
 
-    public EntityStatus getStatus() {
+    public WorkStatus getStatus() {
         return status;
     }
 
-    public void setStatus(EntityStatus status) {
+    public void setStatus(WorkStatus status) {
         this.status = status;
     }
 
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 
     @Override
     public String toString() {

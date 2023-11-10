@@ -1,4 +1,6 @@
-package ru.sfedu.model;
+package ru.sfedu.projectmanager.model;
+
+import java.util.Date;
 
 public abstract class ProjectEntity {
     protected String name;
@@ -6,8 +8,12 @@ public abstract class ProjectEntity {
     protected String projectId;
     protected String description;
 
-    ProjectEntity(String name, String description) {
+    protected Date createdAt;
+
+    ProjectEntity(String name, String description, String projectId) {
+        createdAt = new Date();
         this.name = name;
+        this.projectId = projectId;
         this.description = description;
     }
 

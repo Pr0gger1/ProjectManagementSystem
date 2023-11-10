@@ -1,4 +1,4 @@
-package ru.sfedu.model;
+package ru.sfedu.projectmanager.model.enums;
 
 public enum Priority {
     LOW("Низкий"),
