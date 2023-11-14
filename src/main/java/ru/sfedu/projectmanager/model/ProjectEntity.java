@@ -7,14 +7,17 @@ public abstract class ProjectEntity {
     protected int id;
     protected String projectId;
     protected String description;
-
+    protected int employeeId;
+    protected String employeeFullName;
     protected Date createdAt;
 
-    ProjectEntity(String name, String description, String projectId) {
+    ProjectEntity(String name, String description, int employeeId, String employeeFullName, String projectId) {
         createdAt = new Date();
         this.name = name;
         this.projectId = projectId;
         this.description = description;
+        this.employeeId = employeeId;
+        this.employeeFullName = employeeFullName;
     }
 
     public String getName() {
@@ -39,10 +42,6 @@ public abstract class ProjectEntity {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public void bindEntityToProject(ProjectEntity entity) {
-
     }
 
 }

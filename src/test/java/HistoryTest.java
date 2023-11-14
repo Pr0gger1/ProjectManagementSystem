@@ -1,9 +1,9 @@
 import org.junit.jupiter.api.Test;
 import ru.sfedu.projectmanager.Constants;
-import ru.sfedu.projectmanager.api.MongoHistoryProvider;
 import ru.sfedu.projectmanager.model.HistoryRecord;
 import ru.sfedu.projectmanager.model.Project;
 import ru.sfedu.projectmanager.model.enums.ActionStatus;
+import ru.sfedu.projectmanager.model.enums.ChangeType;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -18,22 +18,24 @@ public class HistoryTest {
                 "tower_defense"
         );
 
-        HistoryRecord<Project> record1 = new HistoryRecord<>(
+        project.addHistoryRecord(
+            Constants.MONGO_TEST_DB,
+            new HistoryRecord<>(
                 project,
                 "initNewBean",
-                ActionStatus.SUCCESS
-        );
+                ActionStatus.SUCCESS,
+                ChangeType.CREATE
+        ));
 
-        MongoHistoryProvider.save(Constants.MONGO_TEST_DB, record1);
         project.setDeadline(new GregorianCalendar(2023, Calendar.DECEMBER, 25));
-
-
-        HistoryRecord<Project> record2 =   new HistoryRecord<>(
+        project.addHistoryRecord(
+            Constants.MONGO_TEST_DB,
+            new HistoryRecord<>(
                 project,
                 "initNewBean",
-                ActionStatus.SUCCESS
+                ActionStatus.SUCCESS,
+                ChangeType.UPDATE
+            )
         );
-
-        MongoHistoryProvider.save(Constants.MONGO_TEST_DB, record2);
     }
 }

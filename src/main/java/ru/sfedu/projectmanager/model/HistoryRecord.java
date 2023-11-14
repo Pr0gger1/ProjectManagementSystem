@@ -1,6 +1,5 @@
 package ru.sfedu.projectmanager.model;
 
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
@@ -8,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.bson.Document;
 import ru.sfedu.projectmanager.Constants;
 import ru.sfedu.projectmanager.model.enums.ActionStatus;
+import ru.sfedu.projectmanager.model.enums.ChangeType;
 
 import java.util.Date;
 import java.util.UUID;
@@ -20,15 +20,19 @@ public class HistoryRecord<T> {
     private Date createdAt;
     private String actor = Constants.ACTOR;
     private ActionStatus status;
+    private ChangeType changeType;
     private Object object;
+
 
     public HistoryRecord(
             T object,
             String methodName,
-            ActionStatus status
+            ActionStatus status,
+            ChangeType changeType
     ) {
         id = UUID.randomUUID();
         this.className = object.getClass().getSimpleName();
+        this.changeType = changeType;
         this.object = object;
         this.createdAt = new Date();
         this.status = status;
@@ -40,8 +44,17 @@ public class HistoryRecord<T> {
         return className;
     }
 
+
     public void setClassName(String className) {
         this.className = className;
+    }
+
+    public ChangeType getChangeType() {
+        return changeType;
+    }
+
+    public void setChangeType(ChangeType changeType) {
+        this.changeType = changeType;
     }
 
     public String getMethodName() {
@@ -99,6 +112,7 @@ public class HistoryRecord<T> {
             document.put(Constants.MONGO_HISTORY_CREATED_AT, createdAt);
             document.put(Constants.MONGO_HISTORY_ACTOR, Constants.ACTOR);
             document.put(Constants.MONGO_HISTORY_STATUS, status.toString());
+            document.put(Constants.MONGO_HISTORY_CHANGE_TYPE, changeType.toString());
             document.put(Constants.MONGO_HISTORY_OBJECT, objMapper.writeValueAsString(object));
 
             return document;
@@ -106,6 +120,50 @@ public class HistoryRecord<T> {
         catch (JsonProcessingException error) {
             logger.error(error.getMessage());
             return null;
+        }
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return String.format(
+                    """
+                    id: %s,
+                    className: %s,
+                    methodName: %s,
+                    createdAt: %s,
+                    status: %s,
+                    changeType: %s
+                    actor: %s,
+                    object: %s
+                    """,
+                    id.toString(),
+                    className, methodName,
+                    createdAt.toString(),
+                    status.toString(), actor,
+                    changeType.toString(),
+                    new ObjectMapper().writeValueAsString(object)
+            );
+        }
+        catch (JsonProcessingException error) {
+            logger.error(error.getMessage());
+            return String.format(
+                    """
+                    id: %s,
+                    className: %s,
+                    methodName: %s,
+                    createdAt: %s,
+                    status: %s,
+                    changeType: %s,
+                    actor: %s,
+                    object: %s
+                    """,
+                    id, className, methodName,
+                    createdAt.toString(),
+                    status.toString(), actor,
+                    changeType.toString(),
+                    object.toString()
+            );
         }
     }
 }

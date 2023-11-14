@@ -1,5 +1,14 @@
 package ru.sfedu.projectmanager.model.enums;
 
 public enum RepositoryType {
-    XML, CSV, POSTGRES
+    XML("xml"), CSV("csv"), RDB("rdb");
+    final String type;
+
+    RepositoryType(String type) {
+        this.type = type;
+    }
+
+    public String getType() {
+        return type;
+    }
 }

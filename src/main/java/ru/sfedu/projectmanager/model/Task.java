@@ -3,10 +3,10 @@ package ru.sfedu.projectmanager.model;
 import ru.sfedu.projectmanager.model.enums.WorkStatus;
 import ru.sfedu.projectmanager.model.enums.Priority;
 
-import java.util.Date;
+import java.util.Calendar;
 
 public class Task extends ProjectEntity {
-    private Date deadline;
+    private Calendar deadline;
     private int executorId;
     private int executorFullName;
     private String comment;
@@ -14,8 +14,8 @@ public class Task extends ProjectEntity {
     private String tag;
     private WorkStatus status = WorkStatus.IN_PROGRESS;
 
-    Task(String name, String description, String projectId) {
-        super(name, description, projectId);
+    Task(String name, String description, int employeeId, String employeeFullName, String projectId) {
+        super(name, description, employeeId, employeeFullName, projectId);
     }
 
     public void setTag(String tag) {
@@ -26,11 +26,11 @@ public class Task extends ProjectEntity {
         return tag;
     }
 
-    public Date getDeadline() {
+    public Calendar getDeadline() {
         return deadline;
     }
 
-    public void setDeadline(Date deadline) {
+    public void setDeadline(Calendar deadline) {
         this.deadline = deadline;
     }
 
