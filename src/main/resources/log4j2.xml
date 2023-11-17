@@ -15,7 +15,7 @@
 
     <Loggers>
         <Root level="debug" additivity="false"/>
-        <Logger name="ru.sfedu.projectmanager" level="debug">
+        <Logger name="ru.sfedu.projectmanager" level="info">
             <AppenderRef ref="console"/>
         </Logger>
 

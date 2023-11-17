@@ -35,7 +35,7 @@ public class ConfigurationXmlUtil implements ConfigurationUtil {
         try {
             if (configPath == null || configPath.isEmpty())
                 configFile = ConfigurationPropertiesUtil.class.getClassLoader()
-                        .getResourceAsStream(Constants.DEFAULT_CONFIG_XML_PATH);
+                        .getResourceAsStream(Constants.DEFAULT_CONFIG_PATH_XML);
             else {
                 configFile = ConfigurationPropertiesUtil.class.getClassLoader()
                         .getResourceAsStream(configPath);

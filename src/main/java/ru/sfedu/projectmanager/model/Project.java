@@ -12,19 +12,26 @@ public class Project {
     private final String name;
     private final String description;
     private final String projectId;
-    private WorkStatus status;
+    private WorkStatus status = WorkStatus.IN_PROGRESS;
     private Employee manager;
-    private ArrayList<Task> tasks = new ArrayList<>();
     private ArrayList<Employee> team = new ArrayList<>();
-    private final ArrayList<BugReport> bugReports = new ArrayList<>();
-    private final ArrayList<Event> events = new ArrayList<>();
-    private final ArrayList<HistoryRecord<?>> history = new ArrayList<>();
+    private ArrayList<ProjectEntity> tasks = new ArrayList<>();
+    private ProjectEntity documentation;
+    private final ArrayList<ProjectEntity> bugReports = new ArrayList<>();
+    private final ArrayList<ProjectEntity> events = new ArrayList<>();
 
     public Project(String name, String description, String projectId) {
         this.name = name;
         this.description = description;
         this.projectId = projectId;
 
+    }
+
+    public Project(String name, String description, String projectId, Employee manager) {
+        this.name = name;
+        this.description = description;
+        this.projectId = projectId;
+        this.manager = manager;
     }
 
     public Calendar getDeadline() {
@@ -43,25 +50,38 @@ public class Project {
         this.manager = manager;
     }
 
-    public ArrayList<BugReport> getBugReports() {
+    public ArrayList<ProjectEntity> getBugReports() {
         return bugReports;
     }
 
-    public ArrayList<HistoryRecord<?>> getHistory() {
-        return history;
+    public void setDeadline(Calendar deadline) {
+        this.deadline = deadline;
     }
 
-    public void addHistoryRecord(String dbName, HistoryRecord<?> record) {
-        history.add(record);
-        MongoHistoryProvider.save(dbName, record);
+    public ProjectEntity getDocumentation() {
+        return documentation;
     }
 
-    public ArrayList<Task> getTasks() {
+    public void setDocumentation(ProjectEntity documentation) {
+        if (documentation instanceof Documentation)
+            this.documentation = documentation;
+    }
+
+    public ArrayList<ProjectEntity> getEvents() {
+        return events;
+    }
+
+    public ArrayList<ProjectEntity> getTasks() {
         return tasks;
     }
 
-    public void setTasks(ArrayList<Task> tasks) {
-        this.tasks = tasks;
+    public void setTasks(ArrayList<ProjectEntity> tasks) {
+        if (tasks.stream().allMatch(entity -> entity instanceof Task))
+            this.tasks = tasks;
+    }
+
+    public void addTask(Task task) {
+        tasks.add(task);
     }
 
     public void deleteTask(int taskId) {}
@@ -72,6 +92,10 @@ public class Project {
 
     public void setTeam(ArrayList<Employee> team) {
         this.team = team;
+    }
+
+    public void addEmployee(Employee employee) {
+        this.team.add(employee);
     }
 
     public WorkStatus getStatus() {
@@ -93,12 +117,6 @@ public class Project {
     public String getDescription() {
         return description;
     }
-    public void bindEntityToProject(ProjectEntity entity) {
-        if (entity instanceof Task)
-            tasks.add((Task) entity);
-        if (entity instanceof BugReport)
-            bugReports.add((BugReport) entity);
-    }
 
     @Override
     public String toString() {
@@ -109,13 +127,13 @@ public class Project {
         description: %s,
         id: %s,
         status: %s,
-        managerId: %s,
+        manager: %s,
         tasks: %s,
         team: %s\s
         }       \s
         """,
                 name, description, projectId,
-                status.toString(), manager.toString(),
+                status.toString(), manager == null ? "None" : manager.toString(),
                 tasks.toString(), team.toString()
         );
     }

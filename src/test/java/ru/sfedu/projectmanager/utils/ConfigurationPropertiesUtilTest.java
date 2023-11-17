@@ -1,7 +1,6 @@
 package ru.sfedu.projectmanager.utils;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -11,12 +10,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class ConfigurationPropertiesUtilTest {
     private static final HashMap<String, String> expectedMapVariable = new HashMap<>();
     private static final String[] expectedArray = { "Earth", "Mars", "Saturn", "Venus" };
-    private final ConfigurationPropertiesUtil configProvider = new ConfigurationPropertiesUtil();
+    private static final ConfigurationPropertiesUtil configProvider = new ConfigurationPropertiesUtil();
 
 
     @BeforeAll
     static void prepareData() {
-
+        configProvider.setConfigPath("test.properties");
         expectedMapVariable.put("1", "January");
         expectedMapVariable.put("2", "February");
         expectedMapVariable.put("3", "March");
@@ -31,15 +30,12 @@ class ConfigurationPropertiesUtilTest {
         expectedMapVariable.put("12", "December");
     }
 
-    @BeforeEach
-    public void resetPath() {
-        configProvider.setConfigPath("test.properties");
-    }
 
     @Test
     void setConfigPath() {
         configProvider.setConfigPath("env.properties");
         assertEquals("env.properties", configProvider.getConfigPath());
+        configProvider.setConfigPath("test.properties");
     }
 
     @Test

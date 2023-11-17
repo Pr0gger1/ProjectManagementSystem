@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 import org.yaml.snakeyaml.Yaml;
 import ru.sfedu.projectmanager.Constants;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -30,7 +29,7 @@ public class ConfigurationYmlUtil implements ConfigurationUtil {
         InputStream configFile = null;
         if (configPath == null || configPath.isEmpty())
             configFile = ConfigurationPropertiesUtil.class.getClassLoader()
-                    .getResourceAsStream(Constants.DEFAULT_CONFIG_YML_PATH);
+                    .getResourceAsStream(Constants.DEFAULT_CONFIG_PATH_YML);
         else {
             configFile = ConfigurationPropertiesUtil.class.getClassLoader()
                     .getResourceAsStream(configPath);

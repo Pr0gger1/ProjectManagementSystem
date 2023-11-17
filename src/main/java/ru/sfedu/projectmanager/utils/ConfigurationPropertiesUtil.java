@@ -34,7 +34,7 @@ public class ConfigurationPropertiesUtil implements ConfigurationUtil {
         try {
             if (configPath == null || configPath.isEmpty())
                 fileStream = ConfigurationPropertiesUtil.class.getClassLoader()
-                        .getResourceAsStream(Constants.DEFAULT_CONFIG_PROPERTIES_PATH);
+                        .getResourceAsStream(Constants.DEFAULT_CONFIG_PATH_PROPERTIES);
             else {
                 fileStream = ConfigurationPropertiesUtil.class.getClassLoader()
                         .getResourceAsStream(configPath);

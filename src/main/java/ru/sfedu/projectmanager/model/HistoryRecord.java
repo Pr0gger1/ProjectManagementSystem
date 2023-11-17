@@ -18,7 +18,7 @@ public class HistoryRecord<T> {
     private String className;
     private String methodName;
     private Date createdAt;
-    private String actor = Constants.ACTOR;
+    private String actor = Constants.MONGO_HISTORY_ACTOR;
     private ActionStatus status;
     private ChangeType changeType;
     private Object object;
@@ -106,14 +106,14 @@ public class HistoryRecord<T> {
             Document document = new Document();
             ObjectMapper objMapper = new ObjectMapper();
 
-            document.put(Constants.MONGO_HISTORY_ID, id);
+            document.put(Constants.MONGO_HISTORY_ID, id.toString());
             document.put(Constants.MONGO_HISTORY_CLASSNAME, className);
             document.put(Constants.MONGO_HISTORY_METHOD_NAME, methodName);
             document.put(Constants.MONGO_HISTORY_CREATED_AT, createdAt);
-            document.put(Constants.MONGO_HISTORY_ACTOR, Constants.ACTOR);
+            document.put(Constants.MONGO_HISTORY_ACTOR, Constants.MONGO_HISTORY_ACTOR);
             document.put(Constants.MONGO_HISTORY_STATUS, status.toString());
             document.put(Constants.MONGO_HISTORY_CHANGE_TYPE, changeType.toString());
-            document.put(Constants.MONGO_HISTORY_OBJECT, objMapper.writeValueAsString(object));
+            document.put(Constants.MONGO_HISTORY_OBJECT, objMapper.writeValueAsString(objMapper));
 
             return document;
         }
