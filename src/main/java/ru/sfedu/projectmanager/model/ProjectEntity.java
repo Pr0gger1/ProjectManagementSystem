@@ -1,17 +1,18 @@
 package ru.sfedu.projectmanager.model;
 
 import java.util.Date;
+import java.util.UUID;
 
 public abstract class ProjectEntity {
+    protected UUID id = UUID.randomUUID();
     protected String name;
-    protected int id;
-    protected String projectId;
     protected String description;
-    protected int employeeId;
+    protected String projectId;
+    protected UUID employeeId;
     protected String employeeFullName;
     protected Date createdAt;
 
-    ProjectEntity(String name, String description, int employeeId, String employeeFullName, String projectId) {
+    ProjectEntity(String name, String description, UUID employeeId, String employeeFullName, String projectId) {
         createdAt = new Date();
         this.name = name;
         this.projectId = projectId;
@@ -28,12 +29,16 @@ public abstract class ProjectEntity {
         this.name = name;
     }
 
-    public int getId() {
+    public UUID getId() {
         return this.id;
     }
 
-    public void setProjectId(int id) {
+    public void setProjectId(UUID id) {
         this.id = id;
+    }
+
+    public String getProjectId() {
+        return projectId;
     }
 
     public String getDescription() {
@@ -44,4 +49,15 @@ public abstract class ProjectEntity {
         this.description = description;
     }
 
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public String getEmployeeFullName() {
+        return employeeFullName;
+    }
+
+    public UUID getEmployeeId() {
+        return employeeId;
+    }
 }

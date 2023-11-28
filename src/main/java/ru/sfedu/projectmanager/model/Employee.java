@@ -1,34 +1,44 @@
 package ru.sfedu.projectmanager.model;
 
-import java.util.Date;
+import java.util.Calendar;
+import java.util.UUID;
 
 public class Employee {
     private final String firstName;
     private final String lastName;
     private final String patronymic;
-    private final Date birthday;
+    private final String fullName;
+    private final Calendar birthday;
     private String email;
     private String phoneNumber;
-    private int id;
+    private final UUID id = UUID.randomUUID();
     private String position;
 
 
-    Employee(String firstName, String lastName, String patronymic, Date birthday, String position) {
+    public Employee(String firstName, String lastName, String patronymic, Calendar birthday, String position) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.patronymic = patronymic;
         this.position = position;
         this.birthday = birthday;
+        this.fullName = String.format(
+            "%s %s %s", this.firstName, this.lastName,
+                this.patronymic
+        ).trim();
     }
 
-    Employee(String firstName, String lastName, Date birthday, String position) {
+    public Employee(String firstName, String lastName, Calendar birthday, String position) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.patronymic = "";
+        this.patronymic = null;
         this.position = position;
         this.birthday = birthday;
+        this.fullName = String.format("%s %s", this.firstName, this.lastName);
     }
 
+    public UUID getId() {
+        return id;
+    }
 
     public String getEmail() {
         return email;
@@ -54,12 +64,12 @@ public class Employee {
         return patronymic;
     }
 
-    public Date getBirthday() {
+    public Calendar getBirthday() {
         return birthday;
     }
 
-    public int getId() {
-        return id;
+    public String getFullName() {
+        return fullName;
     }
 
     public void setPosition(String position) {

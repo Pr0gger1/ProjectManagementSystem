@@ -1,19 +1,20 @@
 package ru.sfedu.projectmanager.model;
 
 import java.util.Calendar;
+import java.util.UUID;
 
 public class Event extends ProjectEntity {
     private Calendar startDate;
     private Calendar endDate;
 
-    Event(
-        String name,
-        String description,
-        int employeeId,
-        String employeeFullName,
-        String projectId,
-        Calendar startDate,
-        Calendar endDate
+    public Event(
+            String name,
+            String description,
+            UUID employeeId,
+            String employeeFullName,
+            String projectId,
+            Calendar startDate,
+            Calendar endDate
     ) {
         super(name, description, employeeId, employeeFullName, projectId);
         this.startDate = startDate;

@@ -3,14 +3,17 @@ package ru.sfedu.projectmanager.api;
 import ru.sfedu.projectmanager.model.*;
 import ru.sfedu.projectmanager.model.enums.WorkStatus;
 
+import java.util.ArrayList;
+import java.util.UUID;
+
 public class DataProviderXML implements IDataProvider {
 
     /**
      * @param project
      */
     @Override
-    public void processNewProject(Project project) {
-
+    public boolean processNewProject(Project project) {
+        return true;
     }
 
     /**
@@ -45,10 +48,12 @@ public class DataProviderXML implements IDataProvider {
 
     /**
      * @param task
+     * @return
      */
     @Override
-    public void processNewTask(Task task) {
+    public boolean processNewTask(Task task) {
 
+        return false;
     }
 
     /**
@@ -63,8 +68,8 @@ public class DataProviderXML implements IDataProvider {
      * @param bugReport
      */
     @Override
-    public void processNewBugReport(BugReport bugReport) {
-
+    public boolean processNewBugReport(BugReport bugReport) {
+        return true;
     }
 
     /**
@@ -79,40 +84,64 @@ public class DataProviderXML implements IDataProvider {
      * @param documentation
      */
     @Override
-    public void processNewDocumentation(Documentation documentation) {
-
+    public boolean processNewDocumentation(Documentation documentation) {
+        return true;
     }
 
     /**
      * @param event
      */
     @Override
-    public void processNewEvent(Event event) {
-
+    public boolean processNewEvent(Event event) {
+        return true;
     }
 
     /**
-     * @return
+     * @param projectId
      */
     @Override
-    public String generateUUID() {
-        return null;
+    public boolean deleteProject(String projectId) {
+        return true;
     }
 
     /**
-     * @param entity
+     * @param taskId
      */
     @Override
-    public void deleteProjectEntity(ProjectEntity entity) {
-
+    public boolean deleteTask(UUID taskId) {
+        return true;
     }
 
     /**
-     * @param project
+     * @param bugReportId
      */
     @Override
-    public void deleteProject(Project project) {
+    public boolean deleteBugReport(UUID bugReportId) {
+        return true;
+    }
 
+    /**
+     * @param eventId
+     */
+    @Override
+    public boolean deleteEvent(UUID eventId) {
+        return true;
+    }
+
+    /**
+     * @param docId
+     */
+    @Override
+    public boolean deleteDocumentation(UUID docId) {
+        return true;
+    }
+
+    /**
+     * @param employeeId
+     */
+    @Override
+    public boolean deleteEmployee(UUID employeeId) {
+        return true;
     }
 
     /**
@@ -139,6 +168,87 @@ public class DataProviderXML implements IDataProvider {
      */
     @Override
     public Project getProjectById(String id) {
+        return null;
+    }
+
+    /**
+     * @param projectId
+     * @return
+     */
+    @Override
+    public ArrayList<Task> getTaskByProjectId(String projectId) {
+        return null;
+    }
+
+    /**
+     * @param taskId
+     * @return
+     */
+    @Override
+    public Task getTaskById(UUID taskId) {
+        return null;
+    }
+
+    /**
+     * @param projectId
+     * @return
+     */
+    @Override
+    public ArrayList<BugReport> getBugReportsByProjectId(String projectId) {
+        return null;
+    }
+
+    /**
+     * @param bugReportId
+     * @return
+     */
+    @Override
+    public BugReport getBugReportById(UUID bugReportId) {
+        return null;
+    }
+
+    /**
+     * @param projectId
+     * @return
+     */
+    @Override
+    public ArrayList<Event> getEventsByProjectId(String projectId) {
+        return null;
+    }
+
+    /**
+     * @param eventId
+     * @return
+     */
+    @Override
+    public Event getEventById(UUID eventId) {
+        return null;
+    }
+
+    /**
+     * @param projectId
+     * @return
+     */
+    @Override
+    public Documentation getDocumentationByProjectId(String projectId) {
+        return null;
+    }
+
+    /**
+     * @param projectId
+     * @return
+     */
+    @Override
+    public ArrayList<Employee> getProjectTeam(String projectId) {
+        return null;
+    }
+
+    /**
+     * @param employeeId
+     * @return
+     */
+    @Override
+    public Employee getEmployee(UUID employeeId) {
         return null;
     }
 

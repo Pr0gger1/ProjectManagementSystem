@@ -6,12 +6,12 @@ import org.apache.logging.log4j.Logger;
 public class Main {
     static Logger logger = LogManager.getLogger(Main.class);
 
-    static {
-        logger.debug("Main[0]: starting application");
-    }
+//    static {
+//        logger.debug("Main[0]: starting application");
+//    }
 
     public static void main(String[] args) {
-        logger.info("Launching the application...");
+        logger.debug("Launching the application...");
         logger.info(
                 "Operating System: " + System.getProperty("os.name") + " "
                         + System.getProperty("os.version")

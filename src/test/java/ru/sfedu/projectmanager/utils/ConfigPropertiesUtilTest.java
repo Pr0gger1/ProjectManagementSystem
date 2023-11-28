@@ -7,15 +7,14 @@ import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ConfigurationPropertiesUtilTest {
+class ConfigPropertiesUtilTest {
     private static final HashMap<String, String> expectedMapVariable = new HashMap<>();
     private static final String[] expectedArray = { "Earth", "Mars", "Saturn", "Venus" };
-    private static final ConfigurationPropertiesUtil configProvider = new ConfigurationPropertiesUtil();
 
 
     @BeforeAll
     static void prepareData() {
-        configProvider.setConfigPath("test.properties");
+        ConfigPropertiesUtil.setConfigPath("test.properties");
         expectedMapVariable.put("1", "January");
         expectedMapVariable.put("2", "February");
         expectedMapVariable.put("3", "March");
@@ -33,32 +32,32 @@ class ConfigurationPropertiesUtilTest {
 
     @Test
     void setConfigPath() {
-        configProvider.setConfigPath("env.properties");
-        assertEquals("env.properties", configProvider.getConfigPath());
-        configProvider.setConfigPath("test.properties");
+        ConfigPropertiesUtil.setConfigPath("env.properties");
+        assertEquals("env.properties", ConfigPropertiesUtil.getConfigPath());
+        ConfigPropertiesUtil.setConfigPath("test.properties");
     }
 
     @Test
     void getConfigPath() {
-        assertEquals("test.properties", configProvider.getConfigPath());
+        assertEquals("test.properties", ConfigPropertiesUtil.getConfigPath());
     }
 
 
     @Test
     void getEnvironmentVariable() {
-        String dbName = configProvider.getEnvironmentVariable("DB_NAME");
+        String dbName = ConfigPropertiesUtil.getEnvironmentVariable("DB_NAME");
         assertEquals("projectManagerDB", dbName);
     }
 
     @Test
     void getEnvironmentVariableList() {
-        String[] actualArray = configProvider.getEnvironmentVariableList("PLANETS");
+        String[] actualArray = ConfigPropertiesUtil.getEnvironmentVariableList("PLANETS");
         assertArrayEquals(expectedArray, actualArray);
     }
 
     @Test
     void getEnvironmentMapVariable() {
-        HashMap<String, String> actualMapVariable = configProvider
+        HashMap<String, String> actualMapVariable = ConfigPropertiesUtil
                 .getEnvironmentMapVariable("MONTHS");
 
         assertEquals(expectedMapVariable, actualMapVariable);

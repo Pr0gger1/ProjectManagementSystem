@@ -1,6 +1,5 @@
 package ru.sfedu.projectmanager.model;
 
-import ru.sfedu.projectmanager.api.MongoHistoryProvider;
 import ru.sfedu.projectmanager.model.enums.WorkStatus;
 
 import java.util.ArrayList;
@@ -11,7 +10,7 @@ public class Project {
     private Calendar deadline;
     private final String name;
     private final String description;
-    private final String projectId;
+    private final String id;
     private WorkStatus status = WorkStatus.IN_PROGRESS;
     private Employee manager;
     private ArrayList<Employee> team = new ArrayList<>();
@@ -20,26 +19,22 @@ public class Project {
     private final ArrayList<ProjectEntity> bugReports = new ArrayList<>();
     private final ArrayList<ProjectEntity> events = new ArrayList<>();
 
-    public Project(String name, String description, String projectId) {
+    public Project(String name, String description, String id) {
         this.name = name;
         this.description = description;
-        this.projectId = projectId;
+        this.id = id;
 
     }
 
-    public Project(String name, String description, String projectId, Employee manager) {
+    public Project(String name, String description, String id, Employee manager) {
         this.name = name;
         this.description = description;
-        this.projectId = projectId;
+        this.id = id;
         this.manager = manager;
     }
 
     public Calendar getDeadline() {
         return deadline;
-    }
-
-    public void setDeadline(GregorianCalendar deadline) {
-        this.deadline = deadline;
     }
 
     public Employee getManager() {
@@ -106,8 +101,8 @@ public class Project {
         this.status = status;
     }
 
-    public String getProjectId() {
-        return projectId;
+    public String getId() {
+        return id;
     }
 
     public String getName() {
@@ -132,7 +127,7 @@ public class Project {
         team: %s\s
         }       \s
         """,
-                name, description, projectId,
+                name, description, id,
                 status.toString(), manager == null ? "None" : manager.toString(),
                 tasks.toString(), team.toString()
         );

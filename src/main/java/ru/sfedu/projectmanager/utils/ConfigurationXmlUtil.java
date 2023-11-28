@@ -11,7 +11,7 @@ import java.util.Properties;
 
 
 public class ConfigurationXmlUtil implements ConfigurationUtil {
-    private static final Logger logger = LogManager.getLogger(ConfigurationPropertiesUtil.class);
+    private static final Logger logger = LogManager.getLogger(ConfigPropertiesUtil.class);
     private static final Properties config = new Properties();
     private static String configPath = "";
 
@@ -34,10 +34,10 @@ public class ConfigurationXmlUtil implements ConfigurationUtil {
         InputStream configFile;
         try {
             if (configPath == null || configPath.isEmpty())
-                configFile = ConfigurationPropertiesUtil.class.getClassLoader()
+                configFile = ConfigPropertiesUtil.class.getClassLoader()
                         .getResourceAsStream(Constants.DEFAULT_CONFIG_PATH_XML);
             else {
-                configFile = ConfigurationPropertiesUtil.class.getClassLoader()
+                configFile = ConfigPropertiesUtil.class.getClassLoader()
                         .getResourceAsStream(configPath);
             }
 

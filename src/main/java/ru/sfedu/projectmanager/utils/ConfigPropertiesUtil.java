@@ -9,34 +9,34 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Properties;
 
-public class ConfigurationPropertiesUtil implements ConfigurationUtil {
-    private static final Logger logger = LogManager.getLogger(ConfigurationPropertiesUtil.class);
+public class ConfigPropertiesUtil {
+    private static final Logger logger = LogManager.getLogger(ConfigPropertiesUtil.class);
     private static final Properties config = new Properties();
     private static String configPath = "";
 
-    private Properties getConfiguration() throws IOException {
+    private static Properties getConfiguration() throws IOException {
         if (config.isEmpty()) {
             loadConfiguration();
         }
         return config;
     }
 
-    public void setConfigPath(String path) {
+    public static void setConfigPath(String path) {
         configPath = path;
     }
 
-    public String getConfigPath() {
+    public static String getConfigPath() {
         return configPath;
     }
 
-    private void loadConfiguration() throws IOException {
+    private static void loadConfiguration() throws IOException {
         InputStream fileStream = null;
         try {
             if (configPath == null || configPath.isEmpty())
-                fileStream = ConfigurationPropertiesUtil.class.getClassLoader()
+                fileStream = ConfigPropertiesUtil.class.getClassLoader()
                         .getResourceAsStream(Constants.DEFAULT_CONFIG_PATH_PROPERTIES);
             else {
-                fileStream = ConfigurationPropertiesUtil.class.getClassLoader()
+                fileStream = ConfigPropertiesUtil.class.getClassLoader()
                         .getResourceAsStream(configPath);
             }
 
@@ -52,7 +52,7 @@ public class ConfigurationPropertiesUtil implements ConfigurationUtil {
 
     }
 
-    public String getEnvironmentVariable(String key) {
+    public static String getEnvironmentVariable(String key) {
         try {
             return getConfiguration().getProperty(key);
         }
@@ -62,7 +62,7 @@ public class ConfigurationPropertiesUtil implements ConfigurationUtil {
         return null;
     }
 
-    public String[] getEnvironmentVariableList(String key) {
+    public static String[] getEnvironmentVariableList(String key) {
         try {
             return getConfiguration().getProperty(key).split(",");
         }
@@ -72,7 +72,7 @@ public class ConfigurationPropertiesUtil implements ConfigurationUtil {
         return null;
     }
 
-    public HashMap<String, String> getEnvironmentMapVariable(String key) {
+    public static HashMap<String, String> getEnvironmentMapVariable(String key) {
         HashMap<String, String> mapVariable = new HashMap<>();
         try {
             String keyValue = getConfiguration().getProperty(key);

@@ -12,7 +12,6 @@ import java.util.Map;
 
 
 public class ConfigurationYmlUtil implements ConfigurationUtil {
-    private static final Logger logger = LogManager.getLogger(ConfigurationPropertiesUtil.class);
     private static final Yaml config = new Yaml();
     private static HashMap<String, Object> data;
     private static String configPath = "";
@@ -28,10 +27,10 @@ public class ConfigurationYmlUtil implements ConfigurationUtil {
     private static void loadConfiguration() {
         InputStream configFile = null;
         if (configPath == null || configPath.isEmpty())
-            configFile = ConfigurationPropertiesUtil.class.getClassLoader()
+            configFile = ConfigPropertiesUtil.class.getClassLoader()
                     .getResourceAsStream(Constants.DEFAULT_CONFIG_PATH_YML);
         else {
-            configFile = ConfigurationPropertiesUtil.class.getClassLoader()
+            configFile = ConfigPropertiesUtil.class.getClassLoader()
                     .getResourceAsStream(configPath);
         }
 
