@@ -10,6 +10,7 @@ import ru.sfedu.projectmanager.model.enums.ActionStatus;
 import ru.sfedu.projectmanager.model.enums.ChangeType;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 public class HistoryRecord<T> {
@@ -166,4 +167,19 @@ public class HistoryRecord<T> {
             );
         }
     }
+
+    @Override
+    public boolean equals(Object object1) {
+        if (this == object1) return true;
+        if (object1 == null || getClass() != object1.getClass()) return false;
+        HistoryRecord<?> record = (HistoryRecord<?>) object1;
+        return Objects.equals(id, record.id) && Objects.equals(className, record.className) && Objects.equals(methodName, record.methodName) && Objects.equals(createdAt, record.createdAt) && Objects.equals(actor, record.actor) && status == record.status && changeType == record.changeType && Objects.equals(object, record.object);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, className, methodName, createdAt, actor, status, changeType, object);
+    }
+
+
 }

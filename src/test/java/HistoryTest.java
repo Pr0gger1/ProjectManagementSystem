@@ -1,5 +1,4 @@
 import org.junit.jupiter.api.Test;
-import ru.sfedu.projectmanager.Constants;
 import ru.sfedu.projectmanager.api.MongoHistoryProvider;
 import ru.sfedu.projectmanager.model.HistoryRecord;
 import ru.sfedu.projectmanager.model.Project;
@@ -20,7 +19,6 @@ public class HistoryTest {
         );
 
         MongoHistoryProvider.save(
-            Constants.MONGO_DB_TEST,
             new HistoryRecord<>(
                 project,
                 "initNewBean",
@@ -30,7 +28,6 @@ public class HistoryTest {
 
         project.setDeadline(new GregorianCalendar(2023, Calendar.DECEMBER, 25));
         MongoHistoryProvider.save(
-            Constants.MONGO_DB_TEST,
             new HistoryRecord<>(
                 project,
                 "initNewBean",

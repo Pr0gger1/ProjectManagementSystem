@@ -7,11 +7,11 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 public interface IDataProvider {
-    boolean processNewProject(Project project);
-    boolean processNewTask(Task task);
-    boolean processNewBugReport(BugReport bugReport);
-    boolean processNewDocumentation(Documentation documentation);
-    boolean processNewEvent(Event event);
+    Result<?> processNewProject(Project project);
+    Result<?> processNewTask(Task task);
+    Result<?> processNewBugReport(BugReport bugReport);
+    Result<?> processNewDocumentation(Documentation documentation);
+    Result<?> processNewEvent(Event event);
 
     TrackInfo<String, TrackInfo<Object, Object>> monitorProjectReadiness(
         String projectId, boolean checkLaborEfficiency
@@ -21,27 +21,26 @@ public interface IDataProvider {
     TrackInfo<Task, WorkStatus> trackTaskStatus();
     TrackInfo<BugReport, WorkStatus> trackBugReportStatus();
 
-    void bindEntityToProject(ProjectEntity entity, String projectId);
-    void bindProjectManager(Employee manager, String projectId);
-    void bindTaskExecutor(Employee executor, String projectId);
+    Result<?> bindEmployeeToProject(UUID employeeId, String projectId);
+    Result<?> bindProjectManager(UUID managerId, String projectId);
+    Result<?> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, String projectId);
 
-    boolean deleteProject(String projectId);
-    boolean deleteTask(UUID taskId);
-    boolean deleteBugReport(UUID bugReportId);
-    boolean deleteEvent(UUID eventId);
-    boolean deleteDocumentation(UUID docId);
-    boolean deleteEmployee(UUID employeeId);
+    Result<?> deleteProject(String projectId);
+    Result<?> deleteTask(UUID taskId);
+    Result<?> deleteBugReport(UUID bugReportId);
+    Result<?> deleteEvent(UUID eventId);
+    Result<?> deleteDocumentation(UUID docId);
+    Result<?> deleteEmployee(UUID employeeId);
 
 
-    Project getProjectById(String id);
-    ArrayList<Task> getTaskByProjectId(String projectId);
-    Task getTaskById(UUID taskId);
-    ArrayList<BugReport> getBugReportsByProjectId(String projectId);
-    BugReport getBugReportById(UUID bugReportId);
-    ArrayList<Event> getEventsByProjectId(String projectId);
-    Event getEventById(UUID eventId);
-    Documentation getDocumentationByProjectId(String projectId);
-    ArrayList<Employee> getProjectTeam(String projectId);
-    Employee getEmployee(UUID employeeId);
-    ProjectEntity getProjectEntityById(int id);
+    Result<Project> getProjectById(String id);
+    Result<ArrayList<ProjectEntity>> getTasksByProjectId(String projectId);
+    Result<ProjectEntity> getTaskById(UUID taskId);
+    Result<ArrayList<ProjectEntity>> getBugReportsByProjectId(String projectId);
+    Result<ProjectEntity> getBugReportById(UUID bugReportId);
+    Result<ArrayList<ProjectEntity>> getEventsByProjectId(String projectId);
+    Result<ProjectEntity> getEventById(UUID eventId);
+    Result<ProjectEntity> getDocumentationByProjectId(String projectId);
+    Result<ArrayList<Employee>> getProjectTeam(String projectId);
+    Result<Employee> getEmployeeById(UUID employeeId);
 }

@@ -1,9 +1,12 @@
 package ru.sfedu.projectmanager.model;
 
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Documentation extends ProjectEntity {
+
     private HashMap<String, String> body;
 
     public Documentation(
@@ -28,6 +31,20 @@ public class Documentation extends ProjectEntity {
         this.body = body;
     }
 
+    public Documentation(
+            String name,
+            String description,
+            UUID id,
+            String projectId,
+            UUID employeeId,
+            String employeeFullName,
+            Date createdAt,
+            HashMap<String, String> body
+    ) {
+        super(name, description, id, projectId, employeeId, employeeFullName, createdAt);
+        this.body = body;
+    }
+
     public HashMap<String, String> getBody() {
         return body;
     }
@@ -40,16 +57,30 @@ public class Documentation extends ProjectEntity {
         body.put(articleTitle, article);
     }
 
-    Documentation(
-        String name,
-        String description,
-        UUID employeeId,
-        String employeeFullName,
-        String projectId,
-        HashMap<String, String> body
-    ) {
-        super(name, description, employeeId, employeeFullName, projectId);
-        this.body = body;
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        Documentation that = (Documentation) object;
+        return Objects.equals(body, that.body);
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(body);
+    }
+
+    @Override
+    public String toString() {
+        return "Documentation{" +
+                "body=" + body +
+                ", id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", projectId='" + projectId + '\'' +
+                ", employeeId=" + employeeId +
+                ", employeeFullName='" + employeeFullName + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
+    }
 }

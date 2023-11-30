@@ -4,7 +4,7 @@ import ru.sfedu.projectmanager.model.enums.WorkStatus;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.util.Objects;
 
 public class Project {
     private Calendar deadline;
@@ -16,14 +16,40 @@ public class Project {
     private ArrayList<Employee> team = new ArrayList<>();
     private ArrayList<ProjectEntity> tasks = new ArrayList<>();
     private ProjectEntity documentation;
-    private final ArrayList<ProjectEntity> bugReports = new ArrayList<>();
-    private final ArrayList<ProjectEntity> events = new ArrayList<>();
+    private ArrayList<ProjectEntity> bugReports = new ArrayList<>();
+    private ArrayList<ProjectEntity> events = new ArrayList<>();
 
     public Project(String name, String description, String id) {
         this.name = name;
         this.description = description;
         this.id = id;
 
+    }
+
+    public Project(
+            String name,
+            String description,
+            String id,
+            Calendar deadline,
+            WorkStatus status,
+            Employee manager,
+            ArrayList<Employee> team,
+            ArrayList<ProjectEntity> tasks,
+            ArrayList<ProjectEntity> bugReports,
+            ArrayList<ProjectEntity> events,
+            ProjectEntity documentation
+    ) {
+        this.deadline = deadline;
+        this.name = name;
+        this.description = description;
+        this.id = id;
+        this.status = status;
+        this.manager = manager;
+        this.team = team;
+        this.tasks = tasks;
+        this.documentation = documentation;
+        this.events = events;
+        this.bugReports = bugReports;
     }
 
     public Project(String name, String description, String id, Employee manager) {
@@ -115,21 +141,31 @@ public class Project {
 
     @Override
     public String toString() {
-        return String.format(
-        """
-        Project {
-        name: %s,
-        description: %s,
-        id: %s,
-        status: %s,
-        manager: %s,
-        tasks: %s,
-        team: %s\s
-        }       \s
-        """,
-                name, description, id,
-                status.toString(), manager == null ? "None" : manager.toString(),
-                tasks.toString(), team.toString()
-        );
+        return "Project{" +
+                "deadline=" + deadline +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", id='" + id + '\'' +
+                ", status=" + status +
+                ", manager=" + manager +
+                ", team=" + team +
+                ", tasks=" + tasks +
+                ", documentation=" + documentation +
+                ", bugReports=" + bugReports +
+                ", events=" + events +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        Project project = (Project) object;
+        return Objects.equals(deadline, project.deadline) && Objects.equals(name, project.name) && Objects.equals(description, project.description) && Objects.equals(id, project.id) && status == project.status && Objects.equals(manager, project.manager) && Objects.equals(team, project.team) && Objects.equals(tasks, project.tasks) && Objects.equals(documentation, project.documentation) && Objects.equals(bugReports, project.bugReports) && Objects.equals(events, project.events);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(deadline, name, description, id, status, manager, team, tasks, documentation, bugReports, events);
     }
 }

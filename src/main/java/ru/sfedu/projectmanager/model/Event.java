@@ -1,6 +1,8 @@
 package ru.sfedu.projectmanager.model;
 
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Event extends ProjectEntity {
@@ -21,6 +23,22 @@ public class Event extends ProjectEntity {
         this.endDate = endDate;
     }
 
+    public Event(
+            String name,
+            String description,
+            UUID id,
+            String projectId,
+            UUID employeeId,
+            String employeeFullName,
+            Date createdAt,
+            Calendar startDate,
+            Calendar endDate
+    ) {
+        super(name, description, id, projectId, employeeId, employeeFullName, createdAt);
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
     public Calendar getStartDate() {
         return startDate;
     }
@@ -35,5 +53,18 @@ public class Event extends ProjectEntity {
 
     public void setEndDate(Calendar endDate) {
         this.endDate = endDate;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        Event event = (Event) object;
+        return Objects.equals(startDate, event.startDate) && Objects.equals(endDate, event.endDate);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(startDate, endDate);
     }
 }

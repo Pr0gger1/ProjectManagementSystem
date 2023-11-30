@@ -10,14 +10,51 @@ public class DataProviderXML implements IDataProvider {
 
     /**
      * @param project
+     * @return
      */
     @Override
-    public boolean processNewProject(Project project) {
-        return true;
+    public Result<?> processNewProject(Project project) {
+        return null;
     }
 
     /**
-     * @param projectId 
+     * @param task
+     * @return
+     */
+    @Override
+    public Result<?> processNewTask(Task task) {
+        return null;
+    }
+
+    /**
+     * @param bugReport
+     * @return
+     */
+    @Override
+    public Result<?> processNewBugReport(BugReport bugReport) {
+        return null;
+    }
+
+    /**
+     * @param documentation
+     * @return
+     */
+    @Override
+    public Result<?> processNewDocumentation(Documentation documentation) {
+        return null;
+    }
+
+    /**
+     * @param event
+     * @return
+     */
+    @Override
+    public Result<?> processNewEvent(Event event) {
+        return null;
+    }
+
+    /**
+     * @param projectId
      * @param checkLaborEfficiency
      * @return
      */
@@ -29,7 +66,7 @@ public class DataProviderXML implements IDataProvider {
     }
 
     /**
-     * @param projectOd 
+     * @param projectOd
      * @return
      */
     @Override
@@ -38,7 +75,7 @@ public class DataProviderXML implements IDataProvider {
     }
 
     /**
-     * @param projectId 
+     * @param projectId
      * @return
      */
     @Override
@@ -47,17 +84,7 @@ public class DataProviderXML implements IDataProvider {
     }
 
     /**
-     * @param task
      * @return
-     */
-    @Override
-    public boolean processNewTask(Task task) {
-
-        return false;
-    }
-
-    /**
-     * @return 
      */
     @Override
     public TrackInfo<Task, WorkStatus> trackTaskStatus() {
@@ -65,101 +92,97 @@ public class DataProviderXML implements IDataProvider {
     }
 
     /**
-     * @param bugReport
-     */
-    @Override
-    public boolean processNewBugReport(BugReport bugReport) {
-        return true;
-    }
-
-    /**
-     * @return 
+     * @return
      */
     @Override
     public TrackInfo<BugReport, WorkStatus> trackBugReportStatus() {
         return null;
     }
 
+
     /**
-     * @param documentation
+     * @param employeeId
+     * @param projectId
+     * @return
      */
     @Override
-    public boolean processNewDocumentation(Documentation documentation) {
-        return true;
+    public Result<?> bindEmployeeToProject(UUID employeeId, String projectId) {
+        return null;
     }
 
     /**
-     * @param event
+     * @param managerId
+     * @param projectId
+     * @return
      */
     @Override
-    public boolean processNewEvent(Event event) {
-        return true;
+    public Result<?> bindProjectManager(UUID managerId, String projectId) {
+        return null;
+    }
+
+    /**
+     * @param executorId
+     * @param taskId
+     * @param projectId
+     * @return
+     */
+    @Override
+    public Result<?> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, String projectId) {
+        return null;
     }
 
     /**
      * @param projectId
+     * @return
      */
     @Override
-    public boolean deleteProject(String projectId) {
-        return true;
+    public Result<?> deleteProject(String projectId) {
+        return null;
     }
 
     /**
      * @param taskId
+     * @return
      */
     @Override
-    public boolean deleteTask(UUID taskId) {
-        return true;
+    public Result<?> deleteTask(UUID taskId) {
+        return null;
     }
 
     /**
      * @param bugReportId
+     * @return
      */
     @Override
-    public boolean deleteBugReport(UUID bugReportId) {
-        return true;
+    public Result<?> deleteBugReport(UUID bugReportId) {
+        return null;
     }
 
     /**
      * @param eventId
+     * @return
      */
     @Override
-    public boolean deleteEvent(UUID eventId) {
-        return true;
+    public Result<?> deleteEvent(UUID eventId) {
+        return null;
     }
 
     /**
      * @param docId
+     * @return
      */
     @Override
-    public boolean deleteDocumentation(UUID docId) {
-        return true;
+    public Result<?> deleteDocumentation(UUID docId) {
+        return null;
     }
 
     /**
      * @param employeeId
+     * @return
      */
     @Override
-    public boolean deleteEmployee(UUID employeeId) {
-        return true;
-    }
-
-    /**
-     * @param manager 
-     * @param projectId
-     */
-    @Override
-    public void bindProjectManager(Employee manager, String projectId) {
-
-    }
-
-    /**
-     * @param executor 
-     * @param projectId
-     */
-    @Override
-    public void bindTaskExecutor(Employee executor, String projectId) {
-
+    public Result<?> deleteEmployee(UUID employeeId) {
+        return null;
     }
 
     /**
@@ -167,7 +190,7 @@ public class DataProviderXML implements IDataProvider {
      * @return
      */
     @Override
-    public Project getProjectById(String id) {
+    public Result<Project> getProjectById(String id) {
         return null;
     }
 
@@ -176,7 +199,7 @@ public class DataProviderXML implements IDataProvider {
      * @return
      */
     @Override
-    public ArrayList<Task> getTaskByProjectId(String projectId) {
+    public Result<ArrayList<ProjectEntity>> getTasksByProjectId(String projectId) {
         return null;
     }
 
@@ -185,7 +208,7 @@ public class DataProviderXML implements IDataProvider {
      * @return
      */
     @Override
-    public Task getTaskById(UUID taskId) {
+    public Result<ProjectEntity> getTaskById(UUID taskId) {
         return null;
     }
 
@@ -194,7 +217,7 @@ public class DataProviderXML implements IDataProvider {
      * @return
      */
     @Override
-    public ArrayList<BugReport> getBugReportsByProjectId(String projectId) {
+    public Result<ArrayList<ProjectEntity>> getBugReportsByProjectId(String projectId) {
         return null;
     }
 
@@ -203,7 +226,7 @@ public class DataProviderXML implements IDataProvider {
      * @return
      */
     @Override
-    public BugReport getBugReportById(UUID bugReportId) {
+    public Result<ProjectEntity> getBugReportById(UUID bugReportId) {
         return null;
     }
 
@@ -212,7 +235,7 @@ public class DataProviderXML implements IDataProvider {
      * @return
      */
     @Override
-    public ArrayList<Event> getEventsByProjectId(String projectId) {
+    public Result<ArrayList<ProjectEntity>> getEventsByProjectId(String projectId) {
         return null;
     }
 
@@ -221,7 +244,7 @@ public class DataProviderXML implements IDataProvider {
      * @return
      */
     @Override
-    public Event getEventById(UUID eventId) {
+    public Result<ProjectEntity> getEventById(UUID eventId) {
         return null;
     }
 
@@ -230,7 +253,7 @@ public class DataProviderXML implements IDataProvider {
      * @return
      */
     @Override
-    public Documentation getDocumentationByProjectId(String projectId) {
+    public Result<ProjectEntity> getDocumentationByProjectId(String projectId) {
         return null;
     }
 
@@ -239,7 +262,7 @@ public class DataProviderXML implements IDataProvider {
      * @return
      */
     @Override
-    public ArrayList<Employee> getProjectTeam(String projectId) {
+    public Result<ArrayList<Employee>> getProjectTeam(String projectId) {
         return null;
     }
 
@@ -248,25 +271,7 @@ public class DataProviderXML implements IDataProvider {
      * @return
      */
     @Override
-    public Employee getEmployee(UUID employeeId) {
+    public Result<Employee> getEmployeeById(UUID employeeId) {
         return null;
-    }
-
-    /**
-     * @param id
-     * @return
-     */
-    @Override
-    public ProjectEntity getProjectEntityById(int id) {
-        return null;
-    }
-
-    /**
-     * @param entity
-     * @param projectId
-     */
-    @Override
-    public void bindEntityToProject(ProjectEntity entity, String projectId) {
-
     }
 }

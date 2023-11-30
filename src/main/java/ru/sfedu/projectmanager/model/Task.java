@@ -4,6 +4,8 @@ import ru.sfedu.projectmanager.model.enums.WorkStatus;
 import ru.sfedu.projectmanager.model.enums.Priority;
 
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Task extends ProjectEntity {
@@ -18,9 +20,60 @@ public class Task extends ProjectEntity {
             String description,
             UUID employeeId,
             String employeeFullName,
+            String projectId,
+            Calendar deadline,
+            String comment,
+            Priority priority,
+            String tag,
+            WorkStatus status,
+            Date createdAt
+    ) {
+        super(name, description, projectId, employeeId, employeeFullName, createdAt);
+        this.deadline = deadline;
+        this.comment = comment;
+        this.priority = priority;
+        this.tag = tag;
+        this.status = status;
+    }
+
+    public Task(
+            String name,
+            String description,
+            UUID id,
+            UUID employeeId,
+            String employeeFullName,
+            String projectId,
+            Calendar deadline,
+            String comment,
+            Priority priority,
+            String tag,
+            WorkStatus status,
+            Date createdAt
+    ) {
+        super(name, description, id, projectId, employeeId, employeeFullName, createdAt);
+        this.deadline = deadline;
+        this.comment = comment;
+        this.priority = priority;
+        this.tag = tag;
+        this.status = status;
+    }
+
+    public Task(
+            String name,
+            String description,
+            UUID employeeId,
+            String employeeFullName,
             String projectId
     ) {
         super(name, description, employeeId, employeeFullName, projectId);
+    }
+
+    public Task(
+            String name,
+            String description,
+            String projectId
+    ) {
+        super(name, description, null, null, projectId);
     }
 
     public Task(
@@ -73,5 +126,37 @@ public class Task extends ProjectEntity {
 
     public void setStatus(WorkStatus status) {
         this.status = status;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        if (!super.equals(object)) return false;
+        Task task = (Task) object;
+        return Objects.equals(deadline, task.deadline) && Objects.equals(comment, task.comment) && priority == task.priority && Objects.equals(tag, task.tag) && status == task.status;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), deadline, comment, priority, tag, status);
+    }
+
+    @Override
+    public String toString() {
+        return "\nTask{" +
+                "\ndeadline=" + deadline +
+                ",\ncomment='" + comment + '\'' +
+                ",\npriority=" + priority +
+                ",\ntag='" + tag + '\'' +
+                ",\nstatus=" + status +
+                ",\nid=" + id +
+                ",\nname='" + name + '\'' +
+                ",\ndescription='" + description + '\'' +
+                ",\nprojectId='" + projectId + '\'' +
+                ",\nemployeeId=" + employeeId +
+                ",\nemployeeFullName='" + employeeFullName + '\'' +
+                ",\ncreatedAt=" + createdAt +
+                '}';
     }
 }

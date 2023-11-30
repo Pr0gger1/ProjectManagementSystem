@@ -7,6 +7,7 @@ import com.mongodb.client.MongoDatabase;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bson.Document;
+import ru.sfedu.projectmanager.Constants;
 import ru.sfedu.projectmanager.model.HistoryRecord;
 import ru.sfedu.projectmanager.utils.ConfigPropertiesUtil;
 
@@ -15,11 +16,12 @@ public class MongoHistoryProvider {
 
     /**
      * Method that saves entity history record in Mongo db
-     * @param dbName database name
      * @param record history record object
      * @param <T> type of history record
      */
-    public static <T> void save(String dbName, HistoryRecord<T> record) {
+    public static <T> void save(HistoryRecord<T> record) {
+        String dbName = Environment.valueOf(ConfigPropertiesUtil.getEnvironmentVariable(Constants.ENVIRONMENT)) == Environment.TEST ?
+                Constants.MONGO_DB_TEST : Constants.MONGO_DB_REAL;
         try {
             logger.debug("save[0]: record{\n{}\n}", record.toString());
             MongoCollection<Document> collection = getCollection(dbName, record.getObject().getClass());
