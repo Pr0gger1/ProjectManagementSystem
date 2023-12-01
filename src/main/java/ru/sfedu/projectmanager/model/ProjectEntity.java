@@ -1,6 +1,6 @@
 package ru.sfedu.projectmanager.model;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -11,7 +11,7 @@ public abstract class ProjectEntity {
     protected String projectId;
     protected UUID employeeId;
     protected String employeeFullName;
-    protected Date createdAt;
+    protected LocalDateTime createdAt;
 
     ProjectEntity(
             String name,
@@ -20,7 +20,7 @@ public abstract class ProjectEntity {
             String employeeFullName,
             String projectId
     ) {
-        createdAt = new Date();
+        createdAt = LocalDateTime.now();
         this.id = UUID.randomUUID();
         this.name = name;
         this.projectId = projectId;
@@ -36,7 +36,7 @@ public abstract class ProjectEntity {
             String projectId,
             UUID employeeId,
             String employeeFullName,
-            Date createdAt
+            LocalDateTime createdAt
     ) {
         this.id = UUID.randomUUID();
         this.name = name;
@@ -55,7 +55,7 @@ public abstract class ProjectEntity {
             String projectId,
             UUID employeeId,
             String employeeFullName,
-            Date createdAt
+            LocalDateTime createdAt
     ) {
         this.id = id;
         this.name = name;
@@ -94,7 +94,7 @@ public abstract class ProjectEntity {
         this.description = description;
     }
 
-    public Date getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 

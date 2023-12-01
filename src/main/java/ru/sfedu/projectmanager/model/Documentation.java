@@ -1,5 +1,6 @@
 package ru.sfedu.projectmanager.model;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
@@ -38,7 +39,7 @@ public class Documentation extends ProjectEntity {
             String projectId,
             UUID employeeId,
             String employeeFullName,
-            Date createdAt,
+            LocalDateTime createdAt,
             HashMap<String, String> body
     ) {
         super(name, description, id, projectId, employeeId, employeeFullName, createdAt);

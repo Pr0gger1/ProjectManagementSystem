@@ -11,6 +11,9 @@ import ru.sfedu.projectmanager.utils.ResultCode;
 
 import java.sql.*;
 import java.sql.Date;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class DataProviderPostgres implements IDataProvider {
@@ -116,18 +119,15 @@ public class DataProviderPostgres implements IDataProvider {
      * @param methodName method name which runs processNewEntity method
      * @param query query that saves an entity
      * @param fields array of object fields
-     * @return true if query was completed successful or false if not
+     * @return Result with execution code and message if it fails
      */
     private Result<?> processNewEntity(String entityName, String methodName, String query, Object ...fields) {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             int paramIndex = 0;
             for (Object field : fields) {
-                if (field instanceof java.util.Date || field instanceof Calendar) {
+                if (field instanceof LocalDateTime) {
                     Timestamp sqlDate;
-                    if (field instanceof java.util.Date)
-                        sqlDate = new Timestamp(((java.util.Date) field).getTime());
-                    else
-                        sqlDate = new Timestamp(((Calendar)field).getTimeInMillis());
+                    sqlDate = Timestamp.valueOf(((LocalDateTime) field));
                     statement.setObject(++paramIndex, sqlDate);
                     continue;
                 }
@@ -141,7 +141,7 @@ public class DataProviderPostgres implements IDataProvider {
             logger.error("{}[2]: {}", methodName, exception.getMessage());
             return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
-        return new Result<>(ResultCode.ACCESS);
+        return new Result<>(ResultCode.SUCCESS);
     }
 
     /**
@@ -149,7 +149,7 @@ public class DataProviderPostgres implements IDataProvider {
      * @param methodName method name which runs deleteEntity method
      * @param tableName entity table name
      * @param id object id
-     * @return true if query was completed successful or false if not
+     * @return Result with execution code and message if it fails
      */
     private Result<?> deleteEntity(String entityName, String methodName, String tableName, Object id) {
         String query = String.format(Constants.DELETE_ENTITY_QUERY, tableName);
@@ -163,10 +163,21 @@ public class DataProviderPostgres implements IDataProvider {
             return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
 
-        return new Result<>(ResultCode.ACCESS);
+        return new Result<>(ResultCode.SUCCESS);
     }
 
-    private Result<?> updateEntity(
+
+    /**
+     *
+     * @param entityName name of updatable entity
+     * @param methodName method which updates entity
+     * @param tableName name of entity table
+     * @param columnName column to update
+     * @param newValue new value of column
+     * @param conditionValue query condition
+     * @return Result with execution code and message if it fails
+     */
+    private Result<?> updateEntityColumn(
             String entityName,
             String methodName,
             String tableName,
@@ -181,7 +192,7 @@ public class DataProviderPostgres implements IDataProvider {
             statement.executeUpdate();
 
             logger.debug("{}[0]: {} updated successfully", methodName, entityName);
-            return new Result<>(ResultCode.ACCESS);
+            return new Result<>(ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("{}[1]: {}", methodName, exception.getMessage());
@@ -189,6 +200,13 @@ public class DataProviderPostgres implements IDataProvider {
         }
     }
 
+    /**
+     * @param entityName name of updatable entity
+     * @param methodName method which updates entity
+     * @param query update query
+     * @param params entity fields
+     * @return Result with execution code and message if it fails
+     */
     private Result<?> updateEntity(
             String entityName,
             String methodName,
@@ -202,7 +220,7 @@ public class DataProviderPostgres implements IDataProvider {
             statement.executeUpdate();
 
             logger.debug("{}[0]: {} updated successfully", methodName, entityName);
-            return new Result<>(ResultCode.ACCESS);
+            return new Result<>(ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("{}[1]: {}", methodName, exception.getMessage());
@@ -213,7 +231,7 @@ public class DataProviderPostgres implements IDataProvider {
 
     /** Creates new project
      * @param project - instance of Project
-     * @return Result with code execution
+     * @return Result with execution code and message if it fails
      */
     @Override
     public Result<?> processNewProject(Project project) {
@@ -235,14 +253,14 @@ public class DataProviderPostgres implements IDataProvider {
                 project.getDescription(),
                 project.getStatus().name(),
                 project.getDeadline() == null ? null :
-                new Timestamp(project.getDeadline().getTimeInMillis()),
+                        Timestamp.valueOf(project.getDeadline()),
                 project.getManager() == null ? null : project.getManager().getId()
         );
     }
 
     /**
      * @param employee Employee instance
-     * @return Result with code execution
+     * @return Result with execution code and message if it fails
      */
     public Result<?> processNewEmployee(Employee employee) {
         return processNewEntity(
@@ -253,8 +271,7 @@ public class DataProviderPostgres implements IDataProvider {
                 employee.getFirstName(),
                 employee.getLastName(),
                 employee.getPatronymic(),
-                new Date(employee.getBirthday()
-                        .getTimeInMillis()),
+                Date.valueOf(employee.getBirthday()),
                 employee.getEmail(),
                 employee.getPhoneNumber(),
                 employee.getPosition()
@@ -264,7 +281,7 @@ public class DataProviderPostgres implements IDataProvider {
 
     /**
      * @param task Task instance
-     * @return Result with code execution
+     * @return Result with execution code and message if it fails
      */
     @Override
     public Result<?> processNewTask(Task task) {
@@ -283,17 +300,17 @@ public class DataProviderPostgres implements IDataProvider {
                 task.getTag(),
                 task.getStatus().name(),
                 task.getDeadline() != null ?
-                new Timestamp(task.getDeadline().getTimeInMillis())
+                Timestamp.valueOf(task.getDeadline())
                 : null,
-                task.getCreatedAt()
-//                new Date(task.getCreatedAt().getTime())
+                task.getCreatedAt(),
+                task.getCompletedAt()
         );
     }
 
 
     /**
      * @param bugReport BugReport instance
-     * @return Result with code execution
+     * @return Result with execution code and message if it fails
      */
     @Override
     public Result<?> processNewBugReport(BugReport bugReport) {
@@ -315,7 +332,7 @@ public class DataProviderPostgres implements IDataProvider {
 
     /**
      * @param documentation Documentation instance
-     * @return Result with code execution
+     * @return Result with execution code and message if it fails
      */
     @Override
     public Result<?> processNewDocumentation(Documentation documentation) {
@@ -331,11 +348,11 @@ public class DataProviderPostgres implements IDataProvider {
             statement.setString(++paramIndex, documentation.getEmployeeFullName());
             statement.setArray(++paramIndex, connection.createArrayOf("TEXT" ,documentationBody.getKey()));
             statement.setArray(++paramIndex, connection.createArrayOf("TEXT", documentationBody.getValue()));
-            statement.setDate(++paramIndex, new Date(documentation.getCreatedAt().getTime()));
+            statement.setDate(++paramIndex, Date.valueOf(documentation.getCreatedAt().toLocalDate()));
 
             statement.executeUpdate();
 
-            return new Result<>(ResultCode.ACCESS);
+            return new Result<>(ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("processNewDocumentation[2]: {}", exception.getMessage());
@@ -369,7 +386,7 @@ public class DataProviderPostgres implements IDataProvider {
 
     /**
      * @param event Event instance
-     * @return Result with code execution
+     * @return Result with execution code and message if it fails
      */
     @Override
     public Result<?> processNewEvent(Event event) {
@@ -392,7 +409,7 @@ public class DataProviderPostgres implements IDataProvider {
 
     /**
      * @param projectId - id of project you want to delete
-     * @return Result with code execution
+     * @return Result with execution code and message if it fails
      */
     @Override
     public Result<?> deleteProject(String projectId) {
@@ -406,7 +423,7 @@ public class DataProviderPostgres implements IDataProvider {
 
     /**
      * @param taskId - id of task you want to delete
-     * @return Result with code execution
+     * @return Result with execution code and message if it fails
      */
     @Override
     public Result<?> deleteTask(UUID taskId) {
@@ -420,7 +437,7 @@ public class DataProviderPostgres implements IDataProvider {
 
     /**
      * @param bugReportId - id of bug report you want to delete
-     * @return Result with code execution
+     * @return Result with execution code and message if it fails
      */
     @Override
     public Result<?> deleteBugReport(UUID bugReportId) {
@@ -434,7 +451,7 @@ public class DataProviderPostgres implements IDataProvider {
 
     /**
      * @param eventId - id of event you want to delete
-     * @return Result with code execution
+     * @return Result with execution code and message if it fails
      */
     @Override
     public Result<?> deleteEvent(UUID eventId) {
@@ -448,7 +465,7 @@ public class DataProviderPostgres implements IDataProvider {
 
     /**
      * @param docId - id of documentation you want to delete
-     * @return Result with code execution
+     * @return Result with execution code and message if it fails
      */
     @Override
     public Result<?> deleteDocumentation(UUID docId) {
@@ -462,7 +479,7 @@ public class DataProviderPostgres implements IDataProvider {
 
     /**
      * @param employeeId - id of employee you want to delete
-     * @return Result with code execution
+     * @return Result with execution code and message if it fails
      */
     @Override
     public Result<?> deleteEmployee(UUID employeeId) {
@@ -480,7 +497,7 @@ public class DataProviderPostgres implements IDataProvider {
      */
     @Override
     public Result<?> bindProjectManager(UUID managerId, String projectId) {
-        return updateEntity(
+        return updateEntityColumn(
             "Project",
                 "bindProjectManager",
                 Constants.PROJECT_TABLE_NAME,
@@ -497,7 +514,8 @@ public class DataProviderPostgres implements IDataProvider {
      */
     @Override
     public Result<?> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, String projectId) {
-        try(PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM employee_project WHERE project_id = ?")) {
+        String query = String.format("SELECT COUNT(*) FROM %s WHERE project_id = ?", Constants.EMPLOYEE_PROJECT_TABLE_NAME);
+        try(PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, projectId);
             ResultSet resultSet = statement.executeQuery();
             int rowCount = 0;
@@ -538,7 +556,7 @@ public class DataProviderPostgres implements IDataProvider {
             );
 
         return new Result<>(
-                ResultCode.ACCESS,
+                ResultCode.SUCCESS,
                 String.format(
                         "employee with id %s successfully linked to project{%s}",
                         employeeId.toString(), projectId
@@ -562,20 +580,19 @@ public class DataProviderPostgres implements IDataProvider {
                 String projectName = queryResult.getString("name");
                 String projectDescription = queryResult.getString("description");
                 String projectId = queryResult.getString("id");
-                Calendar projectDeadline = null;
                 WorkStatus projectStatus = WorkStatus.valueOf(queryResult.getString("status"));
                 UUID managerId = (UUID) queryResult.getObject("manager_id");
                 Employee projectManager = getEmployeeById(managerId).getData();
                 ArrayList<Employee> projectTeam = getProjectTeam(projectId).getData();
-                ArrayList<ProjectEntity> projectTasks = getTasksByProjectId(projectId).getData();
+                ArrayList<Task> projectTasks = getTasksByProjectId(projectId).getData();
                 ProjectEntity projectDocumentation = getDocumentationByProjectId(projectId).getData();
-                ArrayList<ProjectEntity> projectEvents = getEventsByProjectId(projectId).getData();
-                ArrayList<ProjectEntity> projectBugReports = getBugReportsByProjectId(projectId).getData();
+                ArrayList<Event> projectEvents = getEventsByProjectId(projectId).getData();
+                ArrayList<BugReport> projectBugReports = getBugReportsByProjectId(projectId).getData();
 
+                LocalDateTime projectDeadline = null;
                 Timestamp gotTimestamp = queryResult.getTimestamp("deadline");
                 if (gotTimestamp != null) {
-                    projectDeadline = new GregorianCalendar();
-                    projectDeadline.setTimeInMillis(gotTimestamp.getTime());
+                    projectDeadline = gotTimestamp.toLocalDateTime();
                 }
 
                 project = new Project(
@@ -586,15 +603,16 @@ public class DataProviderPostgres implements IDataProvider {
                         projectStatus,
                         projectManager,
                         projectTeam,
-                        projectTasks,
-                        projectBugReports,
-                        projectEvents,
+                        // преобразование в список ProjectEntity
+                        new ArrayList<>(){{ addAll(projectTasks); }},
+                        new ArrayList<>(){{ addAll(projectBugReports); }},
+                        new ArrayList<>(){{ addAll(projectEvents); }},
                         projectDocumentation
                 );
             }
 
             logger.debug("getProjectById[1]: received project {}", project);
-            return new Result<>(project, ResultCode.ACCESS);
+            return new Result<>(project, ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("getProjectById[2]: {}", exception.getMessage());
@@ -607,17 +625,18 @@ public class DataProviderPostgres implements IDataProvider {
      * @return Result with Array of tasks
      */
     @Override
-    public Result<ArrayList<ProjectEntity>> getTasksByProjectId(String projectId) {
-        try(PreparedStatement statement = connection.prepareStatement(Constants.GET_TASKS_QUERY)) {
-            ArrayList<ProjectEntity> tasks = new ArrayList<>();
+    public Result<ArrayList<Task>> getTasksByProjectId(String projectId) {
+        String query = String.format(Constants.GET_ENTITY_BY_PROJECT_ID_QUERY, Constants.TASKS_TABLE_NAME);
+        try(PreparedStatement statement = connection.prepareStatement(query)) {
+            ArrayList<Task> tasks = new ArrayList<>();
             statement.setString(1, projectId);
             ResultSet resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
-                tasks.add(extractTasks(resultSet));
+                tasks.add(extractTask(resultSet));
             }
 
-            return new Result<>(tasks, ResultCode.ACCESS);
+            return new Result<>(tasks, ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("getTasksByProjectId[2]: {}", exception.getMessage());
@@ -626,21 +645,44 @@ public class DataProviderPostgres implements IDataProvider {
     }
 
     /**
+     *
+     * @param employeeId
+     * @return
+     */
+    @Override
+    public Result<ArrayList<Task>> getTasksByEmployeeId(UUID employeeId) {
+        try (PreparedStatement statement = connection.prepareStatement(Constants.GET_TASKS_BY_EMPLOYEE_ID_QUERY)) {
+            statement.setObject(1, employeeId);
+            ArrayList<Task> tasks = new ArrayList<>();
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) tasks.add(extractTask(resultSet));
+            logger.debug("getTasksByEmployeeId[1]: received {}", tasks);
+            return new Result<>(tasks, ResultCode.SUCCESS);
+        }
+        catch (SQLException exception) {
+            logger.error("getTasksByEmployeeId[2]: {}", exception.getMessage());
+            return new Result<>(null, ResultCode.ERROR);
+        }
+    }
+
+    /**
      * @param taskId id of task you want to get by id
      * @return Result with Task and execution code
      */
     @Override
-    public Result<ProjectEntity> getTaskById(UUID taskId) {
-        try(PreparedStatement statement = connection.prepareStatement(Constants.GET_TASK_BY_ID_QUERY)) {
+    public Result<Task> getTaskById(UUID taskId) {
+        String query = String.format(Constants.GET_ENTITY_BY_ID_QUERY, Constants.TASKS_TABLE_NAME);
+        try(PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, taskId);
             ResultSet resultSet = statement.executeQuery();
             Task task = null;
 
             while (resultSet.next())
-                task = extractTasks(resultSet);
+                task = extractTask(resultSet);
 
             logger.debug("getTaskById[1]: received task {}", task);
-            return new Result<>(task, ResultCode.ACCESS);
+            return new Result<>(task, ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("getTaskById[2]: {}", exception.getMessage());
@@ -648,62 +690,23 @@ public class DataProviderPostgres implements IDataProvider {
         }
     }
 
-    private Task extractTasks(ResultSet resultSet) throws SQLException {
-        UUID taskId = (UUID) resultSet.getObject("id");
-        String taskProjectId = resultSet.getString("project_id");
-        String taskName = resultSet.getString("name");
-        String taskDescription = resultSet.getString("description");
-        UUID taskExecutorId = (UUID) resultSet.getObject("executor_id");
-        String taskExecutorFullName = resultSet.getString("executor_full_name");
-        String taskComment = resultSet.getString("comment");
-        Priority taskPriority = Priority.valueOf(resultSet.getString("priority"));
-        String taskTag = resultSet.getString("tag");
-        WorkStatus taskStatus = WorkStatus.valueOf(resultSet.getString("status"));
-
-        Calendar taskDeadline = null;
-        Timestamp deadline = resultSet.getTimestamp("deadline");
-        if (deadline != null) {
-            taskDeadline = new GregorianCalendar();
-            taskDeadline.setTimeInMillis(deadline.getTime());
-        }
-        Timestamp date = resultSet.getTimestamp("created_at");
-        java.util.Date createdAt = null;
-        if (date != null) {
-            createdAt = new java.util.Date(date.getTime());
-        }
-
-        return new Task(
-                taskName,
-                taskDescription,
-                taskId,
-                taskExecutorId,
-                taskExecutorFullName,
-                taskProjectId,
-                taskDeadline,
-                taskComment,
-                taskPriority,
-                taskTag,
-                taskStatus,
-                createdAt
-        );
-    }
-
     /**
      * @param projectId id of project where bug reports are loaded from
      * @return Result with ArrayList of ProjectEntity and execution code
      */
     @Override
-    public Result<ArrayList<ProjectEntity>> getBugReportsByProjectId(String projectId) {
-        try (PreparedStatement statement = connection.prepareStatement(Constants.GET_BUG_REPORTS_BY_PROJECT_ID_QUERY)) {
+    public Result<ArrayList<BugReport>> getBugReportsByProjectId(String projectId) {
+        String query = String.format(Constants.GET_ENTITY_BY_PROJECT_ID_QUERY, Constants.BUG_REPORTS_TABLE_NAME);
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, projectId);
             ResultSet resultSet = statement.executeQuery();
-            ArrayList<ProjectEntity> bugReports = new ArrayList<>();
+            ArrayList<BugReport> bugReports = new ArrayList<>();
 
             while (resultSet.next())
                 bugReports.add(extractBugReport(resultSet));
 
             logger.debug("getBugReportsByProjectId[1]: received BugReport list {}", bugReports);
-            return new Result<>(bugReports, ResultCode.ACCESS);
+            return new Result<>(bugReports, ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("getBugReportsByProjectId[2]: {}", exception.getMessage());
@@ -716,7 +719,7 @@ public class DataProviderPostgres implements IDataProvider {
      * @return Result with ProjectEntity and execution code
      */
     @Override
-    public Result<ProjectEntity> getBugReportById(UUID bugReportId) {
+    public Result<BugReport> getBugReportById(UUID bugReportId) {
         String query = String.format(Constants.GET_ENTITY_BY_ID_QUERY, Constants.BUG_REPORTS_TABLE_NAME);
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, bugReportId);
@@ -725,7 +728,9 @@ public class DataProviderPostgres implements IDataProvider {
             while (resultSet.next()) bugReport = extractBugReport(resultSet);
 
             logger.debug("getBugReportById[1]: received {}", bugReport);
-            return new Result<>(bugReport, ResultCode.ACCESS);
+            if (bugReport == null)
+                return new Result<>(null, ResultCode.NOT_FOUND);
+            return new Result<>(bugReport, ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("getBugReportById[2]: {}", exception.getMessage());
@@ -733,50 +738,22 @@ public class DataProviderPostgres implements IDataProvider {
         }
     }
 
-    private BugReport extractBugReport(ResultSet resultSet) throws SQLException {
-        UUID bugReportId = (UUID) resultSet.getObject("id");
-        String bugReportProjectId = resultSet.getString("project_id");
-        BugStatus bugReportStatus = BugStatus.valueOf(resultSet.getString("status"));
-        Priority bugReportPriority = Priority.valueOf(resultSet.getString("priority"));
-        String bugReportName = resultSet.getString("name");
-        String bugReportDescription = resultSet.getString("description");
-        UUID bugReportAuthorId = (UUID) resultSet.getObject("author_id");
-        String bugReportAuthorFullName = resultSet.getString("author_full_name");
-        Timestamp createdAt = resultSet.getTimestamp("created_at");
-
-        java.util.Date bugReportCreatedAt = null;
-        if (createdAt != null) {
-            bugReportCreatedAt = new java.util.Date(createdAt.getTime());
-        }
-
-        return new BugReport(
-                bugReportName,
-                bugReportDescription,
-                bugReportId,
-                bugReportProjectId,
-                bugReportAuthorId,
-                bugReportAuthorFullName,
-                bugReportCreatedAt,
-                bugReportPriority,
-                bugReportStatus
-        );
-    }
-
     /**
-     * @param projectId
-     * @return
+     * @param projectId id of the project for which events are selected
+     * @return Result with execution code and message if it fails
      */
     @Override
-    public Result<ArrayList<ProjectEntity>> getEventsByProjectId(String projectId) {
-        try (PreparedStatement statement = connection.prepareStatement(Constants.GET_EVENTS_BY_PROJECT_ID)) {
+    public Result<ArrayList<Event>> getEventsByProjectId(String projectId) {
+        String query = String.format(Constants.GET_ENTITY_BY_PROJECT_ID_QUERY, Constants.EVENTS_TABLE_NAME);
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, projectId);
             ResultSet resultSet = statement.executeQuery();
-            ArrayList<ProjectEntity> events = new ArrayList<>();
+            ArrayList<Event> events = new ArrayList<>();
 
             while (resultSet.next()) events.add(extractEvent(resultSet));
 
             logger.debug("getEventsByProjectId[1]: received {}", events);
-            return new Result<>(events, ResultCode.ACCESS);
+            return new Result<>(events, ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("getEventsByProjectId[2]: {}", exception.getMessage());
@@ -785,11 +762,11 @@ public class DataProviderPostgres implements IDataProvider {
     }
 
     /**
-     * @param eventId
-     * @return
+     * @param eventId id of the event
+     * @return Result with execution code and message if it fails
      */
     @Override
-    public Result<ProjectEntity> getEventById(UUID eventId) {
+    public Result<Event> getEventById(UUID eventId) {
         String query = String.format(Constants.GET_ENTITY_BY_ID_QUERY, Constants.EVENTS_TABLE_NAME);
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, eventId);
@@ -798,7 +775,9 @@ public class DataProviderPostgres implements IDataProvider {
             while (resultSet.next()) event = extractEvent(resultSet);
 
             logger.debug("getEventById[1]: received {}", event);
-            return new Result<>(event, ResultCode.ACCESS);
+            if (event == null)
+                return new Result<>(null, ResultCode.NOT_FOUND);
+            return new Result<>(event, ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("getEventById[2]: {}", exception.getMessage());
@@ -806,53 +785,15 @@ public class DataProviderPostgres implements IDataProvider {
         }
     }
 
-    private Event extractEvent(ResultSet resultSet) throws SQLException {
-        UUID eventId = (UUID) resultSet.getObject("id");
-        String eventProjectId = resultSet.getString("project_id");
-        String eventName = resultSet.getString("name");
-        String eventDescription = resultSet.getString("description");
-        UUID authorId = (UUID) resultSet.getObject("author_id");
-        String authorFullName = resultSet.getString("author_full_name");
-        Timestamp startDate = resultSet.getTimestamp("start_date");
-        Timestamp endDate = resultSet.getTimestamp("end_date");
-        Timestamp createdAt = resultSet.getTimestamp("created_at");
-
-        Calendar eventStartDate = null;
-        Calendar eventEndDate = null;
-        java.util.Date eventCreatedAt = null;
-
-        if (startDate != null) {
-            eventStartDate = new GregorianCalendar();
-            eventStartDate.setTimeInMillis(startDate.getTime());
-        }
-        if (endDate != null) {
-            eventEndDate = new GregorianCalendar();
-            eventEndDate.setTimeInMillis(endDate.getTime());
-        }
-        if (createdAt != null)
-            eventCreatedAt = new java.util.Date(createdAt.getTime());
-
-        return new Event(
-                eventName,
-                eventDescription,
-                eventId,
-                eventProjectId,
-                authorId,
-                authorFullName,
-                eventCreatedAt,
-                eventStartDate,
-                eventEndDate
-        );
-
-    }
 
     /**
-     * @param projectId
-     * @return
+     * @param projectId id of the project for which documentation is selected
+     * @return Result with execution code and message if it fails
      */
     @Override
-    public Result<ProjectEntity> getDocumentationByProjectId(String projectId) {
-        try (PreparedStatement statement = connection.prepareStatement(Constants.GET_DOCUMENTATION_BY_PROJECT_ID_QUERY)) {
+    public Result<Documentation> getDocumentationByProjectId(String projectId) {
+        String query = String.format(Constants.GET_ENTITY_BY_PROJECT_ID_QUERY, Constants.DOCUMENTATIONS_TABLE_NAME);
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, projectId);
             ResultSet resultSet = statement.executeQuery();
             Documentation documentation = null;
@@ -866,10 +807,10 @@ public class DataProviderPostgres implements IDataProvider {
                 String[] documentationArticleTitles = (String[]) resultSet.getArray("article_titles").getArray();
                 String[] documentationArticles = (String[]) resultSet.getArray("articles").getArray();
                 Timestamp createdAt = resultSet.getTimestamp("created_at");
-                java.util.Date documentationCreatedAt = null;
+                LocalDateTime documentationCreatedAt = null;
 
                 if (createdAt != null) {
-                    documentationCreatedAt = new java.util.Date(createdAt.getTime());
+                    documentationCreatedAt = createdAt.toLocalDateTime().withNano(0);
                 }
 
                 HashMap<String, String> body = convertDocumentationBodyToHashMap(documentationArticleTitles, documentationArticles);
@@ -887,7 +828,7 @@ public class DataProviderPostgres implements IDataProvider {
             }
 
             logger.debug("getDocumentationByProjectId[1]: received {}", documentation);
-            return new Result<>(documentation, ResultCode.ACCESS);
+            return new Result<>(documentation, ResultCode.SUCCESS);
 
         }
         catch (SQLException | IllegalArgumentException exception) {
@@ -897,8 +838,8 @@ public class DataProviderPostgres implements IDataProvider {
     }
 
     /**
-     * @param projectId
-     * @return
+     * @param projectId id of project for which team is selected
+     * @return Result with ArrayList of Employee, execution code and message if it fails
      */
     @Override
     public Result<ArrayList<Employee>> getProjectTeam(String projectId) {
@@ -909,7 +850,7 @@ public class DataProviderPostgres implements IDataProvider {
                 team.add(extractEmployee(resultSet));
             }
 
-            return new Result<>(team, ResultCode.ACCESS);
+            return new Result<>(team, ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("getProjectTeam[2]: {}", exception.getMessage());
@@ -918,8 +859,8 @@ public class DataProviderPostgres implements IDataProvider {
     }
 
     /**
-     * @param employeeId
-     * @return
+     * @param employeeId id of the employee whose data is being extracted
+     * @return Result with Employee, execution code and message if it fails
      */
     @Override
     public Result<Employee> getEmployeeById(UUID employeeId) {
@@ -930,12 +871,12 @@ public class DataProviderPostgres implements IDataProvider {
             ResultSet resultSet = statement.executeQuery();
             Employee employee = null;
 
-            while (resultSet.next()) {
-                employee = extractEmployee(resultSet);
-            }
+            while (resultSet.next()) employee = extractEmployee(resultSet);
 
             logger.debug("getEmployee[1]: employee received {}", employee);
-            return new Result<>(employee, ResultCode.ACCESS);
+            if (employee == null)
+                return new Result<>(null, ResultCode.NOT_FOUND);
+            return new Result<>(employee, ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("getEmployee[2]: {}", exception.getMessage());
@@ -943,12 +884,202 @@ public class DataProviderPostgres implements IDataProvider {
         }
     }
 
+    /**
+     * @return
+     */
+    @Override
+    public TrackInfo<BugReport, String> trackBugReportStatus(String projectId) {
+        ArrayList<BugReport> bugReports = getBugReportsByProjectId(projectId).getData();
+        if (bugReports != null) {
+            HashMap<BugReport, String> trackInfo = new HashMap<>();
+            for (BugReport bugReport : bugReports)
+                trackInfo.put(bugReport, bugReport.getStatus().name());
+
+            return new TrackInfo<>(trackInfo);
+        }
+        return null;
+    }
+
+    /**
+     * @return
+     */
+    @Override
+    public TrackInfo<Task, String> trackTaskStatus(String projectId) {
+        ArrayList<Task> tasks = getTasksByProjectId(projectId).getData();
+        if (tasks != null) {
+            HashMap<Task, String> trackInfo = new HashMap<>();
+
+            for (Task task : tasks)
+                trackInfo.put(task, task.getStatus().name());
+
+            return new TrackInfo<>(trackInfo);
+
+        }
+        return null;
+    }
+
+    /**
+     * @param projectId
+     * @param checkLaborEfficiency
+     * @return
+     */
+    @Override
+    public TrackInfo<String, ?> monitorProjectReadiness(
+            String projectId, boolean checkLaborEfficiency, boolean trackBugs
+    ) {
+        HashMap<String, ?> mainData = new HashMap<>() {{
+           put(Constants.TRACK_INFO_KEY_PROJECT_READINESS, calculateProjectReadiness(projectId) );
+           put(Constants.TRACK_INFO_KEY_TASK_STATUS, trackTaskStatus(projectId));
+        }};
+
+        TrackInfo<String, ?> commonTrackInfo = new TrackInfo<>(mainData);
+
+        if (checkLaborEfficiency)
+            commonTrackInfo.addData(
+                    Constants.TRACK_INFO_KEY_LABOR_EFFICIENCY,
+                    calculateLaborEfficiency(projectId)
+            );
+        if (trackBugs)
+            commonTrackInfo.addData(
+                    Constants.TRACK_INFO_KEY_BUG_STATUS,
+                    trackBugReportStatus(projectId)
+            );
+
+        return commonTrackInfo;
+    }
+
+    /**
+     * @param projectId id of the project you want to calculate degree of readiness
+     * @return float value of readiness in per cent
+     */
+    @Override
+    public float calculateProjectReadiness(String projectId) {
+        ArrayList<Task> tasks = getTasksByProjectId(projectId).getData();
+        if (!tasks.isEmpty()) {
+            int countOfCompletedTasks = 0;
+            for (Task task : tasks)
+                if (task.getStatus() == WorkStatus.COMPLETED)
+                    countOfCompletedTasks++;
+
+            return ((float) countOfCompletedTasks / tasks.size()) * 100.0f;
+        }
+        return 0;
+    }
+
+    /**
+     * @param projectId
+     * @return
+     */
+    @Override
+    public TrackInfo<Employee, Float> calculateLaborEfficiency(String projectId) {
+        ArrayList<Employee> team = getProjectTeam(projectId).getData();
+        HashMap<Employee, Float> trackInfo = new HashMap<>();
+
+        if (!team.isEmpty()) {
+            for (Employee employee : team) {
+                // получаем список задач сотрудника
+                ArrayList<Task> employeeTasks = getTasksByEmployeeId(employee.getId()).getData();
+                if (!employeeTasks.isEmpty()) {
+                    float averageEffectiveness = checkEmployeeEfficiency(employeeTasks);
+                    trackInfo.put(employee, averageEffectiveness);
+                }
+            }
+
+            return new TrackInfo<>(trackInfo);
+        }
+        return null;
+    }
+
+    /**
+     *
+     * @param tasks
+     * @return
+     */
+    private float checkEmployeeEfficiency(ArrayList<Task> tasks) {
+        // размер списка задач
+        int tasksCount = tasks.size();
+        // сумма эффективности выполнения проектов в процентах. Далее будет вычисляться средняя эффективность
+        int taskEffectivenessSum = 0;
+        float averageEffectiveness = 0;
+
+        for (Task task : tasks) {
+            LocalDateTime taskDeadline = task.getDeadline();
+
+            if (task.getStatus() == WorkStatus.COMPLETED) {
+                // разница в днях между текущей датой и дедлайном
+                long timeDifference = Math.abs(Duration.between(taskDeadline, task.getCompletedAt()).toDays());
+                if (taskDeadline.isBefore(task.getCompletedAt()))
+                    taskEffectivenessSum += (int) (100 - timeDifference);
+                else taskEffectivenessSum += (int) (100 + timeDifference);
+            }
+            else if (task.getStatus() == WorkStatus.IN_PROGRESS) {
+                // если задача просрочена - вычисляем эффективность выполнения путем вычитания из 100%
+                // количества просроченных дней. Иначе - эффективность выполняющейся задачи равна 0
+                if (taskDeadline.isBefore(LocalDateTime.now())) {
+                    // разница в днях между текущей датой и дедлайном
+                    long timeDifference = Duration.between(taskDeadline, LocalDateTime.now()).toDays();
+                    taskEffectivenessSum += (int) (100 - timeDifference);
+                }
+            }
+        }
+        return (taskEffectivenessSum * 1.0f) / tasksCount;
+    }
+
+    /**
+     *
+     * @param resultSet query result with data
+     * @return built Event instance
+     * @throws SQLException exception which throws when something goes wrong with extracting fields
+     */
+    private Event extractEvent(ResultSet resultSet) throws SQLException {
+        UUID eventId = (UUID) resultSet.getObject("id");
+        String eventProjectId = resultSet.getString("project_id");
+        String eventName = resultSet.getString("name");
+        String eventDescription = resultSet.getString("description");
+        UUID authorId = (UUID) resultSet.getObject("author_id");
+        String authorFullName = resultSet.getString("author_full_name");
+        Timestamp startDate = resultSet.getTimestamp("start_date");
+        Timestamp endDate = resultSet.getTimestamp("end_date");
+        Timestamp createdAt = resultSet.getTimestamp("created_at");
+
+        LocalDateTime eventStartDate = null;
+        LocalDateTime eventEndDate = null;
+        LocalDateTime eventCreatedAt = null;
+
+        if (startDate != null) {
+            eventStartDate = startDate.toLocalDateTime();
+        }
+        if (endDate != null) {
+            eventEndDate = endDate.toLocalDateTime();
+        }
+        if (createdAt != null)
+            eventCreatedAt = createdAt.toLocalDateTime().withNano(0);
+
+        return new Event(
+                eventName,
+                eventDescription,
+                eventId,
+                eventProjectId,
+                authorId,
+                authorFullName,
+                eventCreatedAt,
+                eventStartDate,
+                eventEndDate
+        );
+
+    }
+
+    /**
+     *
+     * @param resultSet
+     * @return
+     * @throws SQLException
+     */
     private Employee extractEmployee(ResultSet resultSet) throws SQLException {
-        Calendar employeeBirthday = null;
+        LocalDate employeeBirthday = null;
         Date birthday = resultSet.getDate("birthday");
         if (birthday != null) {
-            employeeBirthday = new GregorianCalendar();
-            employeeBirthday.setTimeInMillis(birthday.getTime());
+            employeeBirthday = birthday.toLocalDate();
         }
 
         String employeeFirstName =  resultSet.getString("first_name");
@@ -971,50 +1102,90 @@ public class DataProviderPostgres implements IDataProvider {
         );
     }
 
-
     /**
+     *
+     * @param resultSet
      * @return
+     * @throws SQLException
      */
-    @Override
-    public TrackInfo<BugReport, WorkStatus> trackBugReportStatus() {
-        return null;
+    private BugReport extractBugReport(ResultSet resultSet) throws SQLException {
+        UUID bugReportId = (UUID) resultSet.getObject("id");
+        String bugReportProjectId = resultSet.getString("project_id");
+        BugStatus bugReportStatus = BugStatus.valueOf(resultSet.getString("status"));
+        Priority bugReportPriority = Priority.valueOf(resultSet.getString("priority"));
+        String bugReportName = resultSet.getString("name");
+        String bugReportDescription = resultSet.getString("description");
+        UUID bugReportAuthorId = (UUID) resultSet.getObject("author_id");
+        String bugReportAuthorFullName = resultSet.getString("author_full_name");
+        Timestamp createdAt = resultSet.getTimestamp("created_at");
+
+        LocalDateTime bugReportCreatedAt = null;
+        if (createdAt != null) {
+            bugReportCreatedAt = createdAt.toLocalDateTime().withNano(0);
+        }
+
+        return new BugReport(
+                bugReportName,
+                bugReportDescription,
+                bugReportId,
+                bugReportProjectId,
+                bugReportAuthorId,
+                bugReportAuthorFullName,
+                bugReportCreatedAt,
+                bugReportPriority,
+                bugReportStatus
+        );
     }
 
     /**
+     *
+     * @param resultSet
      * @return
+     * @throws SQLException
      */
-    @Override
-    public TrackInfo<Task, WorkStatus> trackTaskStatus() {
-        return null;
-    }
+    private Task extractTask(ResultSet resultSet) throws SQLException {
+        UUID taskId = (UUID) resultSet.getObject("id");
+        String taskProjectId = resultSet.getString("project_id");
+        String taskName = resultSet.getString("name");
+        String taskDescription = resultSet.getString("description");
+        UUID taskExecutorId = (UUID) resultSet.getObject("executor_id");
+        String taskExecutorFullName = resultSet.getString("executor_full_name");
+        String taskComment = resultSet.getString("comment");
+        Priority taskPriority = Priority.valueOf(resultSet.getString("priority"));
+        String taskTag = resultSet.getString("tag");
+        WorkStatus taskStatus = WorkStatus.valueOf(resultSet.getString("status"));
 
-    /**
-     * @param projectId
-     * @param checkLaborEfficiency
-     * @return
-     */
-    @Override
-    public TrackInfo<String, TrackInfo<Object, Object>> monitorProjectReadiness(
-            String projectId, boolean checkLaborEfficiency
-    ) {
-        return null;
-    }
+        Timestamp sqlCompletedAt = resultSet.getTimestamp("completed_at");
+        LocalDateTime taskCompletedAt = null;
+        if (sqlCompletedAt != null)
+            taskCompletedAt = sqlCompletedAt.toLocalDateTime().withNano(0);
 
-    /**
-     * @param projectOd
-     * @return
-     */
-    @Override
-    public int calculateProjectReadiness(String projectOd) {
-        return 0;
-    }
+        LocalDateTime taskDeadline = null;
+        Timestamp sqlDeadline = resultSet.getTimestamp("deadline");
+        if (sqlDeadline != null) {
+            taskDeadline = sqlDeadline.toLocalDateTime();
+        }
 
-    /**
-     * @param projectId
-     * @return
-     */
-    @Override
-    public TrackInfo<Employee, Integer> calculateLaborEfficiency(String projectId) {
-        return null;
+        Timestamp date = resultSet.getTimestamp("created_at");
+        LocalDateTime taskCreatedAt = null;
+        if (date != null) {
+            taskCreatedAt = date.toLocalDateTime().withNano(0);
+        }
+
+        return new Task(
+                taskName,
+                taskDescription,
+                taskId,
+                taskExecutorId,
+                taskExecutorFullName,
+                taskProjectId,
+                taskDeadline,
+                taskComment,
+                taskPriority,
+                taskTag,
+                taskStatus,
+                taskCreatedAt,
+                taskCompletedAt
+        );
     }
 }

@@ -3,6 +3,7 @@ package ru.sfedu.projectmanager.model;
 import ru.sfedu.projectmanager.model.enums.BugStatus;
 import ru.sfedu.projectmanager.model.enums.Priority;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
@@ -43,7 +44,7 @@ public class BugReport extends ProjectEntity {
             String projectId,
             UUID employeeId,
             String employeeFullName,
-            Date createdAt,
+            LocalDateTime createdAt,
             Priority priority,
             BugStatus status
     ) {

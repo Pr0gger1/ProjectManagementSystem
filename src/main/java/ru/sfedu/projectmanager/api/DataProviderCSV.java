@@ -59,8 +59,8 @@ public class DataProviderCSV implements IDataProvider {
      * @return
      */
     @Override
-    public TrackInfo<String, TrackInfo<Object, Object>> monitorProjectReadiness(
-            String projectId, boolean checkLaborEfficiency
+    public TrackInfo<String, TrackInfo<?, ?>> monitorProjectReadiness(
+            String projectId, boolean checkLaborEfficiency, boolean trackBugs
     ) {
         return null;
     }
@@ -70,7 +70,7 @@ public class DataProviderCSV implements IDataProvider {
      * @return
      */
     @Override
-    public int calculateProjectReadiness(String projectOd) {
+    public float calculateProjectReadiness(String projectOd) {
         return 0;
     }
 
@@ -79,7 +79,7 @@ public class DataProviderCSV implements IDataProvider {
      * @return
      */
     @Override
-    public TrackInfo<Employee, Integer> calculateLaborEfficiency(String projectId) {
+    public TrackInfo<Employee, Float> calculateLaborEfficiency(String projectId) {
         return null;
     }
 
@@ -87,7 +87,7 @@ public class DataProviderCSV implements IDataProvider {
      * @return
      */
     @Override
-    public TrackInfo<Task, WorkStatus> trackTaskStatus() {
+    public TrackInfo<Task, String> trackTaskStatus(String projectId) {
         return null;
     }
 
@@ -95,7 +95,7 @@ public class DataProviderCSV implements IDataProvider {
      * @return
      */
     @Override
-    public TrackInfo<BugReport, WorkStatus> trackBugReportStatus() {
+    public TrackInfo<BugReport, String> trackBugReportStatus(String projectId) {
         return null;
     }
 
@@ -199,16 +199,24 @@ public class DataProviderCSV implements IDataProvider {
      * @return
      */
     @Override
-    public Result<ArrayList<ProjectEntity>> getTasksByProjectId(String projectId) {
+    public Result<ArrayList<Task>> getTasksByProjectId(String projectId) {
         return null;
     }
+
+    /**
+     *
+     * @param employeeId
+     * @return
+     */
+    @Override
+    public Result<ArrayList<Task>> getTasksByEmployeeId(UUID employeeId) { return null; }
 
     /**
      * @param taskId
      * @return
      */
     @Override
-    public Result<ProjectEntity> getTaskById(UUID taskId) {
+    public Result<Task> getTaskById(UUID taskId) {
         return null;
     }
 
@@ -217,7 +225,7 @@ public class DataProviderCSV implements IDataProvider {
      * @return
      */
     @Override
-    public Result<ArrayList<ProjectEntity>> getBugReportsByProjectId(String projectId) {
+    public Result<ArrayList<BugReport>> getBugReportsByProjectId(String projectId) {
         return null;
     }
 
@@ -226,7 +234,7 @@ public class DataProviderCSV implements IDataProvider {
      * @return
      */
     @Override
-    public Result<ProjectEntity> getBugReportById(UUID bugReportId) {
+    public Result<BugReport> getBugReportById(UUID bugReportId) {
         return null;
     }
 
@@ -235,7 +243,7 @@ public class DataProviderCSV implements IDataProvider {
      * @return
      */
     @Override
-    public Result<ArrayList<ProjectEntity>> getEventsByProjectId(String projectId) {
+    public Result<ArrayList<Event>> getEventsByProjectId(String projectId) {
         return null;
     }
 
@@ -244,7 +252,7 @@ public class DataProviderCSV implements IDataProvider {
      * @return
      */
     @Override
-    public Result<ProjectEntity> getEventById(UUID eventId) {
+    public Result<Event> getEventById(UUID eventId) {
         return null;
     }
 
@@ -253,7 +261,7 @@ public class DataProviderCSV implements IDataProvider {
      * @return
      */
     @Override
-    public Result<ProjectEntity> getDocumentationByProjectId(String projectId) {
+    public Result<Documentation> getDocumentationByProjectId(String projectId) {
         return null;
     }
 

@@ -9,6 +9,8 @@ import ru.sfedu.projectmanager.Constants;
 import ru.sfedu.projectmanager.model.enums.ActionStatus;
 import ru.sfedu.projectmanager.model.enums.ChangeType;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
@@ -18,7 +20,7 @@ public class HistoryRecord<T> {
     private final UUID id;
     private String className;
     private String methodName;
-    private Date createdAt;
+    private LocalDateTime createdAt;
     private String actor = Constants.MONGO_HISTORY_ACTOR;
     private ActionStatus status;
     private ChangeType changeType;
@@ -35,7 +37,7 @@ public class HistoryRecord<T> {
         this.className = object.getClass().getSimpleName();
         this.changeType = changeType;
         this.object = object;
-        this.createdAt = new Date();
+        this.createdAt = LocalDateTime.now();
         this.status = status;
         this.methodName = methodName;
     }
@@ -66,11 +68,11 @@ public class HistoryRecord<T> {
         this.methodName = methodName;
     }
 
-    public Date getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 

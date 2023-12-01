@@ -3,28 +3,37 @@ package ru.sfedu.projectmanager.model;
 import java.util.HashMap;
 import java.util.Objects;
 
-public class TrackInfo<K, V> {
-    private HashMap<K, V> data = new HashMap<>();
+public class TrackInfo<E, S> {
+    private HashMap<E, S> data = new HashMap<>();
 
-    TrackInfo(K key, V value) {
+    TrackInfo(E key, S value) {
         data.put(key, value);
     }
+//    public TrackInfo(String key, Object object) {
+//        this.data.put((E)key, (S)object);
+//    }
 
-    TrackInfo(HashMap<K, V> data) {
+    public TrackInfo(HashMap<E, S> data) {
         this.data = data;
     }
 
-    TrackInfo() {}
+    public TrackInfo() {
 
-    public HashMap<K, V> getData() {
+    }
+
+    public HashMap<E, S> getData() {
         return data;
     }
 
-    public void addData(K key, V value) {
+    public void addData(E key, S value) {
         data.put(key, value);
     }
+    public void addData(String key, Object object) {
+        this.data.put((E)key, (S)object);
+    }
 
-    public void setData(HashMap<K, V> data) {
+
+    public void setData(HashMap<E, S> data) {
         this.data = data;
     }
 
@@ -39,5 +48,12 @@ public class TrackInfo<K, V> {
     @Override
     public int hashCode() {
         return Objects.hash(data);
+    }
+
+    @Override
+    public String toString() {
+        return "TrackInfo{" +
+                "data=" + data +
+                '}';
     }
 }

@@ -1,6 +1,6 @@
 package ru.sfedu.projectmanager.model;
 
-import java.util.Calendar;
+import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -9,7 +9,7 @@ public class Employee {
     private final String lastName;
     private final String patronymic;
     private final String fullName;
-    private final Calendar birthday;
+    private final LocalDate birthday;
     private String email;
     private String phoneNumber;
     private UUID id;
@@ -20,7 +20,7 @@ public class Employee {
             String firstName,
             String lastName,
             String patronymic,
-            Calendar birthday,
+            LocalDate birthday,
             String position
     ) {
         this.id = UUID.randomUUID();
@@ -44,7 +44,7 @@ public class Employee {
             String firstName,
             String lastName,
             String patronymic,
-            Calendar birthday,
+            LocalDate birthday,
             String position
     ) {
         this(firstName, lastName, patronymic, birthday, position);
@@ -55,7 +55,7 @@ public class Employee {
             String firstName,
             String lastName,
             String patronymic,
-            Calendar birthday,
+            LocalDate birthday,
             String email,
             String phoneNumber,
             UUID id,
@@ -80,7 +80,7 @@ public class Employee {
         );
     }
 
-    public Employee(String firstName, String lastName, Calendar birthday, String position) {
+    public Employee(String firstName, String lastName, LocalDate birthday, String position) {
         this.id = UUID.randomUUID();
         this.firstName = firstName;
         this.lastName = lastName;
@@ -118,7 +118,7 @@ public class Employee {
         return patronymic;
     }
 
-    public Calendar getBirthday() {
+    public LocalDate getBirthday() {
         return birthday;
     }
 

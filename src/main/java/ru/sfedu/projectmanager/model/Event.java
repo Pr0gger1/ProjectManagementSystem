@@ -1,13 +1,12 @@
 package ru.sfedu.projectmanager.model;
 
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
 public class Event extends ProjectEntity {
-    private Calendar startDate;
-    private Calendar endDate;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
 
     public Event(
             String name,
@@ -15,8 +14,8 @@ public class Event extends ProjectEntity {
             UUID employeeId,
             String employeeFullName,
             String projectId,
-            Calendar startDate,
-            Calendar endDate
+            LocalDateTime startDate,
+            LocalDateTime endDate
     ) {
         super(name, description, employeeId, employeeFullName, projectId);
         this.startDate = startDate;
@@ -30,28 +29,28 @@ public class Event extends ProjectEntity {
             String projectId,
             UUID employeeId,
             String employeeFullName,
-            Date createdAt,
-            Calendar startDate,
-            Calendar endDate
+            LocalDateTime createdAt,
+            LocalDateTime startDate,
+            LocalDateTime endDate
     ) {
         super(name, description, id, projectId, employeeId, employeeFullName, createdAt);
         this.startDate = startDate;
         this.endDate = endDate;
     }
 
-    public Calendar getStartDate() {
+    public LocalDateTime getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(Calendar startDate) {
+    public void setStartDate(LocalDateTime startDate) {
         this.startDate = startDate;
     }
 
-    public Calendar getEndDate() {
+    public LocalDateTime getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(Calendar endDate) {
+    public void setEndDate(LocalDateTime endDate) {
         this.endDate = endDate;
     }
 

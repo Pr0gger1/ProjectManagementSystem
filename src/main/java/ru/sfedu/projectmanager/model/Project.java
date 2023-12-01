@@ -2,12 +2,12 @@ package ru.sfedu.projectmanager.model;
 
 import ru.sfedu.projectmanager.model.enums.WorkStatus;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Objects;
 
 public class Project {
-    private Calendar deadline;
+    private LocalDateTime deadline;
     private final String name;
     private final String description;
     private final String id;
@@ -30,7 +30,7 @@ public class Project {
             String name,
             String description,
             String id,
-            Calendar deadline,
+            LocalDateTime deadline,
             WorkStatus status,
             Employee manager,
             ArrayList<Employee> team,
@@ -59,7 +59,7 @@ public class Project {
         this.manager = manager;
     }
 
-    public Calendar getDeadline() {
+    public LocalDateTime getDeadline() {
         return deadline;
     }
 
@@ -75,7 +75,7 @@ public class Project {
         return bugReports;
     }
 
-    public void setDeadline(Calendar deadline) {
+    public void setDeadline(LocalDateTime deadline) {
         this.deadline = deadline;
     }
 

@@ -13,13 +13,13 @@ public interface IDataProvider {
     Result<?> processNewDocumentation(Documentation documentation);
     Result<?> processNewEvent(Event event);
 
-    TrackInfo<String, TrackInfo<Object, Object>> monitorProjectReadiness(
-        String projectId, boolean checkLaborEfficiency
+    TrackInfo<String, ?> monitorProjectReadiness(
+        String projectId, boolean checkLaborEfficiency, boolean trackBugs
     );
-    int calculateProjectReadiness(String projectOd);
-    TrackInfo<Employee, Integer> calculateLaborEfficiency(String projectId);
-    TrackInfo<Task, WorkStatus> trackTaskStatus();
-    TrackInfo<BugReport, WorkStatus> trackBugReportStatus();
+    float calculateProjectReadiness(String projectId);
+    TrackInfo<Employee, Float> calculateLaborEfficiency(String projectId);
+    TrackInfo<Task, String> trackTaskStatus(String projectId);
+    TrackInfo<BugReport, String> trackBugReportStatus(String projectId);
 
     Result<?> bindEmployeeToProject(UUID employeeId, String projectId);
     Result<?> bindProjectManager(UUID managerId, String projectId);
@@ -34,13 +34,14 @@ public interface IDataProvider {
 
 
     Result<Project> getProjectById(String id);
-    Result<ArrayList<ProjectEntity>> getTasksByProjectId(String projectId);
-    Result<ProjectEntity> getTaskById(UUID taskId);
-    Result<ArrayList<ProjectEntity>> getBugReportsByProjectId(String projectId);
-    Result<ProjectEntity> getBugReportById(UUID bugReportId);
-    Result<ArrayList<ProjectEntity>> getEventsByProjectId(String projectId);
-    Result<ProjectEntity> getEventById(UUID eventId);
-    Result<ProjectEntity> getDocumentationByProjectId(String projectId);
+    Result<ArrayList<Task>> getTasksByProjectId(String projectId);
+    Result<ArrayList<Task>> getTasksByEmployeeId(UUID employeeId);
+    Result<Task> getTaskById(UUID taskId);
+    Result<ArrayList<BugReport>> getBugReportsByProjectId(String projectId);
+    Result<BugReport> getBugReportById(UUID bugReportId);
+    Result<ArrayList<Event>> getEventsByProjectId(String projectId);
+    Result<Event> getEventById(UUID eventId);
+    Result<Documentation> getDocumentationByProjectId(String projectId);
     Result<ArrayList<Employee>> getProjectTeam(String projectId);
     Result<Employee> getEmployeeById(UUID employeeId);
 }

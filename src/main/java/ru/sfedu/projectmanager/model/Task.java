@@ -3,17 +3,18 @@ package ru.sfedu.projectmanager.model;
 import ru.sfedu.projectmanager.model.enums.WorkStatus;
 import ru.sfedu.projectmanager.model.enums.Priority;
 
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
 public class Task extends ProjectEntity {
-    private Calendar deadline;
+    private LocalDateTime deadline;
     private String comment;
     private Priority priority = Priority.LOW;
+    // TODO: преобразовать поле tag в список строк
     private String tag;
     private WorkStatus status = WorkStatus.IN_PROGRESS;
+    private LocalDateTime completedAt = null;
 
     public Task(
             String name,
@@ -21,12 +22,12 @@ public class Task extends ProjectEntity {
             UUID employeeId,
             String employeeFullName,
             String projectId,
-            Calendar deadline,
+            LocalDateTime deadline,
             String comment,
             Priority priority,
             String tag,
             WorkStatus status,
-            Date createdAt
+            LocalDateTime createdAt
     ) {
         super(name, description, projectId, employeeId, employeeFullName, createdAt);
         this.deadline = deadline;
@@ -36,6 +37,7 @@ public class Task extends ProjectEntity {
         this.status = status;
     }
 
+    // full constructor
     public Task(
             String name,
             String description,
@@ -43,12 +45,13 @@ public class Task extends ProjectEntity {
             UUID employeeId,
             String employeeFullName,
             String projectId,
-            Calendar deadline,
+            LocalDateTime deadline,
             String comment,
             Priority priority,
             String tag,
             WorkStatus status,
-            Date createdAt
+            LocalDateTime createdAt,
+            LocalDateTime completedAt
     ) {
         super(name, description, id, projectId, employeeId, employeeFullName, createdAt);
         this.deadline = deadline;
@@ -56,6 +59,7 @@ public class Task extends ProjectEntity {
         this.priority = priority;
         this.tag = tag;
         this.status = status;
+        this.completedAt = completedAt;
     }
 
     public Task(
@@ -88,6 +92,18 @@ public class Task extends ProjectEntity {
         this.priority = priority;
     }
 
+    public void completeTask() {
+        this.completedAt = LocalDateTime.now().withNano(0);
+    }
+
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
+    }
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+
     public void setTag(String tag) {
         this.tag = tag;
     }
@@ -96,11 +112,11 @@ public class Task extends ProjectEntity {
         return tag;
     }
 
-    public Calendar getDeadline() {
+    public LocalDateTime getDeadline() {
         return deadline;
     }
 
-    public void setDeadline(Calendar deadline) {
+    public void setDeadline(LocalDateTime deadline) {
         this.deadline = deadline;
     }
 
@@ -144,19 +160,19 @@ public class Task extends ProjectEntity {
 
     @Override
     public String toString() {
-        return "\nTask{" +
-                "\ndeadline=" + deadline +
-                ",\ncomment='" + comment + '\'' +
-                ",\npriority=" + priority +
-                ",\ntag='" + tag + '\'' +
-                ",\nstatus=" + status +
-                ",\nid=" + id +
-                ",\nname='" + name + '\'' +
-                ",\ndescription='" + description + '\'' +
-                ",\nprojectId='" + projectId + '\'' +
-                ",\nemployeeId=" + employeeId +
-                ",\nemployeeFullName='" + employeeFullName + '\'' +
-                ",\ncreatedAt=" + createdAt +
+        return "Task{" +
+                "deadline=" + deadline +
+                ",comment='" + comment + '\'' +
+                ",priority=" + priority +
+                ",tag='" + tag + '\'' +
+                ",status=" + status +
+                ",id=" + id +
+                ",name='" + name + '\'' +
+                ",description='" + description + '\'' +
+                ",projectId='" + projectId + '\'' +
+                ",employeeId=" + employeeId +
+                ",employeeFullName='" + employeeFullName + '\'' +
+                ",createdAt=" + createdAt +
                 '}';
     }
 }

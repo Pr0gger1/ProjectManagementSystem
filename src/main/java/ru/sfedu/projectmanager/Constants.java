@@ -81,7 +81,8 @@ public class Constants {
             tag VARCHAR(128),
             status VARCHAR(16) DEFAULT 'IN_PROGRESS',
             deadline TIMESTAMPTZ,
-            created_at TIMESTAMPTZ DEFAULT NOW()
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            completed_at TIMESTAMPTZ DEFAULT NOW()
         );
     """, TASKS_TABLE_NAME);
 
@@ -153,8 +154,8 @@ public class Constants {
     """, EMPLOYEES_TABLE_NAME);
 
     public static final String CREATE_TASK_QUERY = String.format("""
-        INSERT INTO %s (id, project_id, name, description, executor_id, executor_full_name, comment, priority, tag, status, deadline, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        INSERT INTO %s (id, project_id, name, description, executor_id, executor_full_name, comment, priority, tag, status, deadline, created_at, completed_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """, TASKS_TABLE_NAME);
 
     public static final String CREATE_BUG_REPORT_QUERY = String.format("""
@@ -168,7 +169,7 @@ public class Constants {
     """, EVENTS_TABLE_NAME);
 
     public static final String CREATE_DOCUMENTATION_QUERY = String.format("""
-        INSERT INTO %s (id, name, description, project_id, author_id, authors_full_name, article_titles, articles, created_at)
+        INSERT INTO %s (id, name, description, project_id, author_id, author_full_name, article_titles, articles, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
     """, DOCUMENTATIONS_TABLE_NAME);
 
@@ -197,27 +198,19 @@ public class Constants {
         SELECT * FROM %s WHERE id = ?
     """;
 
-    public static final String GET_TASKS_QUERY = String.format("""
+    public static final String GET_ENTITY_BY_PROJECT_ID_QUERY = """
         SELECT * FROM %s WHERE project_id = ?
-    """, TASKS_TABLE_NAME);
-
-    public static final String GET_TASK_BY_ID_QUERY = String.format("""
-        SELECT * FROM %s WHERE id = ?
-    """, TASKS_TABLE_NAME);
-
+    """;
     public static final String GET_PROJECT_TEAM_QUERY = String.format("""
         SELECT p.* FROM %s ep JOIN %s p ON ep.employee_id = p.id;
     """, EMPLOYEE_PROJECT_TABLE_NAME, EMPLOYEES_TABLE_NAME);
 
-    public static final String GET_BUG_REPORTS_BY_PROJECT_ID_QUERY = String.format("""
-        SELECT * FROM %s WHERE project_id = ?
-    """, BUG_REPORTS_TABLE_NAME);
+    public static final String GET_TASKS_BY_EMPLOYEE_ID_QUERY = String.format("""
+        SELECT * FROM %s WHERE executor_id = ?
+    """, TASKS_TABLE_NAME);
 
-    public static final String GET_DOCUMENTATION_BY_PROJECT_ID_QUERY = String.format("""
-        SELECT * FROM %s WHERE project_id = ?
-    """, DOCUMENTATIONS_TABLE_NAME);
-
-    public static final String GET_EVENTS_BY_PROJECT_ID = String.format("""
-        SELECT * FROM %s WHERE project_id = ?
-    """, EVENTS_TABLE_NAME);
+    public static final String TRACK_INFO_KEY_LABOR_EFFICIENCY = "labor_efficiency";
+    public static final String TRACK_INFO_KEY_PROJECT_READINESS = "project_readiness";
+    public static final String TRACK_INFO_KEY_TASK_STATUS = "task_status";
+    public static final String TRACK_INFO_KEY_BUG_STATUS = "bug_status";
 }
