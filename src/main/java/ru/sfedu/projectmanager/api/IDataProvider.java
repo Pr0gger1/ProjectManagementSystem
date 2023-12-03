@@ -1,7 +1,6 @@
 package ru.sfedu.projectmanager.api;
 
 import ru.sfedu.projectmanager.model.*;
-import ru.sfedu.projectmanager.model.enums.WorkStatus;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -13,7 +12,7 @@ public interface IDataProvider {
     Result<?> processNewDocumentation(Documentation documentation);
     Result<?> processNewEvent(Event event);
 
-    TrackInfo<String, ?> monitorProjectReadiness(
+    TrackInfo<String, ?> monitorProjectCharacteristics(
         String projectId, boolean checkLaborEfficiency, boolean trackBugs
     );
     float calculateProjectReadiness(String projectId);
@@ -41,7 +40,8 @@ public interface IDataProvider {
     Result<BugReport> getBugReportById(UUID bugReportId);
     Result<ArrayList<Event>> getEventsByProjectId(String projectId);
     Result<Event> getEventById(UUID eventId);
-    Result<Documentation> getDocumentationByProjectId(String projectId);
+    Result<ArrayList<Documentation>> getDocumentationsByProjectId(String projectId);
+    Result<Documentation> getDocumentationById(UUID docId);
     Result<ArrayList<Employee>> getProjectTeam(String projectId);
     Result<Employee> getEmployeeById(UUID employeeId);
 }

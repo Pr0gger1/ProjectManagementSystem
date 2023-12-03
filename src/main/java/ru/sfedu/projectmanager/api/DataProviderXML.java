@@ -1,13 +1,16 @@
 package ru.sfedu.projectmanager.api;
 
 import ru.sfedu.projectmanager.model.*;
-import ru.sfedu.projectmanager.model.enums.BugStatus;
-import ru.sfedu.projectmanager.model.enums.WorkStatus;
 
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class DataProviderXML implements IDataProvider {
+public class DataProviderXML extends DataProvider {
+
+
+    public DataProviderXML() {
+
+    }
 
     /**
      * @param project
@@ -60,7 +63,7 @@ public class DataProviderXML implements IDataProvider {
      * @return
      */
     @Override
-    public TrackInfo<String, ?> monitorProjectReadiness(
+    public TrackInfo<String, ?> monitorProjectCharacteristics(
             String projectId, boolean checkLaborEfficiency, boolean trackBugs
     ) {
         return null;
@@ -257,12 +260,17 @@ public class DataProviderXML implements IDataProvider {
         return null;
     }
 
+    @Override
+    public Result<Documentation> getDocumentationById(UUID docId) {
+        return null;
+    }
+
     /**
      * @param projectId
      * @return
      */
     @Override
-    public Result<Documentation> getDocumentationByProjectId(String projectId) {
+    public Result<ArrayList<Documentation>> getDocumentationsByProjectId(String projectId) {
         return null;
     }
 

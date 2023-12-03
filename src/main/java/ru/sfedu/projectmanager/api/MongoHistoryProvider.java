@@ -49,7 +49,7 @@ public class MongoHistoryProvider {
      * @return MongoDB document
      */
     public static MongoCollection<Document> getCollection(String dbName, String collectionName) throws IllegalArgumentException, NullPointerException {
-        String mongoUrl = ConfigPropertiesUtil.getEnvironmentVariable("MONGO_URL");
+        String mongoUrl = ConfigPropertiesUtil.getEnvironmentVariable(Constants.MONGO_URL);
         logger.debug("getCollection[1]: mongo URL: {}", mongoUrl);
 
         MongoClient mongoClient = MongoClients.create(mongoUrl);

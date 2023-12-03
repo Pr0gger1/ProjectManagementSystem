@@ -15,7 +15,7 @@ public class Project {
     private Employee manager;
     private ArrayList<Employee> team = new ArrayList<>();
     private ArrayList<ProjectEntity> tasks = new ArrayList<>();
-    private ProjectEntity documentation;
+    private ArrayList<ProjectEntity> documentation = new ArrayList<>();
     private ArrayList<ProjectEntity> bugReports = new ArrayList<>();
     private ArrayList<ProjectEntity> events = new ArrayList<>();
 
@@ -37,7 +37,7 @@ public class Project {
             ArrayList<ProjectEntity> tasks,
             ArrayList<ProjectEntity> bugReports,
             ArrayList<ProjectEntity> events,
-            ProjectEntity documentation
+            ArrayList<ProjectEntity> documentation
     ) {
         this.deadline = deadline;
         this.name = name;
@@ -79,12 +79,12 @@ public class Project {
         this.deadline = deadline;
     }
 
-    public ProjectEntity getDocumentation() {
+    public ArrayList<ProjectEntity> getDocumentation() {
         return documentation;
     }
 
-    public void setDocumentation(ProjectEntity documentation) {
-        if (documentation instanceof Documentation)
+    public void setDocumentation(ArrayList<ProjectEntity> documentation) {
+        if (documentation.stream().allMatch(entity -> entity instanceof Documentation))
             this.documentation = documentation;
     }
 

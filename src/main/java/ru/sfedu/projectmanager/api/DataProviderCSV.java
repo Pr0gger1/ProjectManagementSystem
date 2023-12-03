@@ -59,7 +59,7 @@ public class DataProviderCSV implements IDataProvider {
      * @return
      */
     @Override
-    public TrackInfo<String, TrackInfo<?, ?>> monitorProjectReadiness(
+    public TrackInfo<String, TrackInfo<?, ?>> monitorProjectCharacteristics(
             String projectId, boolean checkLaborEfficiency, boolean trackBugs
     ) {
         return null;
@@ -257,11 +257,14 @@ public class DataProviderCSV implements IDataProvider {
     }
 
     /**
-     * @param projectId
+     * @param docId
      * @return
      */
     @Override
-    public Result<Documentation> getDocumentationByProjectId(String projectId) {
+    public Result<Documentation> getDocumentationById(UUID docId) { return null; }
+
+    @Override
+    public Result<ArrayList<Documentation>> getDocumentationsByProjectId(String projectId) {
         return null;
     }
 

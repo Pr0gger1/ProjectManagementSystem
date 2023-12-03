@@ -1,10 +1,28 @@
 package ru.sfedu.projectmanager;
 
+import ru.sfedu.projectmanager.utils.Pair;
+
 public class Constants {
     // property file formats
     public static final String DEFAULT_CONFIG_PATH_PROPERTIES = "env.properties";
     public static final String DEFAULT_CONFIG_PATH_XML = "env.xml";
     public static final String DEFAULT_CONFIG_PATH_YML = "env.yml";
+
+
+    // file database extensions
+    public static final String FILE_XML_EXTENSION = ".xml";
+    public static final String FILE_CSV_EXTENSION = ".csv";
+    public static final String CSV_DEFAULT_SEPARATOR = ";";
+
+
+    // xml and csv entity filenames
+    public static final String PROJECTS_FILE_PATH = "projects";
+    public static final String EMPLOYEES_FILE_PATH = "employees";
+    public static final String TASKS_FILE_PATH = "tasks";
+    public static final String BUG_REPORTS_FILE_PATH = "bug_reports";
+    public static final String EVENTS_FILE_PATH = "events";
+    public static final String DOCUMENTATIONS_FILE_PATH = "documentations";
+    public static final String EMPLOYEE_PROJECT_FILE_PATH = "employee_project";
 
 
     // mongo history collection item name constants
@@ -26,14 +44,15 @@ public class Constants {
     public static final String DATASOURCE_PATH_XML = "data/xml/";
     public static final String DATASOURCE_PATH_CSV = "data/csv/";
 
-    // postgres database properties variables
+    // properties variables
+    public static final String MONGO_URL = "MONGO_URL";
     public static final String POSTGRES_URL = "POSTGRES_URL";
     public static final String POSTGRES_USER = "POSTGRES_USER";
     public static final String POSTGRES_PASSWORD = "POSTGRES_PASSWORD";
     public static final String POSTGRES_PROD_DB_NAME = "POSTGRES_PROD_DB_NAME";
     public static final String POSTGRES_TEST_DB_NAME = "POSTGRES_TEST_DB_NAME";
-
     public static final String ENVIRONMENT = "ENVIRONMENT";
+    public static final String DATABASE_TYPE = "DATABASE_TYPE";
 
 
     // postgres table names

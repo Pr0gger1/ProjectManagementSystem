@@ -2,6 +2,8 @@ package ru.sfedu.projectmanager.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bson.Document;
@@ -9,8 +11,6 @@ import ru.sfedu.projectmanager.Constants;
 import ru.sfedu.projectmanager.model.enums.ActionStatus;
 import ru.sfedu.projectmanager.model.enums.ChangeType;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
@@ -20,11 +20,15 @@ public class HistoryRecord<T> {
     private final UUID id;
     private String className;
     private String methodName;
-    private LocalDateTime createdAt;
+    private Date createdAt;
     private String actor = Constants.MONGO_HISTORY_ACTOR;
     private ActionStatus status;
     private ChangeType changeType;
     private Object object;
+
+    static {
+        initJavaTimeModule();
+    }
 
 
     public HistoryRecord(
@@ -37,11 +41,16 @@ public class HistoryRecord<T> {
         this.className = object.getClass().getSimpleName();
         this.changeType = changeType;
         this.object = object;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = new Date();
         this.status = status;
         this.methodName = methodName;
     }
 
+    private static void initJavaTimeModule() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule())
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    }
 
     public String getClassName() {
         return className;
@@ -68,11 +77,11 @@ public class HistoryRecord<T> {
         this.methodName = methodName;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Date getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -108,11 +117,12 @@ public class HistoryRecord<T> {
         try {
             Document document = new Document();
             ObjectMapper objMapper = new ObjectMapper();
+            objMapper.registerModule(new JavaTimeModule());
 
             document.put(Constants.MONGO_HISTORY_ID, id.toString());
             document.put(Constants.MONGO_HISTORY_CLASSNAME, className);
             document.put(Constants.MONGO_HISTORY_METHOD_NAME, methodName);
-            document.put(Constants.MONGO_HISTORY_CREATED_AT, createdAt);
+            document.put(Constants.MONGO_HISTORY_CREATED_AT, createdAt.toString());
             document.put(Constants.MONGO_HISTORY_ACTOR, Constants.MONGO_HISTORY_ACTOR);
             document.put(Constants.MONGO_HISTORY_STATUS, status.toString());
             document.put(Constants.MONGO_HISTORY_CHANGE_TYPE, changeType.toString());
