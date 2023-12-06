@@ -1,16 +1,42 @@
 package ru.sfedu.projectmanager.api;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanager.model.*;
+import ru.sfedu.projectmanager.model.enums.ActionStatus;
+import ru.sfedu.projectmanager.model.enums.ChangeType;
+import ru.sfedu.projectmanager.utils.ResultCode;
 
 import java.util.ArrayList;
 import java.util.UUID;
 
 public abstract class DataProvider {
+    private final Logger logger = LogManager.getLogger(DataProvider.class);
     public abstract Result<?> processNewProject(Project project);
     public abstract Result<?> processNewTask(Task task);
     public abstract Result<?> processNewBugReport(BugReport bugReport);
     public abstract Result<?> processNewDocumentation(Documentation documentation);
     public abstract Result<?> processNewEvent(Event event);
+
+    /**
+     *
+     * @param entity
+     * @param methodName
+     * @param queryResult
+     * @param changeType
+     */
+    protected final void logEntity(Object entity, String methodName, ResultCode queryResult, ChangeType changeType) {
+        ActionStatus status = queryResult == ResultCode.SUCCESS ? ActionStatus.SUCCESS : ActionStatus.FAULT;
+        HistoryRecord<Object> historyRecord =  new HistoryRecord<>(
+                entity,
+                methodName,
+                status,
+                changeType
+        );
+
+        logger.debug("logEntity[1]: object {entity} saved to history");
+        MongoHistoryProvider.save(historyRecord);
+    }
 
     public abstract TrackInfo<String, ?> monitorProjectCharacteristics(
             String projectId, boolean checkLaborEfficiency, boolean trackBugs

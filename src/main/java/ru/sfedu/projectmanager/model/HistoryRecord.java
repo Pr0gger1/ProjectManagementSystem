@@ -26,10 +26,11 @@ public class HistoryRecord<T> {
     private ChangeType changeType;
     private Object object;
 
+    private static final ObjectMapper mapper = new ObjectMapper();
+
     static {
         initJavaTimeModule();
     }
-
 
     public HistoryRecord(
             T object,
@@ -47,7 +48,6 @@ public class HistoryRecord<T> {
     }
 
     private static void initJavaTimeModule() {
-        ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule())
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
@@ -116,9 +116,6 @@ public class HistoryRecord<T> {
     public Document convertToDocument() {
         try {
             Document document = new Document();
-            ObjectMapper objMapper = new ObjectMapper();
-            objMapper.registerModule(new JavaTimeModule());
-
             document.put(Constants.MONGO_HISTORY_ID, id.toString());
             document.put(Constants.MONGO_HISTORY_CLASSNAME, className);
             document.put(Constants.MONGO_HISTORY_METHOD_NAME, methodName);
@@ -126,12 +123,12 @@ public class HistoryRecord<T> {
             document.put(Constants.MONGO_HISTORY_ACTOR, Constants.MONGO_HISTORY_ACTOR);
             document.put(Constants.MONGO_HISTORY_STATUS, status.toString());
             document.put(Constants.MONGO_HISTORY_CHANGE_TYPE, changeType.toString());
-            document.put(Constants.MONGO_HISTORY_OBJECT, objMapper.writeValueAsString(objMapper));
+            document.put(Constants.MONGO_HISTORY_OBJECT, mapper.writeValueAsString(object));
 
             return document;
         }
         catch (JsonProcessingException error) {
-            logger.error(error.getMessage());
+            logger.error("convertToDocument[1]: {}", error.getMessage());
             return null;
         }
     }
@@ -155,11 +152,11 @@ public class HistoryRecord<T> {
                     createdAt.toString(),
                     status.toString(), actor,
                     changeType.toString(),
-                    new ObjectMapper().writeValueAsString(object)
+                    mapper.writeValueAsString(object)
             );
         }
         catch (JsonProcessingException error) {
-            logger.error(error.getMessage());
+            logger.error("toString[1]: {}",error.getMessage());
             return String.format(
                     """
                     id: %s,
@@ -185,7 +182,13 @@ public class HistoryRecord<T> {
         if (this == object1) return true;
         if (object1 == null || getClass() != object1.getClass()) return false;
         HistoryRecord<?> record = (HistoryRecord<?>) object1;
-        return Objects.equals(id, record.id) && Objects.equals(className, record.className) && Objects.equals(methodName, record.methodName) && Objects.equals(createdAt, record.createdAt) && Objects.equals(actor, record.actor) && status == record.status && changeType == record.changeType && Objects.equals(object, record.object);
+        return Objects.equals(id, record.id)
+                && Objects.equals(className, record.className)
+                && Objects.equals(methodName, record.methodName)
+                && Objects.equals(createdAt, record.createdAt)
+                && Objects.equals(actor, record.actor)
+                && status == record.status && changeType == record.changeType
+                && Objects.equals(object, record.object);
     }
 
     @Override

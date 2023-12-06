@@ -4,6 +4,7 @@ import ru.sfedu.projectmanager.model.enums.WorkStatus;
 import ru.sfedu.projectmanager.model.enums.Priority;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -11,8 +12,7 @@ public class Task extends ProjectEntity {
     private LocalDateTime deadline;
     private String comment;
     private Priority priority = Priority.LOW;
-    // TODO: преобразовать поле tag в список строк
-    private String tag;
+    private ArrayList<String> tags = new ArrayList<>();
     private WorkStatus status = WorkStatus.IN_PROGRESS;
     private LocalDateTime completedAt = null;
 
@@ -25,7 +25,7 @@ public class Task extends ProjectEntity {
             LocalDateTime deadline,
             String comment,
             Priority priority,
-            String tag,
+            ArrayList<String> tags,
             WorkStatus status,
             LocalDateTime createdAt
     ) {
@@ -33,7 +33,7 @@ public class Task extends ProjectEntity {
         this.deadline = deadline;
         this.comment = comment;
         this.priority = priority;
-        this.tag = tag;
+        this.tags = tags;
         this.status = status;
     }
 
@@ -48,7 +48,7 @@ public class Task extends ProjectEntity {
             LocalDateTime deadline,
             String comment,
             Priority priority,
-            String tag,
+            ArrayList<String> tags,
             WorkStatus status,
             LocalDateTime createdAt,
             LocalDateTime completedAt
@@ -57,7 +57,7 @@ public class Task extends ProjectEntity {
         this.deadline = deadline;
         this.comment = comment;
         this.priority = priority;
-        this.tag = tag;
+        this.tags = tags;
         this.status = status;
         this.completedAt = completedAt;
     }
@@ -93,6 +93,7 @@ public class Task extends ProjectEntity {
     }
 
     public void completeTask() {
+        this.status = WorkStatus.COMPLETED;
         this.completedAt = LocalDateTime.now().withNano(0);
     }
 
@@ -104,12 +105,12 @@ public class Task extends ProjectEntity {
         return completedAt;
     }
 
-    public void setTag(String tag) {
-        this.tag = tag;
+    public void setTags(ArrayList<String> tags) {
+        this.tags = tags;
     }
 
-    public String getTag() {
-        return tag;
+    public ArrayList<String> getTags() {
+        return tags;
     }
 
     public LocalDateTime getDeadline() {
@@ -150,12 +151,12 @@ public class Task extends ProjectEntity {
         if (object == null || getClass() != object.getClass()) return false;
         if (!super.equals(object)) return false;
         Task task = (Task) object;
-        return Objects.equals(deadline, task.deadline) && Objects.equals(comment, task.comment) && priority == task.priority && Objects.equals(tag, task.tag) && status == task.status;
+        return Objects.equals(deadline, task.deadline) && Objects.equals(comment, task.comment) && priority == task.priority && Objects.equals(tags, task.tags) && status == task.status;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), deadline, comment, priority, tag, status);
+        return Objects.hash(super.hashCode(), deadline, comment, priority, tags, status);
     }
 
     @Override
@@ -164,7 +165,7 @@ public class Task extends ProjectEntity {
                 "deadline=" + deadline +
                 ",comment='" + comment + '\'' +
                 ",priority=" + priority +
-                ",tag='" + tag + '\'' +
+                ",tag='" + tags + '\'' +
                 ",status=" + status +
                 ",id=" + id +
                 ",name='" + name + '\'' +

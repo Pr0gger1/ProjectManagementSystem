@@ -21,7 +21,7 @@ public class MongoHistoryProvider {
      */
     public static <T> void save(HistoryRecord<T> record) {
         String dbName = Environment.valueOf(ConfigPropertiesUtil.getEnvironmentVariable(Constants.ENVIRONMENT)) == Environment.TEST ?
-                Constants.MONGO_DB_TEST : Constants.MONGO_DB_REAL;
+                Constants.MONGO_DB_NAME_TEST : Constants.MONGO_DB_NAME_PRODUCTION;
         try {
             logger.debug("save[0]: record{\n{}\n}", record.toString());
             MongoCollection<Document> collection = getCollection(dbName, record.getObject().getClass());

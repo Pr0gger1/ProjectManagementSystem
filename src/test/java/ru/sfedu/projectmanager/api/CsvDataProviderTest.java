@@ -2,9 +2,7 @@ package ru.sfedu.projectmanager.api;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-class DataProviderCSVTest {
+class CsvDataProviderTest {
 
     @Test
     void processNewProject() {

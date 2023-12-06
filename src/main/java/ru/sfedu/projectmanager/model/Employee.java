@@ -9,7 +9,7 @@ public class Employee {
     private final String lastName;
     private final String patronymic;
     private final String fullName;
-    private final LocalDate birthday;
+    private LocalDate birthday;
     private String email;
     private String phoneNumber;
     private UUID id;
@@ -121,6 +121,7 @@ public class Employee {
     public LocalDate getBirthday() {
         return birthday;
     }
+    public void setBirthday(LocalDate birthday) { this.birthday = birthday; }
 
     public String getFullName() {
         return fullName;

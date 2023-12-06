@@ -16,18 +16,18 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
-public class DataProviderPostgres extends DataProvider {
-    private final Logger logger = LogManager.getLogger(DataProviderPostgres.class);
+public class PostgresDataProvider extends DataProvider {
+    private final Logger logger = LogManager.getLogger(PostgresDataProvider.class);
     private Connection connection = null;
     private final Environment dbEnvironment;
     private String dbName;
 
-    public DataProviderPostgres() {
+    public PostgresDataProvider() {
         dbEnvironment = Environment.PRODUCTION;
         initProvider();
     }
 
-    public DataProviderPostgres(Environment environment) {
+    public PostgresDataProvider(Environment environment) {
         dbEnvironment = environment;
         initProvider();
     }
@@ -70,49 +70,49 @@ public class DataProviderPostgres extends DataProvider {
      * @return connection instance to database
      */
     public Connection getConnection() {
-         String dbName = getDbName();
-         String dbUrl = ConfigPropertiesUtil.getEnvironmentVariable(Constants.POSTGRES_URL) + dbName;
-         String dbUser = ConfigPropertiesUtil.getEnvironmentVariable(Constants.POSTGRES_USER);
-         String dbPassword = ConfigPropertiesUtil.getEnvironmentVariable(Constants.POSTGRES_PASSWORD);
+        String dbName = getDbName();
+        String dbUrl = ConfigPropertiesUtil.getEnvironmentVariable(Constants.POSTGRES_URL) + dbName;
+        String dbUser = ConfigPropertiesUtil.getEnvironmentVariable(Constants.POSTGRES_USER);
+        String dbPassword = ConfigPropertiesUtil.getEnvironmentVariable(Constants.POSTGRES_PASSWORD);
 
-         logger.debug("getConnection[1]: dbUrl = {}", dbUrl);
-         logger.debug("getConnection[2]: dbUser = {}", dbUser);
-         logger.debug("getConnection[3]: dbUrl = {}", dbPassword);
+        logger.debug("getConnection[1]: dbUrl = {}", dbUrl);
+        logger.debug("getConnection[2]: dbUser = {}", dbUser);
+        logger.debug("getConnection[3]: dbUrl = {}", dbPassword);
 
-         try {
-             connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
-             logger.debug("getConnection[4]: successful connection");
-         }
-         catch (SQLException exception) {
-             logger.error("getConnection[5]: database error {}", exception.getMessage());
-         }
+        try {
+            connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+            logger.debug("getConnection[4]: successful connection");
+        }
+        catch (SQLException exception) {
+            logger.error("getConnection[5]: database error {}", exception.getMessage());
+        }
 
-         return connection;
-     }
+        return connection;
+    }
 
-     private void initDatabaseTables() {
-         String[] queries = {
-             Constants.INIT_EMPLOYEE_TABLE_QUERY,
-             Constants.INIT_PROJECT_TABLE_QUERY,
-             Constants.INIT_TASK_TABLE_QUERY,
-             Constants.INIT_PROJECT_EMPLOYEE_TABLE_QUERY,
-             Constants.INIT_BUG_REPORT_TABLE_QUERY,
-             Constants.INIT_DOCUMENTATION_TABLE_QUERY,
-             Constants.INIT_EVENT_TABLE_QUERY
-         };
+    private void initDatabaseTables() {
+        String[] queries = {
+                Constants.INIT_EMPLOYEE_TABLE_QUERY,
+                Constants.INIT_PROJECT_TABLE_QUERY,
+                Constants.INIT_TASK_TABLE_QUERY,
+                Constants.INIT_PROJECT_EMPLOYEE_TABLE_QUERY,
+                Constants.INIT_BUG_REPORT_TABLE_QUERY,
+                Constants.INIT_DOCUMENTATION_TABLE_QUERY,
+                Constants.INIT_EVENT_TABLE_QUERY
+        };
 
-         try {
-             for (String query : queries) {
-                 PreparedStatement statement = connection.prepareStatement(query);
-                 statement.execute();
-             }
+        try {
+            for (String query : queries) {
+                PreparedStatement statement = connection.prepareStatement(query);
+                statement.execute();
+            }
 
-             logger.debug("initDatabase[1]: all entities were initialized successfully");
-         }
+            logger.debug("initDatabase[1]: all entities were initialized successfully");
+        }
         catch (SQLException exception) {
             logger.error("initDatabase[2]: {}", exception.getMessage());
         }
-     }
+    }
 
     /**
      * @param entityName entity name for logging what you save
@@ -178,7 +178,7 @@ public class DataProviderPostgres extends DataProvider {
             Object conditionValue
     ) throws SQLException {
         int paramIndex = 0;
-        String query = String.format(Constants.UPDATE_ENTITY_QUERY, tableName, columnName);
+        String query = String.format(Constants.UPDATE_COLUMN_ENTITY_QUERY, tableName, columnName);
 
         PreparedStatement statement = connection.prepareStatement(query);
         statement.setObject(++paramIndex, newValue);
@@ -190,52 +190,229 @@ public class DataProviderPostgres extends DataProvider {
     }
 
     /**
-     * @param entityName name of updatable entity
-     * @param methodName method which updates entity
      * @param query update query
      * @param params entity fields
      * @return Result with execution code and message if it fails
      */
-    private Result<?> updateEntity(
-            String entityName,
-            String methodName,
+    private int updateEntity(
             String query,
             Object ...params
     ) throws SQLException {
         PreparedStatement statement = connection.prepareStatement(query);
         int paramIndex = 0;
-        for (Object param : params)
-            statement.setObject(++paramIndex, param);
+        for (Object param : params) {
+            if (param instanceof Priority || param instanceof WorkStatus || param instanceof BugStatus)
+                statement.setObject(++paramIndex, param, Types.VARCHAR);
+            else statement.setObject(++paramIndex, param);
+        }
         statement.executeUpdate();
 
-        logger.debug("{}[0]: {} updated successfully", methodName, entityName);
-        return new Result<>(ResultCode.SUCCESS);
-//        }
-//        catch (SQLException exception) {
-//            logger.error("{}[1]: {}", methodName, exception.getMessage());
-//            return new Result<>(ResultCode.ERROR, exception.getMessage());
-//        }
+        return statement.getUpdateCount();
     }
 
-    /**
-     *
-     * @param entity
-     * @param methodName
-     * @param queryResult
-     * @param changeType
-     */
-    private void logEntity(Object entity, String methodName, ResultCode queryResult, ChangeType changeType) {
-        ActionStatus status = queryResult == ResultCode.SUCCESS ? ActionStatus.SUCCESS : ActionStatus.FAULT;
-        HistoryRecord<Object> historyRecord =  new HistoryRecord<>(
-                entity,
-                methodName,
-                status,
-                changeType
-        );
+    public Result<?> updateProject(Project project) {
+        try {
+            int updateResult = updateEntity(
+                    Constants.UPDATE_PROJECT_QUERY,
+                    project.getName(),
+                    project.getDescription(),
+                    project.getStatus(),
+                    project.getDeadline(),
+                    project.getManager() == null ?
+                            null : project.getManager().getId(),
+                    project.getId()
+            );
 
-        logger.debug("logEntity[1]: object {entity} saved to history");
-        MongoHistoryProvider.save(historyRecord);
+            ArrayList<ProjectEntity> tasks = project.getTasks();
+            ArrayList<ProjectEntity> bugReports = project.getBugReports();
+            ArrayList<ProjectEntity> events = project.getEvents();
+            ArrayList<ProjectEntity> documentations = project.getDocumentation();
+            ArrayList<Employee> team = project.getTeam();
 
+            for (ProjectEntity task : tasks) {
+                Result<?> result = updateTask((Task) task);
+                if (result.getCode() == ResultCode.ERROR || result.getCode() == ResultCode.NOT_FOUND)
+                    return new Result<>(null, ResultCode.ERROR, result.getMessage());
+            }
+
+            for (ProjectEntity bugReport : bugReports) {
+                Result<?> result = updateBugReport((BugReport) bugReport);
+                if (result.getCode() == ResultCode.ERROR || result.getCode() == ResultCode.NOT_FOUND)
+                    return new Result<>(null, ResultCode.ERROR, result.getMessage());
+            }
+
+            for (ProjectEntity event : events) {
+                Result<?> result = updateEvent((Event) event);
+                if (result.getCode() == ResultCode.ERROR || result.getCode() == ResultCode.NOT_FOUND)
+                    return new Result<>(null, ResultCode.ERROR, result.getMessage());
+            }
+
+            for (ProjectEntity doc : documentations) {
+                Result<?> result = updateDocumentation((Documentation) doc);
+                if (result.getCode() == ResultCode.ERROR || result.getCode() == ResultCode.NOT_FOUND)
+                    return new Result<>(null, ResultCode.ERROR, result.getMessage());
+            }
+
+            for (Employee employee : team) {
+                Result<?> result = updateEmployee(employee);
+                if (result.getCode() == ResultCode.ERROR || result.getCode() == ResultCode.NOT_FOUND)
+                    return new Result<>(null, ResultCode.ERROR, result.getMessage());
+            }
+
+            if (updateResult > 0) {
+                logEntity(project, "updateProject", ResultCode.SUCCESS, ChangeType.UPDATE);
+                return new Result<>(ResultCode.SUCCESS);
+            }
+            return new Result<>(ResultCode.NOT_FOUND);
+        }
+        catch (SQLException exception) {
+            logger.error("updateProject[2]: {}", exception.getMessage());
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
+        }
+    }
+
+    public Result<?> updateEmployee(Employee employee) {
+        try {
+            int result = updateEntity(
+                    Constants.UPDATE_EMPLOYEE_QUERY,
+                    employee.getFirstName(),
+                    employee.getLastName(),
+                    employee.getPatronymic(),
+                    employee.getBirthday(),
+                    employee.getEmail(),
+                    employee.getPhoneNumber(),
+                    employee.getPosition(),
+                    employee.getId()
+            );
+
+            if (result > 0) {
+                logEntity(employee, "updateEmployee", ResultCode.SUCCESS, ChangeType.UPDATE);
+                return new Result<>(ResultCode.SUCCESS);
+            }
+
+            return new Result<>(ResultCode.NOT_FOUND);
+        }
+        catch (SQLException exception) {
+            logger.error("updateEmployee[2]: {}", exception.getMessage());
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
+        }
+    }
+
+    public Result<?> updateTask(Task task) {
+        try {
+            int result = updateEntity(
+                    Constants.UPDATE_TASK_QUERY,
+                    task.getProjectId(),
+                    task.getName(),
+                    task.getDescription(),
+                    task.getEmployeeId(),
+                    task.getEmployeeFullName(),
+                    task.getComment(),
+                    task.getPriority(),
+                    connection.createArrayOf("VARCHAR", task.getTags().toArray()),
+                    task.getStatus(),
+                    task.getDeadline(),
+                    task.getCreatedAt(),
+                    task.getCompletedAt(),
+                    task.getId()
+            );
+
+            if (result > 0) {
+                logEntity(task, "updateTask", ResultCode.SUCCESS, ChangeType.UPDATE);
+                return new Result<>(ResultCode.SUCCESS);
+            }
+
+            return new Result<>(ResultCode.NOT_FOUND);
+        }
+        catch (SQLException exception) {
+            logger.error("updateTask[2]: {}", exception.getMessage());
+            return new Result<>(null, ResultCode.ERROR, exception.getMessage());
+        }
+    }
+
+    public Result<?> updateBugReport(BugReport bugReport) {
+        try {
+            int result = updateEntity(
+                    Constants.UPDATE_BUG_REPORT_QUERY,
+                    bugReport.getProjectId(),
+                    bugReport.getStatus(),
+                    bugReport.getPriority(),
+                    bugReport.getName(),
+                    bugReport.getDescription(),
+                    bugReport.getEmployeeId(),
+                    bugReport.getEmployeeFullName(),
+                    bugReport.getCreatedAt(),
+                    bugReport.getId()
+            );
+
+            if (result > 0) {
+                logEntity(bugReport, "updateBugReport", ResultCode.SUCCESS, ChangeType.UPDATE);
+                return new Result<>(ResultCode.SUCCESS);
+            }
+
+            return new Result<>(ResultCode.NOT_FOUND);
+        }
+        catch (SQLException exception) {
+            logger.error("updateBugReport[2]: {}", exception.getMessage());
+            return new Result<>(null, ResultCode.ERROR, exception.getMessage());
+        }
+    }
+
+    public Result<?> updateEvent(Event event) {
+        try {
+            int result = updateEntity(
+                    Constants.UPDATE_EVENT_QUERY,
+                    event.getName(),
+                    event.getDescription(),
+                    event.getProjectId(),
+                    event.getEmployeeId(),
+                    event.getEmployeeFullName(),
+                    event.getStartDate(),
+                    event.getEndDate(),
+                    event.getCreatedAt(),
+                    event.getId()
+            );
+
+            if (result > 0) {
+                logEntity(event, "updateEvent", ResultCode.SUCCESS, ChangeType.UPDATE);
+                return new Result<>(ResultCode.SUCCESS);
+            }
+
+            return new Result<>(ResultCode.NOT_FOUND);
+        }
+        catch (SQLException exception) {
+            logger.error("updateEvent[2]: {}", exception.getMessage());
+            return new Result<>(null, ResultCode.ERROR, exception.getMessage());
+        }
+    }
+
+    public Result<?> updateDocumentation(Documentation documentation) {
+        Pair<String[], String[]> documentationBody = splitDocumentationToArrays(documentation.getBody());
+        try {
+            int result = updateEntity(
+                    Constants.UPDATE_DOCUMENTATION_QUERY,
+                    documentation.getProjectId(),
+                    documentation.getName(),
+                    documentation.getDescription(),
+                    documentation.getEmployeeId(),
+                    documentation.getEmployeeFullName(),
+                    documentationBody.getKey(),
+                    documentationBody.getValue(),
+                    documentation.getCreatedAt(),
+                    documentation.getId()
+            );
+
+            if (result > 0) {
+                logEntity(documentation, "updateBugReport", ResultCode.SUCCESS, ChangeType.UPDATE);
+                return new Result<>(ResultCode.SUCCESS);
+            }
+
+            return new Result<>(null, ResultCode.NOT_FOUND);
+        }
+        catch (SQLException exception) {
+            logger.error("updateDocumentation[2]: {}", exception.getMessage());
+            return new Result<>(null, ResultCode.ERROR, exception.getMessage());
+        }
     }
 
 
@@ -248,7 +425,7 @@ public class DataProviderPostgres extends DataProvider {
         final String methodName = "processNewProject";
 
         Result<?> result = processNewEntity(
-            project.getClass().getName(),
+                project.getClass().getName(),
                 methodName,
                 Constants.CREATE_PROJECT_QUERY,
                 project.getId(),
@@ -310,34 +487,40 @@ public class DataProviderPostgres extends DataProvider {
     public Result<?> processNewTask(Task task) {
         final String methodName = "processNewTask";
 
-        Result<?> result = processNewEntity(
-                task.getClass().getName(),
-                methodName,
-                Constants.CREATE_TASK_QUERY,
-                task.getId(),
-                task.getProjectId(),
-                task.getName(),
-                task.getDescription(),
-                task.getEmployeeId(),
-                task.getEmployeeFullName(),
-                task.getComment(),
-                task.getPriority().name(),
-                task.getTag(),
-                task.getStatus().name(),
-                task.getDeadline() != null ?
-                Timestamp.valueOf(task.getDeadline())
-                : null,
-                task.getCreatedAt(),
-                task.getCompletedAt()
-        );
-        logEntity(
-                task,
-                methodName,
-                result.getCode(),
-                ChangeType.CREATE
-        );
+        try {
+            Result<?> result = processNewEntity(
+                    task.getClass().getName(),
+                    methodName,
+                    Constants.CREATE_TASK_QUERY,
+                    task.getId(),
+                    task.getProjectId(),
+                    task.getName(),
+                    task.getDescription(),
+                    task.getEmployeeId(),
+                    task.getEmployeeFullName(),
+                    task.getComment(),
+                    task.getPriority().name(),
+                    connection.createArrayOf("VARCHAR",task.getTags().toArray()),
+                    task.getStatus().name(),
+                    task.getDeadline() != null ?
+                            Timestamp.valueOf(task.getDeadline())
+                            : null,
+                    task.getCreatedAt(),
+                    task.getCompletedAt()
+            );
+            logEntity(
+                    task,
+                    methodName,
+                    result.getCode(),
+                    ChangeType.CREATE
+            );
 
-        return result;
+            return result;
+        }
+        catch (SQLException exception) {
+            logger.error("processNewTask[2]: {}", exception.getMessage());
+            return new Result<>(ResultCode.ERROR);
+        }
     }
 
 
@@ -350,7 +533,7 @@ public class DataProviderPostgres extends DataProvider {
         final String methodName = "processNewBugReport";
 
         Result<?> result = processNewEntity(
-            bugReport.getClass().getName(),
+                bugReport.getClass().getName(),
                 methodName,
                 Constants.CREATE_BUG_REPORT_QUERY,
                 bugReport.getId(),
@@ -383,30 +566,30 @@ public class DataProviderPostgres extends DataProvider {
         Pair<String[], String[]> documentationBody = splitDocumentationToArrays(documentation.getBody());
 
         try {
-                Result<?> result = processNewEntity(
-                        documentation.getClass().getName(),
-                        methodName,
-                        Constants.CREATE_DOCUMENTATION_QUERY,
-                        documentation.getId(),
-                        documentation.getName(),
-                        documentation.getDescription(),
-                        documentation.getProjectId(),
-                        documentation.getEmployeeId(),
-                        documentation.getEmployeeFullName(),
-                        connection.createArrayOf("TEXT", documentationBody.getKey()),
-                        connection.createArrayOf("TEXT", documentationBody.getValue()),
-                        documentation.getCreatedAt()
+            Result<?> result = processNewEntity(
+                    documentation.getClass().getName(),
+                    methodName,
+                    Constants.CREATE_DOCUMENTATION_QUERY,
+                    documentation.getId(),
+                    documentation.getName(),
+                    documentation.getDescription(),
+                    documentation.getProjectId(),
+                    documentation.getEmployeeId(),
+                    documentation.getEmployeeFullName(),
+                    connection.createArrayOf("TEXT", documentationBody.getKey()),
+                    connection.createArrayOf("TEXT", documentationBody.getValue()),
+                    documentation.getCreatedAt()
 
-                );
+            );
 
-                logEntity(
-                        documentation,
-                        methodName,
-                        result.getCode(),
-                        ChangeType.CREATE
-                );
+            logEntity(
+                    documentation,
+                    methodName,
+                    result.getCode(),
+                    ChangeType.CREATE
+            );
 
-                return result;
+            return result;
         }
         catch (SQLException exception) {
             logger.error("processNewDocumentation[1]: {}", exception.getMessage());
@@ -441,8 +624,8 @@ public class DataProviderPostgres extends DataProvider {
         final String methodName = "processNewEvent";
 
         Result<?> result = processNewEntity(
-            event.getClass().getName(),
-            "processNewEvent",
+                event.getClass().getName(),
+                "processNewEvent",
                 Constants.CREATE_EVENT_QUERY,
                 event.getId(),
                 event.getName(),
@@ -653,14 +836,22 @@ public class DataProviderPostgres extends DataProvider {
     @Override
     public Result<?> bindProjectManager(UUID managerId, String projectId) {
         try {
-            return updateEntityColumn(
-                "Project",
-                    "bindProjectManager",
-                    Constants.PROJECT_TABLE_NAME,
-                    "manager_id",
-                    managerId,
-                    projectId
-            );
+            Result<ArrayList<Employee>> teamResult = getProjectTeam(projectId);
+            if (teamResult.getCode() == ResultCode.SUCCESS && !teamResult.getData().isEmpty()) {
+                ArrayList<Employee> team = teamResult.getData();
+                if (team.stream().anyMatch(employee -> employee.getId().equals(managerId))) {
+                    return updateEntityColumn(
+                            "Project",
+                            "bindProjectManager",
+                            Constants.PROJECT_TABLE_NAME,
+                            "manager_id",
+                            managerId,
+                            projectId
+                    );
+                }
+                else return new Result<>(ResultCode.ERROR, "Данный сотрудник не является участником проекта");
+            }
+            return new Result<>(ResultCode.NOT_FOUND);
         }
         catch (SQLException exception) {
             return new Result<>(null, ResultCode.ERROR, exception.getMessage());
@@ -682,16 +873,26 @@ public class DataProviderPostgres extends DataProvider {
             while (resultSet.next()) rowCount = resultSet.getInt("count");
 
             if (rowCount > 0) {
-                return updateEntity(
-                    "Task",
-                    "bindTaskExecutor",
-                    Constants.UPDATE_TASK_EXECUTOR_QUERY,
-                    executorId, executorFullName, taskId, projectId
-
+                int result = updateEntity(
+                        Constants.UPDATE_TASK_EXECUTOR_QUERY,
+                        executorId, executorFullName, taskId, projectId
                 );
 
+                Result<Task> updatedTask = getTaskById(taskId);
+                if (updatedTask.getCode() == ResultCode.SUCCESS) {
+                    logEntity(
+                            updatedTask.getData(),
+                            "bindTaskExecutor",
+                            updatedTask.getCode(),
+                            ChangeType.UPDATE
+                    );
+                }
+
+                if (result > 0) {
+                    return new Result<>(ResultCode.SUCCESS);
+                }
             }
-            return new Result<>(null, ResultCode.NOT_FOUND);
+            return new Result<>(ResultCode.NOT_FOUND);
         }
         catch (SQLException exception) {
             logger.error("bindTaskExecutor[2]: {}", exception.getMessage());
@@ -702,18 +903,14 @@ public class DataProviderPostgres extends DataProvider {
     @Override
     public Result<?> bindEmployeeToProject(UUID employeeId, String projectId) {
         Result<?> createResult = processNewEntity(
-            "bindEmployeeToProject",
+                "bindEmployeeToProject",
                 "bindEmployeeToProject",
                 Constants.CREATE_EMPLOYEE_PROJECT_LINK_QUERY,
                 employeeId, projectId
         );
 
         if (createResult.getCode() == ResultCode.ERROR)
-            return new Result<>(
-                    null,
-                    ResultCode.NOT_FOUND,
-                    "Unable to link employee to project"
-            );
+            return new Result<>(null, ResultCode.NOT_FOUND, "Unable to link employee to project");
 
         return new Result<>(
                 ResultCode.SUCCESS,
@@ -948,6 +1145,11 @@ public class DataProviderPostgres extends DataProvider {
         }
     }
 
+
+    /**
+     * @param docId
+     * @return
+     */
     @Override
     public Result<Documentation> getDocumentationById(UUID docId) {
         String query = String.format(Constants.GET_ENTITY_BY_ID_QUERY, Constants.DOCUMENTATIONS_TABLE_NAME);
@@ -1097,8 +1299,8 @@ public class DataProviderPostgres extends DataProvider {
             String projectId, boolean checkLaborEfficiency, boolean trackBugs
     ) {
         HashMap<String, ?> mainData = new HashMap<>() {{
-           put(Constants.TRACK_INFO_KEY_PROJECT_READINESS, calculateProjectReadiness(projectId) );
-           put(Constants.TRACK_INFO_KEY_TASK_STATUS, trackTaskStatus(projectId));
+            put(Constants.TRACK_INFO_KEY_PROJECT_READINESS, calculateProjectReadiness(projectId) );
+            put(Constants.TRACK_INFO_KEY_TASK_STATUS, trackTaskStatus(projectId));
         }};
 
         TrackInfo<String, ?> commonTrackInfo = new TrackInfo<>(mainData);
@@ -1173,7 +1375,6 @@ public class DataProviderPostgres extends DataProvider {
         int tasksCount = tasks.size();
         // сумма эффективности выполнения проектов в процентах. Далее будет вычисляться средняя эффективность
         int taskEffectivenessSum = 0;
-        float averageEffectiveness = 0;
 
         for (Task task : tasks) {
             LocalDateTime taskDeadline = task.getDeadline();
@@ -1198,4 +1399,7 @@ public class DataProviderPostgres extends DataProvider {
         return (taskEffectivenessSum * 1.0f) / tasksCount;
     }
 
+//    public HistoryRecord<ProjectEntity> getProjectEntityHistory(UUID id) {
+//
+//    }
 }

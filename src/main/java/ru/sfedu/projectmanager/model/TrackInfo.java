@@ -9,9 +9,6 @@ public class TrackInfo<E, S> {
     TrackInfo(E key, S value) {
         data.put(key, value);
     }
-//    public TrackInfo(String key, Object object) {
-//        this.data.put((E)key, (S)object);
-//    }
 
     public TrackInfo(HashMap<E, S> data) {
         this.data = data;

@@ -1,7 +1,5 @@
 package ru.sfedu.projectmanager;
 
-import ru.sfedu.projectmanager.utils.Pair;
-
 public class Constants {
     // property file formats
     public static final String DEFAULT_CONFIG_PATH_PROPERTIES = "env.properties";
@@ -36,8 +34,8 @@ public class Constants {
     public static final String MONGO_HISTORY_CHANGE_TYPE = "Change type";
 
     // mongo database names
-    public static final String MONGO_DB_TEST = "history_test";
-    public static final String MONGO_DB_REAL = "history";
+    public static final String MONGO_DB_NAME_TEST = "history_test";
+    public static final String MONGO_DB_NAME_PRODUCTION = "history";
 
 
     // datasource path
@@ -97,7 +95,7 @@ public class Constants {
             executor_full_name VARCHAR(128) NOT NULL,
             comment TEXT,
             priority VARCHAR(20) DEFAULT 'UNDEFINED',
-            tag VARCHAR(128),
+            tag VARCHAR(32)[],
             status VARCHAR(16) DEFAULT 'IN_PROGRESS',
             deadline TIMESTAMPTZ,
             created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -205,9 +203,79 @@ public class Constants {
 
 
     // postgres update entity queries
-    public static final String UPDATE_ENTITY_QUERY = """
+    public static final String UPDATE_COLUMN_ENTITY_QUERY = """
         UPDATE %s SET %s = ? WHERE id = ?
     """;
+
+    public static final String UPDATE_PROJECT_QUERY = String.format(
+        "UPDATE %s SET name = ?, description = ?, status = ?, deadline = ?, manager_id = ? WHERE id = ?;",
+        PROJECT_TABLE_NAME
+    );
+
+    public static final String UPDATE_EMPLOYEE_QUERY = String.format("""
+        UPDATE %s SET first_name = ?, last_name = ?, patronymic = ?, birthday = ?,
+         email = ?, phone_number = ?, position = ? WHERE id = ?;
+    """, EMPLOYEES_TABLE_NAME);
+
+    public static final String UPDATE_TASK_QUERY = String.format("""
+        UPDATE %s SET project_id = ?,
+                    name = ?,
+                    description = ?,
+                    executor_id = ?,
+                    executor_full_name = ?,
+                    comment = ?,
+                    priority = ?,
+                    tag = ?,
+                    status = ?,
+                    deadline = ?,
+                    created_at = ?,
+                    completed_at = ?
+                WHERE id = ?;
+    """, TASKS_TABLE_NAME);
+
+    public static final String UPDATE_EMPLOYEE_PROJECT_QUERY = String.format("""
+        UPDATE %s SET employee_id = ? WHERE project_id = ?;
+    """, EMPLOYEE_PROJECT_TABLE_NAME);
+
+    public static final String UPDATE_BUG_REPORT_QUERY = String.format("""
+        UPDATE %s
+                SET project_id = ?,
+                    status = ?,
+                    priority = ?,
+                    name = ?,
+                    description = ?,
+                    author_id = ?,
+                    author_full_name = ?,
+                    created_at = ?
+                WHERE id = ?;
+    """, BUG_REPORTS_TABLE_NAME);
+
+    public static final String UPDATE_EVENT_QUERY = String.format("""
+            UPDATE %s
+                    SET name = ?,
+                        description = ?,
+                        project_id = ?,
+                        author_id = ?,
+                        author_full_name = ?,
+                        start_date = ?,
+                        end_date = ?,
+                        created_at = ?
+                    WHERE id = ?;
+    """, EVENTS_TABLE_NAME);
+
+    public static final String UPDATE_DOCUMENTATION_QUERY = String.format("""
+            UPDATE %s
+            SET project_id = ?,
+                name = ?,
+                description = ?,
+                author_id = ?,
+                author_full_name = ?,
+                article_titles = ?,
+                articles = ?,
+                created_at = ?
+            WHERE id = ?;
+                
+    """, DOCUMENTATIONS_TABLE_NAME);
 
     public static final String UPDATE_TASK_EXECUTOR_QUERY = String.format("""
         UPDATE %s SET executor_id = ?, executor_full_name = ? WHERE id = ? AND project_id = ?

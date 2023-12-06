@@ -1,12 +1,11 @@
 package ru.sfedu.projectmanager.api;
 
 import ru.sfedu.projectmanager.model.*;
-import ru.sfedu.projectmanager.model.enums.WorkStatus;
 
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class DataProviderCSV implements IDataProvider {
+public class CsvDataProvider extends DataProvider {
 
     /**
      * @param project

@@ -21,9 +21,9 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-class DataProviderPostgresTest {
-    private static final DataProviderPostgres postgresProvider = new DataProviderPostgres(Environment.TEST);
-    private static final Logger logger = LogManager.getLogger(DataProviderPostgresTest.class);
+class PostgresDataProviderTest {
+    private static final PostgresDataProvider postgresProvider = new PostgresDataProvider(Environment.TEST);
+    private static final Logger logger = LogManager.getLogger(PostgresDataProviderTest.class);
     private static final ArrayList<Employee> team = new ArrayList<>();
     private static final Employee employee = new Employee(
             "Nikolay",
@@ -97,7 +97,7 @@ class DataProviderPostgresTest {
                 LocalDateTime.of(2023, Month.DECEMBER, 24,0, 0),
                 "Comment for Task 1",
                 Priority.HIGH,
-                "Tag1",
+                new ArrayList<>(Arrays.asList("Tag1", "tag2")),
                 WorkStatus.COMPLETED,
                 LocalDateTime.now().withNano(0),
                 LocalDateTime.of(2023, Month.DECEMBER, 20, 15, 12)
@@ -113,7 +113,7 @@ class DataProviderPostgresTest {
                 LocalDateTime.of(2023, Month.NOVEMBER, 15,0, 0),
                 "Comment for Task 2",
                 Priority.MEDIUM,
-                "Tag2",
+                new ArrayList<>(Arrays.asList("Tag1", "tag2")),
                 WorkStatus.COMPLETED,
                 LocalDateTime.now().withNano(0),
                 LocalDateTime.of(2023, Month.NOVEMBER, 18, 10, 54)
@@ -129,7 +129,7 @@ class DataProviderPostgresTest {
                 LocalDateTime.of(2023, Month.DECEMBER, 15, 0, 0),
                 "Comment for Task 3",
                 Priority.LOW,
-                "Tag3",
+                new ArrayList<>(Arrays.asList("Tag1", "tag2")),
                 WorkStatus.IN_PROGRESS,
                 LocalDateTime.now().withNano(0),
                 null
@@ -355,7 +355,7 @@ class DataProviderPostgresTest {
                     LocalDateTime.of(2023, Month.DECEMBER, 24,0, 0),
                     "Comment for Task 1",
                     Priority.HIGH,
-                    "Tag1",
+                    new ArrayList<>(Arrays.asList("Tag1", "tag2")),
                     WorkStatus.COMPLETED,
                     LocalDateTime.now().withNano(0),
                     null)
@@ -372,7 +372,7 @@ class DataProviderPostgresTest {
                     LocalDateTime.of(2023, Month.NOVEMBER, 15,0, 0),
                     "Comment for Task 2",
                     Priority.MEDIUM,
-                    "Tag2",
+                    new ArrayList<>(Arrays.asList("Tag1", "tag2")),
                     WorkStatus.COMPLETED,
                     LocalDateTime.now().withNano(0),
                     null
@@ -389,7 +389,7 @@ class DataProviderPostgresTest {
                     LocalDateTime.of(2023, Month.NOVEMBER, 15,0, 0),
                     "Comment for Task 3",
                     Priority.MEDIUM,
-                    "Tag2",
+                    new ArrayList<>(Arrays.asList("Tag1", "tag3")),
                     WorkStatus.IN_PROGRESS,
                     LocalDateTime.now().withNano(0),
                     null
@@ -481,6 +481,7 @@ class DataProviderPostgresTest {
 
     @Test
     void bindProjectManager() {
+        postgresProvider.bindEmployeeToProject(employee.getId(), project.getId());
         Result<?> actual = postgresProvider
                 .bindProjectManager(employee.getId(), project.getId());
 
@@ -944,5 +945,113 @@ class DataProviderPostgresTest {
         logger.debug("getNonExistentEmployee[2]: expected result code {}", ResultCode.NOT_FOUND);
         logger.debug("getNonExistentEmployee[3]: actual {}", actual.getData());
         logger.debug("getNonExistentEmployee[4]: expected {}", employee);
+    }
+
+    @Test
+    void updateEmployee() {
+        Employee newEmployee = new Employee(
+                "Nikolay",
+                "Eremeev",
+                LocalDate.of(1999, Month.MAY, 6),
+                "Senior mobile dev lead"
+        );
+
+        postgresProvider.processNewEmployee(newEmployee);
+
+        newEmployee.setPhoneNumber("7989855668");
+        newEmployee.setEmail("example@mail.ru");
+
+        Result<?> actual = postgresProvider.updateEmployee(newEmployee);
+        assertEquals(ResultCode.SUCCESS, actual.getCode());
+
+        logger.debug("updateEmployee[1]: actual result code {}", actual.getCode());
+        logger.debug("updateEmployee[2]: expected result code {}", ResultCode.SUCCESS);
+    }
+
+    @Test
+    void updateNonExistentEmployee() {
+        Employee newEmployee = new Employee(
+                "Nikolay",
+                "Eremeev",
+                LocalDate.of(1999, Month.MAY, 6),
+                "Senior mobile dev lead"
+        );
+
+        newEmployee.setPhoneNumber("7989855668");
+        newEmployee.setEmail("example@mail.ru");
+
+        Result<?> actual = postgresProvider.updateEmployee(newEmployee);
+        assertEquals(ResultCode.NOT_FOUND, actual.getCode());
+
+        logger.debug("updateEmployee[1]: actual result code {}", actual.getCode());
+        logger.debug("updateEmployee[2]: expected result code {}", ResultCode.NOT_FOUND);
+    }
+
+    @Test
+    void updateTask() {
+        Task newTask = new Task(
+                "create main page of application",
+                "main page of bank application",
+                employee.getId(),
+                employee.getFullName(),
+                project.getId(),
+                Priority.MEDIUM
+        );
+
+        newTask.completeTask();
+        newTask.setComment("some comment");
+        newTask.setPriority(Priority.MEDIUM);
+
+        postgresProvider.processNewTask(newTask);
+        Result<?> actual = postgresProvider.updateTask(newTask);
+        assertEquals(ResultCode.SUCCESS, actual.getCode());
+
+        logger.debug("updateTask[1]: actual result code {}", actual.getCode());
+        logger.debug("updateTask[2]: expected result code {}", ResultCode.SUCCESS);
+    }
+
+    @Test
+    void updateNonExistentTask() {
+        Task newTask = new Task(
+                "create main page of application",
+                "main page of bank application",
+                employee.getId(),
+                employee.getFullName(),
+                project.getId(),
+                Priority.MEDIUM
+        );
+
+        newTask.completeTask();
+        newTask.setComment("some comment");
+        newTask.setPriority(Priority.MEDIUM);
+
+        Result<?> actual = postgresProvider.updateTask(newTask);
+        assertEquals(ResultCode.NOT_FOUND, actual.getCode());
+
+        logger.debug("updateNonExistentTask[1]: actual result code {}", actual.getCode());
+        logger.debug("updateNonExistentTask[2]: expected result code {}", ResultCode.NOT_FOUND);
+    }
+
+    @Test
+    void updateBugReport() {
+        BugReport newBugReport = new BugReport(
+                "mobile_bank_report_12-05-2023",
+                "this is a bug report description",
+                employee.getId(),
+                employee.getFullName(),
+                project.getId(),
+                Priority.HIGH
+        );
+
+        postgresProvider.processNewBugReport(newBugReport);
+        newBugReport.setStatus(BugStatus.CLOSED);
+        newBugReport.setPriority(Priority.HIGH);
+        newBugReport.setDescription("some description");
+
+        Result<?> actual = postgresProvider.updateBugReport(newBugReport);
+        assertEquals(ResultCode.SUCCESS, actual.getCode());
+
+        logger.debug("updateBugReport[1]: actual result code {}", actual.getCode());
+        logger.debug("updateBugReport[2]: expected result code {}", ResultCode.SUCCESS);
     }
 }

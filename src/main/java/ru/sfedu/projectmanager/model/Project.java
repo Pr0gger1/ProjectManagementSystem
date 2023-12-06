@@ -1,22 +1,52 @@
 package ru.sfedu.projectmanager.model;
 
+import jakarta.xml.bind.annotation.*;
 import ru.sfedu.projectmanager.model.enums.WorkStatus;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Objects;
 
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name = "project")
+@XmlType(name = "project")
 public class Project {
+    @XmlElement(nillable = true)
     private LocalDateTime deadline;
+
+    @XmlElement(required = true)
     private final String name;
+
+    @XmlElement(nillable = true)
     private final String description;
+
+    @XmlAttribute(required = true)
     private final String id;
+
+    @XmlElement(required = true)
     private WorkStatus status = WorkStatus.IN_PROGRESS;
+
+    @XmlElement(nillable = true)
     private Employee manager;
+
+    @XmlElementWrapper(name = "team")
+    @XmlElement(name = "employee", nillable = true)
     private ArrayList<Employee> team = new ArrayList<>();
+
+    @XmlElementWrapper(name = "tasks")
+    @XmlElement(name = "task", nillable = true)
     private ArrayList<ProjectEntity> tasks = new ArrayList<>();
+
+    @XmlElementWrapper(name = "documentations")
+    @XmlElement(name = "documentation", nillable = true)
     private ArrayList<ProjectEntity> documentation = new ArrayList<>();
+
+    @XmlElementWrapper(name = "bug_reports")
+    @XmlElement(name = "bug_report", nillable = true)
     private ArrayList<ProjectEntity> bugReports = new ArrayList<>();
+
+    @XmlElementWrapper(name = "events")
+    @XmlElement(name = "event", nillable = true)
     private ArrayList<ProjectEntity> events = new ArrayList<>();
 
     public Project(String name, String description, String id) {
@@ -26,6 +56,11 @@ public class Project {
 
     }
 
+    private Project() {
+        name = "new project";
+        id = "project_id";
+        description = "";
+    }
     public Project(
             String name,
             String description,

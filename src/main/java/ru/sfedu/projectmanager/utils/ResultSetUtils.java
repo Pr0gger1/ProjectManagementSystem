@@ -1,7 +1,7 @@
 package ru.sfedu.projectmanager.utils;
 
 import ru.sfedu.projectmanager.api.DataProvider;
-import ru.sfedu.projectmanager.api.DataProviderPostgres;
+import ru.sfedu.projectmanager.api.PostgresDataProvider;
 import ru.sfedu.projectmanager.model.*;
 import ru.sfedu.projectmanager.model.enums.BugStatus;
 import ru.sfedu.projectmanager.model.enums.Priority;
@@ -13,10 +13,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 
 public class ResultSetUtils {
@@ -178,7 +175,8 @@ public class ResultSetUtils {
         String taskExecutorFullName = resultSet.getString("executor_full_name");
         String taskComment = resultSet.getString("comment");
         Priority taskPriority = Priority.valueOf(resultSet.getString("priority"));
-        String taskTag = resultSet.getString("tag");
+        String[] taskTags = (String[]) resultSet.getArray("tag").getArray();
+        ArrayList<String> tags = new ArrayList<>(Arrays.asList(taskTags));
         WorkStatus taskStatus = WorkStatus.valueOf(resultSet.getString("status"));
 
         Timestamp sqlCompletedAt = resultSet.getTimestamp("completed_at");
@@ -208,7 +206,7 @@ public class ResultSetUtils {
                 taskDeadline,
                 taskComment,
                 taskPriority,
-                taskTag,
+                tags,
                 taskStatus,
                 taskCreatedAt,
                 taskCompletedAt
@@ -216,7 +214,7 @@ public class ResultSetUtils {
     }
 
     public static Project extractProject(ResultSet resultSet) throws SQLException {
-        DataProvider postgresProvider = new DataProviderPostgres();
+        DataProvider postgresProvider = new PostgresDataProvider();
 
         String projectId = resultSet.getString("id");
         String projectName = resultSet.getString("name");
