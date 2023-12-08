@@ -1,9 +1,9 @@
 import org.junit.jupiter.api.Test;
-import ru.sfedu.projectmanager.api.MongoHistoryProvider;
-import ru.sfedu.projectmanager.model.HistoryRecord;
-import ru.sfedu.projectmanager.model.Project;
-import ru.sfedu.projectmanager.model.enums.ActionStatus;
-import ru.sfedu.projectmanager.model.enums.ChangeType;
+import ru.sfedu.projectmanagement.core.api.MongoHistoryProvider;
+import ru.sfedu.projectmanagement.core.utils.types.HistoryRecord;
+import ru.sfedu.projectmanagement.core.model.Project;
+import ru.sfedu.projectmanagement.core.model.enums.ActionStatus;
+import ru.sfedu.projectmanagement.core.model.enums.ChangeType;
 
 import java.time.LocalDateTime;
 import java.time.Month;

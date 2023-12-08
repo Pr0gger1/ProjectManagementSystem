@@ -19,7 +19,7 @@
             <AppenderRef ref="console"/>
         </Logger>
 
-        <Logger name="ru.sfedu.projectmanager" level="debug">
+        <Logger name="ru.sfedu.projectmanagement.core" level="debug">
             <AppenderRef ref="RollingFile"/>
         </Logger>
     </Loggers>
