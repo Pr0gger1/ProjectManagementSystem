@@ -2,11 +2,13 @@ package ru.sfedu.projectmanagement.core.api;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.sfedu.projectmanagement.core.Queries;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.enums.BugStatus;
 import ru.sfedu.projectmanagement.core.model.enums.ChangeType;
 import ru.sfedu.projectmanagement.core.model.enums.Priority;
 import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
+import ru.sfedu.projectmanagement.core.utils.PostgresUtil;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
 import ru.sfedu.projectmanagement.core.utils.types.TrackInfo;
 import ru.sfedu.projectmanagement.core.Constants;
@@ -20,6 +22,7 @@ import java.sql.Date;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class PostgresDataProvider extends DataProvider {
@@ -29,14 +32,10 @@ public class PostgresDataProvider extends DataProvider {
     private String dbName;
 
     public PostgresDataProvider() {
-        dbEnvironment = Environment.PRODUCTION;
+        dbEnvironment = Environment.valueOf(ConfigPropertiesUtil.getEnvironmentVariable(Constants.ENVIRONMENT));
         initProvider();
     }
 
-    public PostgresDataProvider(Environment environment) {
-        dbEnvironment = environment;
-        initProvider();
-    }
 
     /**
      * initializes all entity tables before executing queries
@@ -101,13 +100,13 @@ public class PostgresDataProvider extends DataProvider {
      */
     private void initDatabaseTables() {
         String[] queries = {
-                Constants.INIT_EMPLOYEE_TABLE_QUERY,
-                Constants.INIT_PROJECT_TABLE_QUERY,
-                Constants.INIT_TASK_TABLE_QUERY,
-                Constants.INIT_PROJECT_EMPLOYEE_TABLE_QUERY,
-                Constants.INIT_BUG_REPORT_TABLE_QUERY,
-                Constants.INIT_DOCUMENTATION_TABLE_QUERY,
-                Constants.INIT_EVENT_TABLE_QUERY
+                Queries.INIT_EMPLOYEE_TABLE_QUERY,
+                Queries.INIT_PROJECT_TABLE_QUERY,
+                Queries.INIT_TASK_TABLE_QUERY,
+                Queries.INIT_PROJECT_EMPLOYEE_TABLE_QUERY,
+                Queries.INIT_BUG_REPORT_TABLE_QUERY,
+                Queries.INIT_DOCUMENTATION_TABLE_QUERY,
+                Queries.INIT_EVENT_TABLE_QUERY
         };
 
         try {
@@ -122,6 +121,58 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("initDatabase[2]: {}", exception.getMessage());
         }
     }
+
+    private String generateCreateProjectQuery(Project project) {
+        String filledQuery = String.format(
+                Queries.CREATE_PROJECT_QUERY,
+                Queries.PROJECT_TABLE_NAME,
+                PostgresUtil.convertObjectToSqlString(project.getId()),
+                PostgresUtil.convertObjectToSqlString(project.getName()),
+                PostgresUtil.convertObjectToSqlString(project.getDescription()),
+                PostgresUtil.convertObjectToSqlString(project.getStatus()),
+                PostgresUtil.convertObjectToSqlString(project.getDeadline()),
+                PostgresUtil.convertObjectToSqlString(project.getManagerId())
+        );
+
+        logger.debug("generateCreateProjectQuery[1]: result query = {}", filledQuery);
+        return filledQuery;
+    }
+
+    private String generateCreateTaskQuery(Task task) {
+        String formattedTags = task.getTags()
+                .stream()
+                .map(el -> "'" + el + "'")
+                .collect(Collectors.joining(", "));
+
+        String formattedDeadline = PostgresUtil.convertObjectToSqlString(task.getDeadline());
+        String formattedCreatedAt = PostgresUtil.convertObjectToSqlString(task.getCreatedAt());
+        String formattedCompletedAt = PostgresUtil.convertObjectToSqlString(task.getCompletedAt());
+
+        String filledQuery = String.format(
+                Queries.CREATE_TASK_QUERY,
+                Queries.TASKS_TABLE_NAME,
+                task.getId(),
+                task.getProjectId(),
+                task.getName(),
+                task.getDescription(),
+                task.getEmployeeId(),
+                task.getEmployeeFullName(),
+                task.getComment(),
+                task.getPriority(),
+                formattedTags,
+                task.getStatus(),
+                formattedDeadline,
+                formattedCreatedAt,
+                formattedCompletedAt
+        );
+
+        logger.debug("generateCreateTaskQuery[1]: result query = {}", filledQuery);
+        return filledQuery;
+    }
+
+//    private String generateCreateBugReportQuery(BugReport bugReport) {
+//        String filledQuery = String.format()
+//    }
 
     /**
      * @param entityName entity name for logging what you save
@@ -153,21 +204,13 @@ public class PostgresDataProvider extends DataProvider {
         return new Result<>(ResultCode.SUCCESS);
     }
 
-//    private PreparedStatement generateQuery(String queryPattern) throws SQLException {
-//        String filledQuery = queryPattern;
-//        PreparedStatement statement = connection.prepareStatement(queryPattern);
-//
-//        return statement;
-//    }
-
-
     /**
      * @param tableName entity table name
      * @param id object id
      * @return Result with execution code and message if it fails
      */
     private Result<?> deleteEntity(String tableName, Object id) throws SQLException {
-        String query = String.format(Constants.DELETE_ENTITY_QUERY, tableName);
+        String query = String.format(Queries.DELETE_ENTITY_QUERY, tableName);
         PreparedStatement statement = connection.prepareStatement(query);
         statement.setObject(1, id);
         statement.executeUpdate();
@@ -195,7 +238,7 @@ public class PostgresDataProvider extends DataProvider {
             Object conditionValue
     ) throws SQLException {
         int paramIndex = 0;
-        String query = String.format(Constants.UPDATE_COLUMN_ENTITY_QUERY, tableName, columnName);
+        String query = String.format(Queries.UPDATE_COLUMN_ENTITY_QUERY, tableName, columnName);
 
         PreparedStatement statement = connection.prepareStatement(query);
         statement.setObject(++paramIndex, newValue);
@@ -215,11 +258,13 @@ public class PostgresDataProvider extends DataProvider {
     @Override
     public Result<?> processNewProject(Project project) {
         final String methodName = "processNewProject";
-
+        if (project.getManager() != null && getEmployeeById(project.getManagerId()).getCode() == ResultCode.NOT_FOUND) {
+            processNewEmployee(project.getManager());
+        }
         Result<?> result = processNewEntity(
                 project.getClass().getName(),
                 methodName,
-                Constants.CREATE_PROJECT_QUERY,
+                Queries.CREATE_PROJECT_QUERY,
                 project.getId(),
                 project.getName(),
                 project.getDescription(),
@@ -250,7 +295,7 @@ public class PostgresDataProvider extends DataProvider {
         Result<?> result = processNewEntity(
                 employee.getClass().getName(),
                 methodName,
-                Constants.CREATE_EMPLOYEE_QUERY,
+                Queries.CREATE_EMPLOYEE_QUERY,
                 employee.getId(),
                 employee.getFirstName(),
                 employee.getLastName(),
@@ -284,7 +329,7 @@ public class PostgresDataProvider extends DataProvider {
             Result<?> result = processNewEntity(
                     task.getClass().getName(),
                     methodName,
-                    Constants.CREATE_TASK_QUERY,
+                    Queries.CREATE_TASK_QUERY,
                     task.getId(),
                     task.getProjectId(),
                     task.getName(),
@@ -317,6 +362,7 @@ public class PostgresDataProvider extends DataProvider {
     }
 
 
+
     /**
      * @param bugReport BugReport instance
      * @return Result with execution code and message if it fails
@@ -328,7 +374,7 @@ public class PostgresDataProvider extends DataProvider {
         Result<?> result = processNewEntity(
                 bugReport.getClass().getName(),
                 methodName,
-                Constants.CREATE_BUG_REPORT_QUERY,
+                Queries.CREATE_BUG_REPORT_QUERY,
                 bugReport.getId(),
                 bugReport.getProjectId(),
                 bugReport.getStatus().name(),
@@ -362,7 +408,7 @@ public class PostgresDataProvider extends DataProvider {
             Result<?> result = processNewEntity(
                     documentation.getClass().getName(),
                     methodName,
-                    Constants.CREATE_DOCUMENTATION_QUERY,
+                    Queries.CREATE_DOCUMENTATION_QUERY,
                     documentation.getId(),
                     documentation.getName(),
                     documentation.getDescription(),
@@ -419,7 +465,7 @@ public class PostgresDataProvider extends DataProvider {
         Result<?> result = processNewEntity(
                 event.getClass().getName(),
                 "processNewEvent",
-                Constants.CREATE_EVENT_QUERY,
+                Queries.CREATE_EVENT_QUERY,
                 event.getId(),
                 event.getName(),
                 event.getDescription(),
@@ -525,7 +571,7 @@ public class PostgresDataProvider extends DataProvider {
     public Result<?> updateEmployee(Employee employee) {
         try {
             int result = updateEntity(
-                    Constants.UPDATE_EMPLOYEE_QUERY,
+                    Queries.UPDATE_EMPLOYEE_QUERY,
                     employee.getFirstName(),
                     employee.getLastName(),
                     employee.getPatronymic(),
@@ -552,7 +598,7 @@ public class PostgresDataProvider extends DataProvider {
     public Result<?> updateTask(Task task) {
         try {
             int result = updateEntity(
-                    Constants.UPDATE_TASK_QUERY,
+                    Queries.UPDATE_TASK_QUERY,
                     task.getProjectId(),
                     task.getName(),
                     task.getDescription(),
@@ -584,7 +630,7 @@ public class PostgresDataProvider extends DataProvider {
     public Result<?> updateBugReport(BugReport bugReport) {
         try {
             int result = updateEntity(
-                    Constants.UPDATE_BUG_REPORT_QUERY,
+                    Queries.UPDATE_BUG_REPORT_QUERY,
                     bugReport.getProjectId(),
                     bugReport.getStatus(),
                     bugReport.getPriority(),
@@ -612,7 +658,7 @@ public class PostgresDataProvider extends DataProvider {
     public Result<?> updateEvent(Event event) {
         try {
             int result = updateEntity(
-                    Constants.UPDATE_EVENT_QUERY,
+                    Queries.UPDATE_EVENT_QUERY,
                     event.getName(),
                     event.getDescription(),
                     event.getProjectId(),
@@ -641,7 +687,7 @@ public class PostgresDataProvider extends DataProvider {
         Pair<String[], String[]> documentationBody = splitDocumentationToArrays(documentation.getBody());
         try {
             int result = updateEntity(
-                    Constants.UPDATE_DOCUMENTATION_QUERY,
+                    Queries.UPDATE_DOCUMENTATION_QUERY,
                     documentation.getProjectId(),
                     documentation.getName(),
                     documentation.getDescription(),
@@ -678,7 +724,7 @@ public class PostgresDataProvider extends DataProvider {
         try {
             Result<Project> projectResult = getProjectById(projectId);
             if (projectResult.getCode() == ResultCode.SUCCESS) {
-                Result<?> deleteResult = deleteEntity(Constants.PROJECT_TABLE_NAME, projectId);
+                Result<?> deleteResult = deleteEntity(Queries.PROJECT_TABLE_NAME, projectId);
                 logEntity(
                         projectResult.getData(),
                         methodName,
@@ -708,7 +754,7 @@ public class PostgresDataProvider extends DataProvider {
         try {
             Result<Task> taskResult = getTaskById(taskId);
             if (taskResult.getCode() == ResultCode.SUCCESS) {
-                Result<?> result = deleteEntity(Constants.TASKS_TABLE_NAME, taskId);
+                Result<?> result = deleteEntity(Queries.TASKS_TABLE_NAME, taskId);
                 logEntity(
                         taskResult.getData(),
                         methodName,
@@ -737,7 +783,7 @@ public class PostgresDataProvider extends DataProvider {
         try {
             Result<BugReport> bugReportResult = getBugReportById(bugReportId);
             if (bugReportResult.getCode() == ResultCode.SUCCESS) {
-                Result<?> result = deleteEntity(Constants.BUG_REPORTS_TABLE_NAME, bugReportId);
+                Result<?> result = deleteEntity(Queries.BUG_REPORTS_TABLE_NAME, bugReportId);
                 logEntity(
                         bugReportResult.getData(),
                         methodName,
@@ -767,7 +813,7 @@ public class PostgresDataProvider extends DataProvider {
         try {
             Result<Event> eventResult = getEventById(eventId);
             if (eventResult.getCode() == ResultCode.SUCCESS) {
-                Result<?> result = deleteEntity(Constants.EVENTS_TABLE_NAME, eventId);
+                Result<?> result = deleteEntity(Queries.EVENTS_TABLE_NAME, eventId);
                 logEntity(
                         eventResult.getData(),
                         methodName,
@@ -797,7 +843,7 @@ public class PostgresDataProvider extends DataProvider {
         try {
             Result<Documentation> documentationResult = getDocumentationById(docId);
             if (documentationResult.getCode() == ResultCode.SUCCESS) {
-                Result<?> result = deleteEntity(Constants.DOCUMENTATIONS_TABLE_NAME, docId);
+                Result<?> result = deleteEntity(Queries.DOCUMENTATIONS_TABLE_NAME, docId);
                 logEntity(
                         documentationResult,
                         methodName,
@@ -828,7 +874,7 @@ public class PostgresDataProvider extends DataProvider {
             Result<Employee> employeeResult = getEmployeeById(employeeId);
 
             if (employeeResult.getCode() == ResultCode.SUCCESS) {
-                Result<?> result = deleteEntity(Constants.EMPLOYEES_TABLE_NAME, employeeId);
+                Result<?> result = deleteEntity(Queries.EMPLOYEES_TABLE_NAME, employeeId);
                 logEntity(
                         employeeResult,
                         methodName,
@@ -862,7 +908,7 @@ public class PostgresDataProvider extends DataProvider {
                     return updateEntityColumn(
                             "Project",
                             "bindProjectManager",
-                            Constants.PROJECT_TABLE_NAME,
+                            Queries.PROJECT_TABLE_NAME,
                             "manager_id",
                             managerId,
                             projectId
@@ -884,7 +930,7 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<?> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, String projectId) {
-        String query = String.format("SELECT COUNT(*) FROM %s WHERE project_id = ?", Constants.EMPLOYEE_PROJECT_TABLE_NAME);
+        String query = String.format("SELECT COUNT(*) FROM %s WHERE project_id = ?", Queries.EMPLOYEE_PROJECT_TABLE_NAME);
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, projectId);
             ResultSet resultSet = statement.executeQuery();
@@ -893,7 +939,7 @@ public class PostgresDataProvider extends DataProvider {
 
             if (rowCount > 0) {
                 int result = updateEntity(
-                        Constants.UPDATE_TASK_EXECUTOR_QUERY,
+                        Queries.UPDATE_TASK_EXECUTOR_QUERY,
                         executorId, executorFullName, taskId, projectId
                 );
 
@@ -924,7 +970,7 @@ public class PostgresDataProvider extends DataProvider {
         Result<?> createResult = processNewEntity(
                 "bindEmployeeToProject",
                 "bindEmployeeToProject",
-                Constants.CREATE_EMPLOYEE_PROJECT_LINK_QUERY,
+                Queries.CREATE_EMPLOYEE_PROJECT_LINK_QUERY,
                 employeeId, projectId
         );
 
@@ -946,12 +992,12 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<Project> getProjectById(String id) {
-        String query = String.format(Constants.GET_ENTITY_BY_ID_QUERY, Constants.PROJECT_TABLE_NAME);
+        String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.PROJECT_TABLE_NAME);
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, id);
             ResultSet queryResult = statement.executeQuery();
             Project project = null;
-            while (queryResult.next()) project = ResultSetUtils.extractProject(queryResult);
+            while (queryResult.next()) project = ResultSetUtils.extractProject(queryResult, this);
 
             return Optional.ofNullable(project)
                 .map(p -> {
@@ -975,7 +1021,7 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<ArrayList<Task>> getTasksByProjectId(String projectId) {
-        String query = String.format(Constants.GET_ENTITY_BY_PROJECT_ID_QUERY, Constants.TASKS_TABLE_NAME);
+        String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.TASKS_TABLE_NAME);
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, projectId);
@@ -1006,7 +1052,7 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<ArrayList<Task>> getTasksByEmployeeId(UUID employeeId) {
-        try (PreparedStatement statement = connection.prepareStatement(Constants.GET_TASKS_BY_EMPLOYEE_ID_QUERY)) {
+        try (PreparedStatement statement = connection.prepareStatement(Queries.GET_TASKS_BY_EMPLOYEE_ID_QUERY)) {
             statement.setObject(1, employeeId);
             ArrayList<Task> tasks = new ArrayList<>();
             ResultSet resultSet = statement.executeQuery();
@@ -1049,7 +1095,7 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<Task> getTaskById(UUID taskId) {
-        String query = String.format(Constants.GET_ENTITY_BY_ID_QUERY, Constants.TASKS_TABLE_NAME);
+        String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.TASKS_TABLE_NAME);
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, taskId);
@@ -1075,7 +1121,7 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<ArrayList<BugReport>> getBugReportsByProjectId(String projectId) {
-        String query = String.format(Constants.GET_ENTITY_BY_PROJECT_ID_QUERY, Constants.BUG_REPORTS_TABLE_NAME);
+        String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.BUG_REPORTS_TABLE_NAME);
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, projectId);
@@ -1108,7 +1154,7 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<BugReport> getBugReportById(UUID bugReportId) {
-        String query = String.format(Constants.GET_ENTITY_BY_ID_QUERY, Constants.BUG_REPORTS_TABLE_NAME);
+        String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.BUG_REPORTS_TABLE_NAME);
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, bugReportId);
@@ -1138,7 +1184,7 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<ArrayList<Event>> getEventsByProjectId(String projectId) {
-        String query = String.format(Constants.GET_ENTITY_BY_PROJECT_ID_QUERY, Constants.EVENTS_TABLE_NAME);
+        String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.EVENTS_TABLE_NAME);
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, projectId);
@@ -1172,7 +1218,7 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<Event> getEventById(UUID eventId) {
-        String query = String.format(Constants.GET_ENTITY_BY_ID_QUERY, Constants.EVENTS_TABLE_NAME);
+        String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.EVENTS_TABLE_NAME);
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, eventId);
@@ -1204,7 +1250,7 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<Documentation> getDocumentationById(UUID docId) {
-        String query = String.format(Constants.GET_ENTITY_BY_ID_QUERY, Constants.DOCUMENTATIONS_TABLE_NAME);
+        String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.DOCUMENTATIONS_TABLE_NAME);
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, docId);
@@ -1235,7 +1281,7 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<ArrayList<Documentation>> getDocumentationsByProjectId(String projectId) {
-        String query = String.format(Constants.GET_ENTITY_BY_PROJECT_ID_QUERY, Constants.DOCUMENTATIONS_TABLE_NAME);
+        String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.DOCUMENTATIONS_TABLE_NAME);
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, projectId);
@@ -1267,7 +1313,7 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<ArrayList<Employee>> getProjectTeam(String projectId) {
-        try(PreparedStatement statement = connection.prepareStatement(Constants.GET_PROJECT_TEAM_QUERY)) {
+        try(PreparedStatement statement = connection.prepareStatement(Queries.GET_PROJECT_TEAM_QUERY)) {
             ResultSet resultSet = statement.executeQuery();
             ArrayList<Employee> team = new ArrayList<>();
 
@@ -1295,14 +1341,15 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<Employee> getEmployeeById(UUID employeeId) {
-        String query = String.format(Constants.GET_ENTITY_BY_ID_QUERY, Constants.EMPLOYEES_TABLE_NAME);
+        String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.EMPLOYEES_TABLE_NAME);
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, employeeId);
             ResultSet resultSet = statement.executeQuery();
             Employee employee = null;
 
-            while (resultSet.next()) employee = ResultSetUtils.extractEmployee(resultSet);
+            while (resultSet.next())
+                employee = ResultSetUtils.extractEmployee(resultSet);
 
             return Optional.ofNullable(employee)
                 .map(e -> {

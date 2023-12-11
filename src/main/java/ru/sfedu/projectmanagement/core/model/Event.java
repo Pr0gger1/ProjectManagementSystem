@@ -1,15 +1,25 @@
 package ru.sfedu.projectmanagement.core.model;
 
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import ru.sfedu.projectmanagement.core.model.enums.EntityType;
+import ru.sfedu.projectmanagement.core.utils.xml.adapters.XmlLocalDateTimeAdapter;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
 public class Event extends ProjectEntity {
+    @XmlElement(name = "start_date")
+    @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     private LocalDateTime startDate;
+
+    @XmlElement(name = "end_date")
+    @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     private LocalDateTime endDate;
 
     public Event() {
-        super();
+        super(EntityType.Event);
     }
 
     public Event(
@@ -21,7 +31,7 @@ public class Event extends ProjectEntity {
             LocalDateTime startDate,
             LocalDateTime endDate
     ) {
-        super(name, description, employeeId, employeeFullName, projectId);
+        super(name, description, employeeId, employeeFullName, projectId, EntityType.Event);
         this.startDate = startDate;
         this.endDate = endDate;
     }
@@ -37,7 +47,7 @@ public class Event extends ProjectEntity {
             LocalDateTime startDate,
             LocalDateTime endDate
     ) {
-        super(name, description, id, projectId, employeeId, employeeFullName, createdAt);
+        super(name, description, id, projectId, employeeId, employeeFullName, createdAt, EntityType.Event);
         this.startDate = startDate;
         this.endDate = endDate;
     }

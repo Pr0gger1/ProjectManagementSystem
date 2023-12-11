@@ -14,12 +14,14 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 public abstract class DataProvider {
+    private final Logger logger = LogManager.getLogger(DataProvider.class);
+
     /**
      *
-     * @param entity
-     * @param methodName
-     * @param queryResult
-     * @param changeType
+     * @param entity entity which will be saved in mongo db
+     * @param methodName name of the method that runs logEntity. Necessary for logs
+     * @param queryResult execution result of entity operation
+     * @param changeType type of what happened with entity
      */
     protected final void logEntity(Object entity, String methodName, ResultCode queryResult, ChangeType changeType) {
         ActionStatus status = queryResult == ResultCode.SUCCESS ? ActionStatus.SUCCESS : ActionStatus.FAULT;
@@ -34,7 +36,6 @@ public abstract class DataProvider {
         MongoHistoryProvider.save(historyRecord);
     }
 
-    private final Logger logger = LogManager.getLogger(DataProvider.class);
     public abstract Result<?> processNewProject(Project project);
     public abstract Result<?> processNewTask(Task task);
     public abstract Result<?> processNewBugReport(BugReport bugReport);

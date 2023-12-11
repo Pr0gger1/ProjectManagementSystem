@@ -1,16 +1,25 @@
 package ru.sfedu.projectmanagement.core.model;
 
+import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import ru.sfedu.projectmanagement.core.model.enums.EntityType;
+import ru.sfedu.projectmanagement.core.utils.xml.adapters.XmlDocumentationAdapter;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.UUID;
 
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "Documentation")
+@XmlRootElement(name = "documentation")
 public class Documentation extends ProjectEntity {
-
+    @XmlElement
+    @XmlJavaTypeAdapter(XmlDocumentationAdapter.class)
     private HashMap<String, String> body;
 
     public Documentation() {
-        super();
+        super(EntityType.Documentation);
     }
 
     public Documentation(
@@ -20,7 +29,7 @@ public class Documentation extends ProjectEntity {
             String employeeFullName,
             String projectId
     ) {
-        super(name, description, employeeId, employeeFullName, projectId);
+        super(name, description, employeeId, employeeFullName, projectId, EntityType.Documentation);
     }
 
     public Documentation(
@@ -31,7 +40,7 @@ public class Documentation extends ProjectEntity {
             String employeeFullName,
             String projectId
     ) {
-        super(name, description, employeeId, employeeFullName, projectId);
+        super(name, description, employeeId, employeeFullName, projectId, EntityType.Documentation);
         this.body = body;
     }
 
@@ -45,7 +54,7 @@ public class Documentation extends ProjectEntity {
             LocalDateTime createdAt,
             HashMap<String, String> body
     ) {
-        super(name, description, id, projectId, employeeId, employeeFullName, createdAt);
+        super(name, description, id, projectId, employeeId, employeeFullName, createdAt, EntityType.Documentation);
         this.body = body;
     }
 

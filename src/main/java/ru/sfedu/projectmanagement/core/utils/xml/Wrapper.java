@@ -1,10 +1,10 @@
 package ru.sfedu.projectmanagement.core.utils.xml;
 
 import jakarta.xml.bind.annotation.*;
-import ru.sfedu.projectmanagement.core.model.BugReport;
-import ru.sfedu.projectmanagement.core.model.Project;
+import ru.sfedu.projectmanagement.core.model.*;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -12,16 +12,23 @@ import java.util.Objects;
 public class Wrapper<T> {
     @XmlElements({
             @XmlElement(name = "project", type = Project.class),
-            @XmlElement(name = "bug_report", type = BugReport.class)
+            @XmlElement(name = "bug_report", type = BugReport.class),
+            @XmlElement(name = "task", type = Task.class),
+            @XmlElement(name = "event", type = Event.class),
+            @XmlElement(name = "documentation", type = Documentation.class),
+            @XmlElement(name = "employee", type = Employee.class)
     })
-    private ArrayList<T> list = new ArrayList<>();
+    private List<T> list = new ArrayList<>();
 
-    public ArrayList<T> getList() {
+    public List<T> getList() {
         return list;
     }
 
-    public void setList(ArrayList<T> list) {
+    public void setList(List<T> list) {
         this.list = list;
+    }
+    public void addNode(T node) {
+        this.list.add(node);
     }
 
     @Override

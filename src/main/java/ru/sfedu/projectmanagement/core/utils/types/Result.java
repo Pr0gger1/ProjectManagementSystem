@@ -55,11 +55,11 @@ public class Result<T> {
 
     @Override
     public String toString() {
-        return String.format("""
-            data: %s,
-            code: %s,
-            message: %s
-        """, data != null ? data.toString() : null, code.toString(), message);
+        return "Result{" +
+                "code=" + code +
+                ", data=" + data +
+                ", message='" + message + '\'' +
+                '}';
     }
 
     @Override

@@ -1,6 +1,9 @@
 package ru.sfedu.projectmanagement.core.model;
 
 import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import ru.sfedu.projectmanagement.core.model.enums.EntityType;
+import ru.sfedu.projectmanagement.core.utils.xml.adapters.XmlLocalDateTimeAdapter;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -8,7 +11,10 @@ import java.util.UUID;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "ProjectEntity")
-public abstract class ProjectEntity {
+public abstract class ProjectEntity implements Entity {
+    @XmlTransient
+    private EntityType entityType;
+
     @XmlAttribute(required = true)
     protected UUID id;
 
@@ -28,10 +34,14 @@ public abstract class ProjectEntity {
     protected String employeeFullName;
 
     @XmlElement(required = true)
+    @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     protected LocalDateTime createdAt;
 
-    ProjectEntity() {
+    ProjectEntity() {}
+
+    ProjectEntity(EntityType entityType) {
         id = UUID.randomUUID();
+        this.entityType = entityType;
     }
 
     ProjectEntity(
@@ -39,8 +49,10 @@ public abstract class ProjectEntity {
             String description,
             UUID employeeId,
             String employeeFullName,
-            String projectId
+            String projectId,
+            EntityType entityType
     ) {
+        this.entityType = entityType;
         createdAt = LocalDateTime.now();
         this.id = UUID.randomUUID();
         this.name = name;
@@ -59,8 +71,10 @@ public abstract class ProjectEntity {
             String projectId,
             UUID employeeId,
             String employeeFullName,
-            LocalDateTime createdAt
+            LocalDateTime createdAt,
+            EntityType entityType
     ) {
+        this.entityType = entityType;
         this.id = id;
         this.name = name;
         this.description = description;
@@ -120,6 +134,10 @@ public abstract class ProjectEntity {
 
     public void setEmployeeFullName(String employeeFullName) {
         this.employeeFullName = employeeFullName;
+    }
+
+    public EntityType getEntityType() {
+        return entityType;
     }
 
     @Override

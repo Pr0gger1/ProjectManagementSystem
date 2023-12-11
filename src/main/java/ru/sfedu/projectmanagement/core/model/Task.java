@@ -1,23 +1,45 @@
 package ru.sfedu.projectmanagement.core.model;
 
+import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import ru.sfedu.projectmanagement.core.model.enums.EntityType;
 import ru.sfedu.projectmanagement.core.model.enums.Priority;
 import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
+import ru.sfedu.projectmanagement.core.utils.xml.adapters.XmlLocalDateTimeAdapter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.UUID;
 
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name = "task")
+@XmlType(name = "Task")
 public class Task extends ProjectEntity {
+    @XmlElement(name = "deadline")
+    @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     private LocalDateTime deadline;
+
+    @XmlElement(name = "comment")
     private String comment;
+
+    @XmlElement(name = "priority", required = true)
     private Priority priority = Priority.LOW;
+
+    @XmlElementWrapper(name = "tags")
+    @XmlElement(name = "tag")
     private ArrayList<String> tags = new ArrayList<>();
+
+    @XmlElement(name = "status", required = true)
     private WorkStatus status = WorkStatus.IN_PROGRESS;
+
+    @XmlElement(name = "completed_at")
+    @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     private LocalDateTime completedAt = null;
 
+
     public Task() {
-        super();
+        super(EntityType.Event);
     }
 
     public Task(
@@ -33,7 +55,7 @@ public class Task extends ProjectEntity {
             WorkStatus status,
             LocalDateTime createdAt
     ) {
-        super(name, description, UUID.randomUUID(), projectId, employeeId, employeeFullName, createdAt);
+        super(name, description, UUID.randomUUID(), projectId, employeeId, employeeFullName, createdAt, EntityType.Event);
         this.deadline = deadline;
         this.comment = comment;
         this.priority = priority;
@@ -58,7 +80,7 @@ public class Task extends ProjectEntity {
             LocalDateTime createdAt,
             LocalDateTime completedAt
     ) {
-        super(name, description, id, projectId, employeeId, employeeFullName, createdAt);
+        super(name, description, id, projectId, employeeId, employeeFullName, createdAt, EntityType.Event);
         this.deadline = deadline;
         this.comment = comment;
         this.priority = priority;
@@ -75,7 +97,7 @@ public class Task extends ProjectEntity {
             String employeeFullName,
             String projectId
     ) {
-        super(name, description, employeeId, employeeFullName, projectId);
+        super(name, description, employeeId, employeeFullName, projectId, EntityType.Event);
     }
 
     public Task(
@@ -86,7 +108,7 @@ public class Task extends ProjectEntity {
             String projectId,
             Priority priority
     ) {
-        super(name, description, employeeId, employeeFullName, projectId);
+        super(name, description, employeeId, employeeFullName, projectId, EntityType.Event);
         this.priority = priority;
     }
 

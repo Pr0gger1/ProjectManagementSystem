@@ -1,17 +1,24 @@
 package ru.sfedu.projectmanagement.core.model;
 
 import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import ru.sfedu.projectmanagement.core.model.enums.EntityType;
 import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
+import ru.sfedu.projectmanagement.core.utils.xml.adapters.XmlLocalDateTimeAdapter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.UUID;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name = "project")
 @XmlType(name = "Project")
-public class Project {
+public class Project implements Entity {
+    @XmlTransient
+    private final EntityType entityType = EntityType.Project;
     @XmlElement(nillable = true)
+    @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     private LocalDateTime deadline;
 
     @XmlElement(required = true)
@@ -98,6 +105,11 @@ public class Project {
 
     public Employee getManager() {
         return manager;
+    }
+    public UUID getManagerId() {
+        if (manager == null)
+            return null;
+        return manager.getId();
     }
 
     public void setManager(Employee manager) {

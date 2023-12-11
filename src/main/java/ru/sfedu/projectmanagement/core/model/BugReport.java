@@ -2,6 +2,7 @@ package ru.sfedu.projectmanagement.core.model;
 
 import jakarta.xml.bind.annotation.*;
 import ru.sfedu.projectmanagement.core.model.enums.BugStatus;
+import ru.sfedu.projectmanagement.core.model.enums.EntityType;
 import ru.sfedu.projectmanagement.core.model.enums.Priority;
 
 import java.time.LocalDateTime;
@@ -20,7 +21,7 @@ public class BugReport extends ProjectEntity {
     private BugStatus status = BugStatus.OPENED;
 
     public BugReport() {
-        super();
+        super(EntityType.BugReport);
     }
 
     public BugReport(
@@ -30,7 +31,7 @@ public class BugReport extends ProjectEntity {
             String authorFullName,
             String projectId
     ) {
-        super(name, description, authorId, authorFullName, projectId);
+        super(name, description, authorId, authorFullName, projectId, EntityType.BugReport);
     }
 
     public BugReport(
@@ -41,7 +42,7 @@ public class BugReport extends ProjectEntity {
             String projectId,
             Priority priority
     ) {
-        super(name, description, authorId, authorFullName, projectId);
+        super(name, description, authorId, authorFullName, projectId, EntityType.BugReport);
         this.priority = priority;
     }
 
@@ -58,7 +59,7 @@ public class BugReport extends ProjectEntity {
             Priority priority,
             BugStatus status
     ) {
-        super(name, description, id, projectId, employeeId, employeeFullName, createdAt);
+        super(name, description, id, projectId, employeeId, employeeFullName, createdAt, EntityType.BugReport);
         this.priority = priority;
         this.status = status;
     }

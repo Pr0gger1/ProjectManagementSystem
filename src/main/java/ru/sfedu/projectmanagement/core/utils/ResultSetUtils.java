@@ -6,6 +6,7 @@ import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.enums.BugStatus;
 import ru.sfedu.projectmanagement.core.model.enums.Priority;
 import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
+import ru.sfedu.projectmanagement.core.utils.types.Result;
 
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -213,8 +214,8 @@ public class ResultSetUtils {
         );
     }
 
-    public static Project extractProject(ResultSet resultSet) throws SQLException {
-        DataProvider postgresProvider = new PostgresDataProvider();
+    public static Project extractProject(ResultSet resultSet, PostgresDataProvider postgresProvider) throws SQLException {
+//        DataProvider postgresProvider = new PostgresDataProvider();
 
         String projectId = resultSet.getString("id");
         String projectName = resultSet.getString("name");

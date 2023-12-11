@@ -2,77 +2,382 @@ package ru.sfedu.projectmanagement.core.api;
 
 import org.junit.jupiter.api.Test;
 
-class CsvDataProviderTest {
+class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest {
 
+    @Override
     @Test
-    void processNewProject() {
+    public void processNewProject() {
     }
 
-    @Test
-    void monitorProjectReadiness() {
-    }
+    @Override
 
     @Test
-    void calculateProjectReadiness() {
+    public void createExistingProject() {
+
     }
 
+    @Override
     @Test
-    void calculateLaborEfficiency() {
+    public void calculateProjectReadiness() {
     }
 
+    @Override
     @Test
-    void processNewTask() {
+    public void calculateProjectReadinessIfHasNoTasks() {
+
     }
 
+    @Override
     @Test
-    void trackTaskStatus() {
+    public void calculateLaborEfficiency() {
     }
 
+    @Override
     @Test
-    void processNewBugReport() {
+    public void calculateLaborEfficiencyIfEmployeeHasNoTasks() {
+
     }
 
+    @Override
     @Test
-    void trackBugReportStatus() {
+    public void processNewTask() {
     }
 
+    @Override
     @Test
-    void processNewDocumentation() {
+    public void createExistingTasks() {
+
     }
 
+    @Override
     @Test
-    void processNewEvent() {
+    public void trackTaskStatus() {
     }
 
+    @Override
     @Test
-    void generateUUID() {
+    public void processNewBugReport() {
     }
 
+    @Override
     @Test
-    void deleteProjectEntity() {
+    public void createExistingBugReports() {
+
     }
 
+    @Override
     @Test
-    void deleteProject() {
+    public void trackBugReportStatus() {
     }
 
+    @Override
     @Test
-    void bindProjectManager() {
+    public void bindEmployeeToProject() {
+
     }
 
+    @Override
     @Test
-    void bindTaskExecutor() {
+    public void processNewDocumentation() {
     }
 
+    @Override
     @Test
-    void getProjectById() {
+    public void createExistingDocumentation() {
+
     }
 
+    @Override
     @Test
-    void getProjectEntityById() {
+    public void processNewEvent() {
     }
 
+    @Override
     @Test
-    void bindEntityToProject() {
+    public void createExistingEvent() {
+
+    }
+
+    @Override
+    @Test
+    public void processNewEmployee() {
+
+    }
+
+    @Override
+    @Test
+    public void createExistingEmployee() {
+
+    }
+
+    @Override
+    @Test
+    public void monitorProjectCharacteristics() {
+
+    }
+
+    @Override
+    public void initDataForMonitorProjectCharacteristics() {
+
+    }
+
+    @Override
+    @Test
+    public void monitorProjectCharacteristicsWithBugStatusAndLaborEfficiency() {
+
+    }
+
+    @Override
+    @Test
+    public void monitorProjectCharacteristicsWithLaborEfficiency() {
+
+    }
+
+    @Override
+    @Test
+    public void deleteProject() {
+    }
+
+    @Override
+    @Test
+    public void deleteNonExistentProject() {
+
+    }
+
+    @Override
+    @Test
+    public void deleteTask() {
+
+    }
+
+    @Override
+    @Test
+    public void deleteNonExistentTask() {
+
+    }
+
+    @Override
+    @Test
+    public void deleteBugReport() {
+
+    }
+
+    @Override
+    @Test
+    public void deleteNonExistentBugReport() {
+
+    }
+
+    @Override
+    @Test
+    public void deleteEvent() {
+
+    }
+
+    @Override
+    @Test
+    public void deleteNonExistentEvent() {
+
+    }
+
+    @Override
+    @Test
+    public void deleteDocumentation() {
+
+    }
+
+    @Override
+    @Test
+    public void deleteNonExistentDocumentation() {
+
+    }
+
+    @Override
+    @Test
+    public void deleteEmployee() {
+
+    }
+
+    @Override
+    @Test
+    public void deleteNonExistentEmployee() {
+
+    }
+
+    @Override
+    @Test
+    public void bindProjectManager() {
+    }
+
+    @Override
+    @Test
+    public void bindTaskExecutor() {
+    }
+
+    @Override
+    @Test
+    public void getProjectById() {
+    }
+
+    @Override
+    @Test
+    public void getNonExistentProject() {
+
+    }
+
+    @Override
+    @Test
+    public void getTasksByTags() {
+
+    }
+
+    @Override
+    @Test
+    public void getTasksByNonExistentTags() {
+
+    }
+
+    @Override
+    @Test
+    public void getTasksByProjectId() {
+
+    }
+
+    @Override
+    @Test
+    public void getTasksFromProjectWithNoTasks() {
+
+    }
+
+    @Override
+    @Test
+    public void getTasksByNonExistentProjectId() {
+
+    }
+
+    @Override
+    @Test
+    public void getTasksByEmployeeId() {
+
+    }
+
+    @Override
+    @Test
+    public void getTasksByNonExistentEmployeeId() {
+
+    }
+
+    @Override
+    @Test
+    public void getTaskById() {
+
+    }
+
+    @Override
+    @Test
+    public void getNonExistentTask() {
+
+    }
+
+    @Override
+    @Test
+    public void getBugReportsByProjectId() {
+
+    }
+
+    @Override
+    @Test
+    public void getBugReportsByNonExistentProjectId() {
+
+    }
+
+    @Override
+    @Test
+    public void getBugReportById() {
+
+    }
+
+    @Override
+    @Test
+    public void getNonExistentBugReport() {
+
+    }
+
+    @Override
+    @Test
+    public void getEventsByProjectId() {
+
+    }
+
+    @Override
+    @Test
+    public void getEventsByNonExistentProjectId() {
+
+    }
+
+    @Override
+    @Test
+    public void getEventById() {
+
+    }
+
+    @Override
+    @Test
+    public void getNonExistentEvent() {
+
+    }
+
+    @Override
+    @Test
+    public void getDocumentationsByProjectId() {
+
+    }
+
+    @Override
+    @Test
+    public void getDocumentationsByNonExistentProjectId() {
+
+    }
+
+    @Override
+    @Test
+    public void getDocumentationById() {
+
+    }
+
+    @Override
+    @Test
+    public void getNonExistentDocumentation() {
+
+    }
+
+    @Override
+    @Test
+    public void getProjectTeam() {
+
+    }
+
+    @Override
+    @Test
+    public void getProjectTeamOfNonExistentProject() {
+
+    }
+
+    @Override
+    @Test
+    public void getEmptyProjectTeam() {
+
+    }
+
+    @Override
+    @Test
+    public void getEmployeeById() {
+
+    }
+
+    @Override
+    @Test
+    public void getNonExistentEmployee() {
+
     }
 }

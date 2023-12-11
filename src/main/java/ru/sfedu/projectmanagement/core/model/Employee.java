@@ -1,20 +1,44 @@
 package ru.sfedu.projectmanagement.core.model;
 
+import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import ru.sfedu.projectmanagement.core.utils.xml.adapters.XmlLocalDateAdapter;
+
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
 
-public class Employee {
-    private String firstName;
-    private String lastName;
-    private String patronymic;
-    private String fullName;
-    private LocalDate birthday;
-    private String email;
-    private String phoneNumber;
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name = "employee")
+@XmlType(name = "Employee")
+public class Employee implements Entity {
+    @XmlAttribute(required = true)
     private UUID id;
-    private String position;
 
+    @XmlElement(required = true)
+    private String firstName;
+
+    @XmlElement(required = true)
+    private String lastName;
+
+    @XmlElement()
+    private String patronymic;
+
+    @XmlElement(required = true)
+    private String fullName;
+
+    @XmlElement(required = true)
+    @XmlJavaTypeAdapter(XmlLocalDateAdapter.class)
+    private LocalDate birthday;
+
+    @XmlElement(required = true)
+    private String email;
+
+    @XmlElement()
+    private String phoneNumber;
+
+    @XmlElement(required = true)
+    private String position;
 
     public Employee() {
         id = UUID.randomUUID();
