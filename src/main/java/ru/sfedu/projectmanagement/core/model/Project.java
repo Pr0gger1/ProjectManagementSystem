@@ -59,8 +59,6 @@ public class Project implements Entity {
     public Project(String name, String description, String id) {
         this.name = name;
         this.description = description;
-        this.id = id;
-
     }
 
     public Project() {
@@ -97,6 +95,10 @@ public class Project implements Entity {
         this.description = description;
         this.id = id;
         this.manager = manager;
+    }
+
+    public EntityType getEntityType() {
+        return entityType;
     }
 
     public LocalDateTime getDeadline() {
@@ -210,7 +212,7 @@ public class Project implements Entity {
                 "deadline=" + deadline +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
-                ", id='" + id + '\'' +
+                ", id='" + getId() + '\'' +
                 ", status=" + status +
                 ", manager=" + manager +
                 ", team=" + team +

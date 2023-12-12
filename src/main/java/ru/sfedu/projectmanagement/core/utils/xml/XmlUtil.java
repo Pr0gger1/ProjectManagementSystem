@@ -7,6 +7,7 @@ import jakarta.xml.bind.Unmarshaller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.model.*;
+import ru.sfedu.projectmanagement.core.model.Entity;
 
 import java.io.File;
 import java.util.List;
@@ -14,8 +15,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class XmlUtil {
     private static final Logger logger = LogManager.getLogger(XmlUtil.class);
-    private static JAXBContext context;
     private static Marshaller marshaller;
+    private static JAXBContext context;
 
     static {
         try {
@@ -26,7 +27,8 @@ public class XmlUtil {
                     Task.class,
                     Employee.class,
                     Event.class,
-                    Documentation.class
+                    Documentation.class,
+                    EmployeeProjectObject.class
             );
 
             marshaller = context.createMarshaller();
@@ -36,6 +38,19 @@ public class XmlUtil {
         }
     }
 
+    /**
+     * @param filePath
+     * @param id
+     * @param <T>
+     * @return
+     */
+    public static <T extends Entity> boolean isRecordExists(String filePath, Object id) {
+        Wrapper<T> wrapper = XmlUtil.read(filePath);
+        return wrapper.getList()
+                .stream()
+                .anyMatch(entity -> entity.getId().equals(id));
+    }
+
     public static void truncateFile(String entityFilePath) throws JAXBException {
         File file = new File(entityFilePath);
         JAXBContext context = JAXBContext.newInstance(Wrapper.class);
@@ -43,11 +58,10 @@ public class XmlUtil {
         marshaller.marshal(new Wrapper<>(), file);
     }
 
-    public static <T> Wrapper<T> read(String entityFilePath) {
+    public static <T extends Entity> Wrapper<T> read(String entityFilePath) {
         File file = new File(entityFilePath);
 
         try {
-            JAXBContext context = JAXBContext.newInstance(Wrapper.class, Task.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
             Wrapper<T> wrapper = (Wrapper<T>) unmarshaller.unmarshal(file);
             logger.debug("readRecord[1]: read record {}", wrapper.toString());
@@ -60,10 +74,9 @@ public class XmlUtil {
     }
 
     public static <T extends Entity> void createRecord(String filePath, T object) throws JAXBException {
-        Wrapper<T> wrapper = new Wrapper<>();
-        logger.debug("createRecord[0]: {}", wrapper.getList());
-        wrapper = read(filePath);
+        Wrapper<T> wrapper = read(filePath);
         List<T> list = wrapper.getList();
+        logger.debug("createRecord[0]: {}", list);
 
         for (T entity : list) {
             if (entity.getId().equals(object.getId())) {

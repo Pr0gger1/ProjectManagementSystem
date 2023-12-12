@@ -711,7 +711,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Override
     @Test
     public void getTaskById() {
-        processNewTask();
+        tasks.forEach(postgresProvider::processNewTask);
         for (Task task : tasks) {
             Result<Task> taskResult = postgresProvider.getTaskById(task.getId());
             assertEquals(ResultCode.SUCCESS, taskResult.getCode());

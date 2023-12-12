@@ -2,6 +2,7 @@ package ru.sfedu.projectmanagement.core.model;
 
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import ru.sfedu.projectmanagement.core.model.enums.EntityType;
 import ru.sfedu.projectmanagement.core.utils.xml.adapters.XmlLocalDateAdapter;
 
 import java.time.LocalDate;
@@ -12,6 +13,9 @@ import java.util.UUID;
 @XmlRootElement(name = "employee")
 @XmlType(name = "Employee")
 public class Employee implements Entity {
+    @XmlTransient
+    private final EntityType entityType = EntityType.Employee;
+
     @XmlAttribute(required = true)
     private UUID id;
 
@@ -102,6 +106,11 @@ public class Employee implements Entity {
         this.position = position;
         this.birthday = birthday;
         this.fullName = String.format("%s %s", this.firstName, this.lastName);
+    }
+
+    @Override
+    public EntityType getEntityType() {
+        return entityType;
     }
 
     public UUID getId() {
@@ -196,7 +205,7 @@ public class Employee implements Entity {
             email: %s,
             position: %s
         }
-        """, id, fullName,
+        """, getId(), fullName,
                 firstName, lastName,
                 patronymic, birthday.toString(),
                 phoneNumber, email, position
@@ -208,11 +217,11 @@ public class Employee implements Entity {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         Employee employee = (Employee) object;
-        return Objects.equals(firstName, employee.firstName) && Objects.equals(lastName, employee.lastName) && Objects.equals(patronymic, employee.patronymic) && Objects.equals(fullName, employee.fullName) && Objects.equals(birthday, employee.birthday) && Objects.equals(email, employee.email) && Objects.equals(phoneNumber, employee.phoneNumber) && Objects.equals(id, employee.id) && Objects.equals(position, employee.position);
+        return Objects.equals(firstName, employee.firstName) && Objects.equals(lastName, employee.lastName) && Objects.equals(patronymic, employee.patronymic) && Objects.equals(fullName, employee.fullName) && Objects.equals(birthday, employee.birthday) && Objects.equals(email, employee.email) && Objects.equals(phoneNumber, employee.phoneNumber) && Objects.equals(getId(), employee.getId()) && Objects.equals(position, employee.position);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(firstName, lastName, patronymic, fullName, birthday, email, phoneNumber, id, position);
+        return Objects.hash(firstName, lastName, patronymic, fullName, birthday, email, phoneNumber, getId(), position);
     }
 }

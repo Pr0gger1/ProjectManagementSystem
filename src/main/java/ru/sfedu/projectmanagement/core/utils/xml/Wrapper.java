@@ -16,7 +16,8 @@ public class Wrapper<T> {
             @XmlElement(name = "task", type = Task.class),
             @XmlElement(name = "event", type = Event.class),
             @XmlElement(name = "documentation", type = Documentation.class),
-            @XmlElement(name = "employee", type = Employee.class)
+            @XmlElement(name = "employee", type = Employee.class),
+            @XmlElement(name = "employee_project", type = EmployeeProjectObject.class)
     })
     private List<T> list = new ArrayList<>();
 
