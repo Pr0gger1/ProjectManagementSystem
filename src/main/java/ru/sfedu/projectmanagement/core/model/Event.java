@@ -27,7 +27,7 @@ public class Event extends ProjectEntity {
             String description,
             UUID employeeId,
             String employeeFullName,
-            String projectId,
+            UUID projectId,
             LocalDateTime startDate,
             LocalDateTime endDate
     ) {
@@ -40,7 +40,7 @@ public class Event extends ProjectEntity {
             String name,
             String description,
             UUID id,
-            String projectId,
+            UUID projectId,
             UUID employeeId,
             String employeeFullName,
             LocalDateTime createdAt,

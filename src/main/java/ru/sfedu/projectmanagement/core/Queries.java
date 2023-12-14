@@ -14,10 +14,9 @@ public class Queries {
     // init postgres tables queries
     public static final String INIT_PROJECT_TABLE_QUERY = String.format("""
         CREATE TABLE IF NOT EXISTS %s (
-            id VARCHAR(64) PRIMARY KEY,
+            id UUID PRIMARY KEY,
             name VARCHAR(128) NOT NULL,
             description TEXT,
-            version VARCHAR,
             status VARCHAR(16) DEFAULT 'IN_PROGRESS',
             deadline TIMESTAMPTZ,
             manager_id UUID REFERENCES employees(id) ON DELETE CASCADE
@@ -27,7 +26,7 @@ public class Queries {
     public static final String INIT_PROJECT_EMPLOYEE_TABLE_QUERY = String.format("""
        CREATE TABLE IF NOT EXISTS %s (
             employee_id UUID NOT NULL,
-            project_id VARCHAR(64) NOT NULL,
+            project_id UUID NOT NULL,
             PRIMARY KEY(employee_id, project_id),
             FOREIGN KEY(employee_id) REFERENCES employees(id) ON DELETE CASCADE,
             FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
@@ -37,7 +36,7 @@ public class Queries {
     public static final String INIT_TASK_TABLE_QUERY = String.format("""
         CREATE TABLE IF NOT EXISTS %s (
             id UUID PRIMARY KEY,
-            project_id VARCHAR(64) NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+            project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
             name VARCHAR(128) NOT NULL,
             description TEXT,
             executor_id UUID NOT NULL REFERENCES employees(id),
@@ -55,7 +54,7 @@ public class Queries {
     public static final String INIT_BUG_REPORT_TABLE_QUERY = String.format("""
         CREATE TABLE IF NOT EXISTS %s (
             id UUID PRIMARY KEY,
-            project_id VARCHAR(64) NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+            project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
             status VARCHAR(16) DEFAULT 'OPENED',
             priority VARCHAR(20) DEFAULT 'UNDEFINED',
             name VARCHAR(128) NOT NULL,
@@ -71,7 +70,7 @@ public class Queries {
             id UUID PRIMARY KEY,
             name VARCHAR(128) NOT NULL,
             description TEXT,
-            project_id VARCHAR(64) NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+            project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
             author_id UUID NOT NULL REFERENCES employees(id),
             author_full_name VARCHAR(128) NOT NULL,
             start_date TIMESTAMPTZ NOT NULL,
@@ -83,7 +82,7 @@ public class Queries {
     public static final String INIT_DOCUMENTATION_TABLE_QUERY = String.format("""
         CREATE TABLE IF NOT EXISTS %s (
             id UUID PRIMARY KEY,
-            project_id VARCHAR(64) NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+            project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
             name VARCHAR(128) NOT NULL,
             description TEXT,
             author_id UUID NOT NULL REFERENCES employees(id),

@@ -69,8 +69,8 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public TrackInfo<String, TrackInfo<?, ?>> monitorProjectCharacteristics(
-            String projectId, boolean checkLaborEfficiency, boolean trackBugs
+    public ProjectStatistics monitorProjectCharacteristics(
+            UUID projectId, boolean checkLaborEfficiency, boolean trackBugs
     ) {
         return null;
     }
@@ -80,7 +80,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public float calculateProjectReadiness(String projectOd) {
+    public float calculateProjectReadiness(UUID projectOd) {
         return 0;
     }
 
@@ -89,7 +89,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public TrackInfo<Employee, Float> calculateLaborEfficiency(String projectId) {
+    public TrackInfo<Employee, Float> calculateLaborEfficiency(UUID projectId) {
         return null;
     }
 
@@ -97,7 +97,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public TrackInfo<Task, String> trackTaskStatus(String projectId) {
+    public TrackInfo<Task, String> trackTaskStatus(UUID projectId) {
         return null;
     }
 
@@ -105,7 +105,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public TrackInfo<BugReport, String> trackBugReportStatus(String projectId) {
+    public TrackInfo<BugReport, String> trackBugReportStatus(UUID projectId) {
         return null;
     }
 
@@ -116,7 +116,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> bindEmployeeToProject(UUID employeeId, String projectId) {
+    public Result<?> bindEmployeeToProject(UUID employeeId, UUID projectId) {
         return null;
     }
 
@@ -126,7 +126,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> bindProjectManager(UUID managerId, String projectId) {
+    public Result<?> bindProjectManager(UUID managerId, UUID projectId) {
         return null;
     }
 
@@ -137,7 +137,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, String projectId) {
+    public Result<?> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId) {
         return null;
     }
 
@@ -146,7 +146,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> deleteProject(String projectId) {
+    public Result<?> deleteProject(UUID projectId) {
         return null;
     }
 
@@ -200,7 +200,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<Project> getProjectById(String id) {
+    public Result<Project> getProjectById(UUID id) {
         return null;
     }
 
@@ -209,7 +209,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<ArrayList<Task>> getTasksByProjectId(String projectId) {
+    public Result<ArrayList<Task>> getTasksByProjectId(UUID projectId) {
         return null;
     }
 
@@ -231,7 +231,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     @Override
-    public Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, String projectId) {
+    public Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, UUID projectId) {
         return null;
     }
 
@@ -240,7 +240,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<ArrayList<BugReport>> getBugReportsByProjectId(String projectId) {
+    public Result<ArrayList<BugReport>> getBugReportsByProjectId(UUID projectId) {
         return null;
     }
 
@@ -258,7 +258,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<ArrayList<Event>> getEventsByProjectId(String projectId) {
+    public Result<ArrayList<Event>> getEventsByProjectId(UUID projectId) {
         return null;
     }
 
@@ -279,7 +279,7 @@ public class CsvDataProvider extends DataProvider {
     public Result<Documentation> getDocumentationById(UUID docId) { return null; }
 
     @Override
-    public Result<ArrayList<Documentation>> getDocumentationsByProjectId(String projectId) {
+    public Result<ArrayList<Documentation>> getDocumentationsByProjectId(UUID projectId) {
         return null;
     }
 
@@ -288,7 +288,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<ArrayList<Employee>> getProjectTeam(String projectId) {
+    public Result<ArrayList<Employee>> getProjectTeam(UUID projectId) {
         return null;
     }
 

@@ -26,7 +26,7 @@ public class ResultSetUtils {
     private static HashMap<String, Object> extractProjectEntity(ResultSet resultSet) throws SQLException {
         return new HashMap<>() {{
             put(ENTITY_ID, resultSet.getObject(ENTITY_ID));
-            put(ENTITY_PROJECT_ID, resultSet.getString(ENTITY_PROJECT_ID));
+            put(ENTITY_PROJECT_ID, resultSet.getObject(ENTITY_PROJECT_ID));
             put(ENTITY_NAME, resultSet.getString(ENTITY_NAME));
             put(ENTITY_DESCRIPTION, resultSet.getString(ENTITY_DESCRIPTION));
         }};
@@ -63,7 +63,7 @@ public class ResultSetUtils {
                 (String) entityFields.get(ENTITY_NAME),
                 (String) entityFields.get(ENTITY_DESCRIPTION),
                 (UUID) entityFields.get(ENTITY_ID),
-                (String) entityFields.get(ENTITY_PROJECT_ID),
+                (UUID) entityFields.get(ENTITY_PROJECT_ID),
                 authorId,
                 authorFullName,
                 eventCreatedAt,
@@ -91,7 +91,7 @@ public class ResultSetUtils {
                 (String) entityFields.get(ENTITY_NAME),
                 (String) entityFields.get(ENTITY_DESCRIPTION),
                 (UUID) entityFields.get(ENTITY_ID),
-                (String) entityFields.get(ENTITY_PROJECT_ID),
+                (UUID) entityFields.get(ENTITY_PROJECT_ID),
                 documentationAuthorId,
                 documentationAuthorFullName,
                 documentationCreatedAt,
@@ -155,7 +155,7 @@ public class ResultSetUtils {
                 (String) entityFields.get(ENTITY_NAME),
                 (String) entityFields.get(ENTITY_DESCRIPTION),
                 (UUID) entityFields.get(ENTITY_ID),
-                (String) entityFields.get(ENTITY_PROJECT_ID),
+                (UUID) entityFields.get(ENTITY_PROJECT_ID),
                 bugReportAuthorId,
                 bugReportAuthorFullName,
                 bugReportCreatedAt,
@@ -203,7 +203,7 @@ public class ResultSetUtils {
                 (UUID) entityFields.get(ENTITY_ID),
                 taskExecutorId,
                 taskExecutorFullName,
-                (String) entityFields.get(ENTITY_PROJECT_ID),
+                (UUID) entityFields.get(ENTITY_PROJECT_ID),
                 taskDeadline,
                 taskComment,
                 taskPriority,
@@ -217,7 +217,7 @@ public class ResultSetUtils {
     public static Project extractProject(ResultSet resultSet, PostgresDataProvider postgresProvider) throws SQLException {
 //        DataProvider postgresProvider = new PostgresDataProvider();
 
-        String projectId = resultSet.getString("id");
+        UUID projectId = (UUID) resultSet.getObject("id");
         String projectName = resultSet.getString("name");
         String projectDescription = resultSet.getString("description");
         WorkStatus projectStatus = WorkStatus.valueOf(resultSet.getString("status"));

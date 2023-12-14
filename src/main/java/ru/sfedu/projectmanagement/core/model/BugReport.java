@@ -29,7 +29,7 @@ public class BugReport extends ProjectEntity {
             String description,
             UUID authorId,
             String authorFullName,
-            String projectId
+            UUID projectId
     ) {
         super(name, description, authorId, authorFullName, projectId, EntityType.BugReport);
     }
@@ -39,7 +39,7 @@ public class BugReport extends ProjectEntity {
             String description,
             UUID authorId,
             String authorFullName,
-            String projectId,
+            UUID projectId,
             Priority priority
     ) {
         super(name, description, authorId, authorFullName, projectId, EntityType.BugReport);
@@ -52,7 +52,7 @@ public class BugReport extends ProjectEntity {
             String name,
             String description,
             UUID id,
-            String projectId,
+            UUID projectId,
             UUID employeeId,
             String employeeFullName,
             LocalDateTime createdAt,

@@ -39,7 +39,7 @@ public class Task extends ProjectEntity {
 
 
     public Task() {
-        super(EntityType.Event);
+        super(EntityType.Task);
     }
 
     public Task(
@@ -47,7 +47,7 @@ public class Task extends ProjectEntity {
             String description,
             UUID employeeId,
             String employeeFullName,
-            String projectId,
+            UUID projectId,
             LocalDateTime deadline,
             String comment,
             Priority priority,
@@ -55,7 +55,7 @@ public class Task extends ProjectEntity {
             WorkStatus status,
             LocalDateTime createdAt
     ) {
-        super(name, description, UUID.randomUUID(), projectId, employeeId, employeeFullName, createdAt, EntityType.Event);
+        super(name, description, UUID.randomUUID(), projectId, employeeId, employeeFullName, createdAt, EntityType.Task);
         this.deadline = deadline;
         this.comment = comment;
         this.priority = priority;
@@ -71,7 +71,7 @@ public class Task extends ProjectEntity {
             UUID id,
             UUID employeeId,
             String employeeFullName,
-            String projectId,
+            UUID projectId,
             LocalDateTime deadline,
             String comment,
             Priority priority,
@@ -80,7 +80,7 @@ public class Task extends ProjectEntity {
             LocalDateTime createdAt,
             LocalDateTime completedAt
     ) {
-        super(name, description, id, projectId, employeeId, employeeFullName, createdAt, EntityType.Event);
+        super(name, description, id, projectId, employeeId, employeeFullName, createdAt, EntityType.Task);
         this.deadline = deadline;
         this.comment = comment;
         this.priority = priority;
@@ -95,9 +95,9 @@ public class Task extends ProjectEntity {
             String description,
             UUID employeeId,
             String employeeFullName,
-            String projectId
+            UUID projectId
     ) {
-        super(name, description, employeeId, employeeFullName, projectId, EntityType.Event);
+        super(name, description, employeeId, employeeFullName, projectId, EntityType.Task);
     }
 
     public Task(
@@ -105,10 +105,10 @@ public class Task extends ProjectEntity {
             String description,
             UUID employeeId,
             String employeeFullName,
-            String projectId,
+            UUID projectId,
             Priority priority
     ) {
-        super(name, description, employeeId, employeeFullName, projectId, EntityType.Event);
+        super(name, description, employeeId, employeeFullName, projectId, EntityType.Task);
         this.priority = priority;
     }
 

@@ -17,7 +17,7 @@ public class EmployeeProjectObject implements Entity {
     private UUID employeeId;
 
     @XmlElement(name = "project_id")
-    private String projectId;
+    private UUID projectId;
 
     public UUID getEmployeeId() {
         return employeeId;
@@ -27,16 +27,16 @@ public class EmployeeProjectObject implements Entity {
         this.employeeId = employeeId;
     }
 
-    public String getId() {
+    public UUID getId() {
         return projectId;
     }
 
-    public void setProjectId(String projectId) {
+    public void setProjectId(UUID projectId) {
         this.projectId = projectId;
     }
 
     private EmployeeProjectObject() {}
-    public EmployeeProjectObject(UUID employeeId, String projectId) {
+    public EmployeeProjectObject(UUID employeeId, UUID projectId) {
         this.employeeId = employeeId;
         this.projectId = projectId;
     }

@@ -1,17 +1,25 @@
 package ru.sfedu.projectmanagement.core.utils;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.api.Environment;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.Entity;
 import ru.sfedu.projectmanagement.core.utils.config.ConfigPropertiesUtil;
+import ru.sfedu.projectmanagement.core.utils.types.Result;
+import ru.sfedu.projectmanagement.core.utils.xml.Wrapper;
 import ru.sfedu.projectmanagement.core.utils.xml.XmlUtil;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
 
 import static ru.sfedu.projectmanagement.core.utils.FileUtil.createFileIfNotExists;
 
 public class DataSourceFileUtil {
+    private static final Logger logger = LogManager.getLogger(DataSourceFileUtil.class);
     public final String projectsFilePath;
     public final String employeesFilePath;
     public final String tasksFilePath;
@@ -80,40 +88,129 @@ public class DataSourceFileUtil {
         }
     }
 
-    public <T extends Entity> boolean createValidation(T entity) {
+    public <T extends Entity> Result<TreeMap<String, String>> createValidation(T entity) {
+        logger.debug("Entity type: " + entity.getClass().getSimpleName());
+        logger.debug("Expected type: " + entity.getEntityType());
         return switch (entity.getEntityType()) {
-            case BugReport -> createBugReportValidation((BugReport) entity);
-            case Documentation -> createDocumentationValidation((Documentation) entity);
+            case BugReport -> createProjectEntityValidation((BugReport) entity);
+            case Documentation -> createProjectEntityValidation((Documentation) entity);
             case Employee -> createEmployeeValidation((Employee) entity);
-            case Event -> createEventValidation((Event) entity);
+            case Event -> createProjectEntityValidation((Event) entity);
             case Project -> createProjectValidation((Project) entity);
-            case Task -> createTaskValidation((Task) entity);
-            case EmployeeProject -> true;
+            case Task -> createProjectEntityValidation((Task) entity);
+            default -> throw new IllegalArgumentException("Unsupported entity type: " + entity.getEntityType());
         };
     }
 
-    private boolean createTaskValidation(Task task) {
-        return XmlUtil.isRecordExists(projectsFilePath, task.getProjectId()) &&
-                XmlUtil.isRecordExists(employeesFilePath, task.getEmployeeId());
+    public <T extends Entity> Result<TreeMap<String, String>> checkProjectAndEmployeeExistence(String filePath, UUID id) {
+        Wrapper<T> entity = XmlUtil.read(filePath);
+        return entity.getList()
+                .stream()
+                .filter(e -> e.getId().equals(id))
+                .findFirst()
+                .map(e -> checkProjectAndEmployeeExistence((ProjectEntity) e))
+                .orElse(new Result<>(new TreeMap<>(Map.of("entity", "couldn't find an entity")), ResultCode.ERROR));
+    }
+    public Result<TreeMap<String, String>> checkProjectAndEmployeeExistence(ProjectEntity entity) {
+        logger.debug("checkProjectAndEmployeeExistence[1]: creating {} {}", entity.getClass().getSimpleName(), entity);
+        TreeMap<String, String> errors = new TreeMap<>();
+        if (!XmlUtil.isRecordExists(employeesFilePath, entity.getEmployeeId()))
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, String.format(Constants.EMPLOYEE_DOES_NOT_EXISTS, entity.getEmployeeId()));
+        if (!XmlUtil.isRecordExists(projectsFilePath, entity.getProjectId()))
+            errors.put(Constants.PROJECT_ERROR_KEY, String.format(Constants.PROJECT_DOES_NOT_EXISTS, entity.getProjectId()));
+        if (!XmlUtil.isRecordExists(employeeProjectFilePath, entity.getEmployeeId()))
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT);
+
+        if (!errors.isEmpty())
+            return new Result<>(errors, ResultCode.ERROR);
+
+        logger.info("checkProjectAndEmployeeExistence[2]: is valid: {}", true);
+        return new Result<>(ResultCode.SUCCESS);
     }
 
-    private boolean createProjectValidation(Project project) {
-        return true;
+    private Result<TreeMap<String, String>> createProjectEntityValidation(ProjectEntity entity) {
+        logger.debug("createProjectEntityValidation[1]: creating {} {}", entity.getClass().getSimpleName(), entity);
+        TreeMap<String, String> errors = new TreeMap<>();
+        Result<TreeMap<String, String>> result = checkProjectAndEmployeeExistence(entity);
+
+        if (entity.getName().isEmpty())
+            errors.put(Constants.BUG_REPORT_ERROR_KEY, Constants.ENTITY_INVALID_NAME);
+        if (entity.getEmployeeId() == null)
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_IS_NULL);
+        if (entity.getEmployeeFullName().isEmpty())
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_INVALID_FULL_NAME);
+
+        if (!errors.isEmpty()) {
+            result.setCode(ResultCode.INVALID_DATA);
+            result.getData().putAll(errors);
+        }
+
+        logger.info("createProjectEntityValidation[2]: is valid: {}", true);
+        return result;
     }
 
-    private boolean createBugReportValidation(BugReport bugReport) {
-        return true;
+    public Result<Task> checkEntitiesBeforeBindTaskExecutor(UUID executorId, UUID taskId, UUID projectId) {
+        logger.debug("checkEntitiesBeforeBindTaskExecutor[1]: start validating");
+        TreeMap<String, String> errors = new TreeMap<>();
+
+        if (!XmlUtil.isRecordExists(tasksFilePath, taskId))
+            errors.put(Constants.TASK_ERROR_KEY, Constants.TASK_DOES_NOT_EXISTS);
+        if (!XmlUtil.isRecordExists(employeesFilePath, executorId))
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_DOES_NOT_EXISTS);
+        if (!XmlUtil.isRecordExists(projectsFilePath, projectId))
+            errors.put(Constants.PROJECT_ERROR_KEY, Constants.PROJECT_DOES_NOT_EXISTS);
+        if (!XmlUtil.isRecordExists(employeeProjectFilePath, executorId))
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_DOES_NOT_EXISTS);
+
+        if (!errors.isEmpty())
+            return new Result<>(null, ResultCode.ERROR, errors);
+
+        logger.info("checkEntitiesBeforeBindTaskExecutor[2]: is valid: {}", true);
+        return new Result<>(ResultCode.SUCCESS);
     }
 
-    private boolean createDocumentationValidation(Documentation documentation) {
-        return true;
+    private Result<TreeMap<String, String>> createProjectValidation(Project project) {
+        logger.debug("createProjectValidation[1]: creating project {}", project);
+        TreeMap<String, String> errors = new TreeMap<>();
+
+        if (project.getManager() != null && !XmlUtil.isRecordExists(employeesFilePath, project.getManagerId())) {
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, String.format(Constants.EMPLOYEE_DOES_NOT_EXISTS, project.getManagerId()));
+            return new Result<>(errors, ResultCode.ERROR);
+        }
+
+        logger.info("createProjectValidation[2]: is valid: true");
+        return new Result<>(ResultCode.SUCCESS);
     }
 
-    private boolean createEmployeeValidation(Employee employee) {
-        return true;
+    private Result<TreeMap<String, String>> createEmployeeValidation(Employee employee) {
+        logger.debug("createEmployeeValidation[1]: creating employee {}", employee);
+        TreeMap<String, String> errors = new TreeMap<>();
+        if (employee.getFirstName().isEmpty())
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_INVALID_NAME);
+        if (employee.getLastName().isEmpty())
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_INVALID_LAST_NAME);
+        if (employee.getPosition().isEmpty())
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_INVALID_POSITION);
+
+        if (!errors.isEmpty())
+            return new Result<>(errors, ResultCode.INVALID_DATA);
+
+        return new Result<>(ResultCode.SUCCESS);
     }
 
-    private boolean createEventValidation(Event event) {
-        return true;
+    public Result<TreeMap<String, String>> checkIfEmployeeBelongsToProject(Employee employee) {
+        logger.debug("checkIfEmployeeBelongsToProject[1]: object {}", employee);
+        TreeMap<String, String> errors = new TreeMap<>();
+        if (!XmlUtil.isRecordExists(employeesFilePath, employee.getId()))
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_DOES_NOT_EXISTS);
+        if (!XmlUtil.isRecordExists(employeeProjectFilePath, employee.getId()))
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT);
+
+        if (!errors.isEmpty())
+            return new Result<>(errors, ResultCode.ERROR);
+
+        logger.info("checkIfEmployeeBelongsToProject[2]: is valid: {}", true);
+        return new Result<>(ResultCode.SUCCESS);
     }
+
 }

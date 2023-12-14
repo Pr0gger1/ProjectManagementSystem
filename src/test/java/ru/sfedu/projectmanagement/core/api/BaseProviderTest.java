@@ -16,10 +16,11 @@ import java.util.UUID;
 
 public class BaseProviderTest {
     protected static final ArrayList<Employee> team = new ArrayList<>();
-    private static final UUID staticEmployeeId = UUID.fromString("0c725486-f5ed-4d12-819e-4e5bd7eb1a9d");
+    private static final UUID staticEmployeeId1 = UUID.fromString("0c725486-f5ed-4d12-819e-4e5bd7eb1a9d");
+    private static final UUID staticEmployeeId2 = UUID.fromString("ebaf9fd8-b97a-430e-ab91-fb3493410a93");
 
-    protected static final Employee employee = createEmployee(
-            staticEmployeeId,
+    protected static final Employee employee1 = createEmployee(
+            staticEmployeeId1,
             "Nikolay",
             "Eremeev",
             "Ivanovich",
@@ -29,8 +30,20 @@ public class BaseProviderTest {
             "mail@mail.ru"
     );
 
+    protected static final Employee employee2 = createEmployee(
+            staticEmployeeId2,
+            "Petr",
+            "Zaycev",
+            "Alexeevich",
+            LocalDate.of(1999, Month.MAY, 6),
+            "+79882258565",
+            "Senior mobile dev lead",
+            "zaycev@mail.ru"
+    );
+
+
     protected static final Project project = createProject(
-            "mobile_bank",
+            UUID.randomUUID(),
             "mobile bank app",
             "mobile app for bank based on kotlin and swift",
             WorkStatus.IN_PROGRESS,
@@ -40,13 +53,27 @@ public class BaseProviderTest {
             new ArrayList<>(),
             new ArrayList<>(),
             new ArrayList<>(),
-            employee
+            employee1
     );
 
     protected static final Task task = createTask(
             project.getId(),
-            employee.getId(),
-            employee.getFullName(),
+            employee1.getId(),
+            employee1.getFullName(),
+            "task",
+            "task description",
+            "create main page of application",
+            WorkStatus.IN_PROGRESS,
+            new ArrayList<>(),
+            null,
+            LocalDateTime.of(2024, Month.JANUARY, 1, 0, 0),
+            Priority.MEDIUM
+    );
+
+    protected static final Task taskWithoutExecutor = createTask(
+            project.getId(),
+            null,
+            "",
             "task",
             "task description",
             "create main page of application",
@@ -60,8 +87,8 @@ public class BaseProviderTest {
     protected static final BugReport bugReport = new BugReport(
             "mobile_bank_report_12-05-2023",
             "this is a bug report description",
-            employee.getId(),
-            employee.getFullName(),
+            employee1.getId(),
+            employee1.getFullName(),
             project.getId(),
             Priority.HIGH
     );
@@ -69,8 +96,8 @@ public class BaseProviderTest {
     protected static final Event event = new Event(
             "mobile bank app presentation",
             "show client what we did",
-            employee.getId(),
-            employee.getFullName(),
+            employee1.getId(),
+            employee1.getFullName(),
             project.getId(),
             LocalDateTime.of(2023, Month.DECEMBER, 22, 15, 0),
             LocalDateTime.of(2023, Month.DECEMBER, 22, 10, 0)
@@ -83,8 +110,8 @@ public class BaseProviderTest {
                 put("chapter one", "some loooooong text");
                 put("chapter two", "another some loooooong text");
             }},
-            employee.getId(),
-            employee.getFullName(),
+            employee1.getId(),
+            employee1.getFullName(),
             project.getId()
     );
 
@@ -97,8 +124,8 @@ public class BaseProviderTest {
     public static void createTaskList() {
         Task task1 = createTask(
                 project.getId(),
-                employee.getId(),
-                employee.getFullName(),
+                employee1.getId(),
+                employee1.getFullName(),
                 "Task 1",
                 "Description for Task 1",
                 "Comment for Task 1",
@@ -111,8 +138,8 @@ public class BaseProviderTest {
 
         Task task2 = createTask(
                 project.getId(),
-                employee.getId(),
-                employee.getFullName(),
+                employee1.getId(),
+                employee1.getFullName(),
                 "Task 2",
                 "Description for Task 2",
                 "Comment for Task 2",
@@ -125,8 +152,8 @@ public class BaseProviderTest {
 
         Task task3 = createTask(
                 project.getId(),
-                employee.getId(),
-                employee.getFullName(),
+                employee1.getId(),
+                employee1.getFullName(),
                 "Task 3",
                 "Description for Task 3",
                 "Comment for Task 3",
@@ -190,8 +217,8 @@ public class BaseProviderTest {
                 "Bug 1",
                 "Description 1",
                 project.getId(),
-                employee.getId(),
-                employee.getFullName(),
+                employee1.getId(),
+                employee1.getFullName(),
                 BugStatus.IN_PROGRESS,
                 Priority.LOW
         );
@@ -200,8 +227,8 @@ public class BaseProviderTest {
                 "Bug 2",
                 "Description 2",
                 project.getId(),
-                employee.getId(),
-                employee.getFullName(),
+                employee1.getId(),
+                employee1.getFullName(),
                 BugStatus.OPENED,
                 Priority.HIGH
         );
@@ -210,8 +237,8 @@ public class BaseProviderTest {
                 "Bug 3",
                 "Description 3",
                 project.getId(),
-                employee.getId(),
-                employee.getFullName(),
+                employee1.getId(),
+                employee1.getFullName(),
                 BugStatus.CLOSED,
                 Priority.MEDIUM
         );
@@ -224,7 +251,7 @@ public class BaseProviderTest {
 
 
     static protected Project createProject(
-            String id,
+            UUID id,
             String name,
             String description,
             WorkStatus status,
@@ -253,7 +280,7 @@ public class BaseProviderTest {
     }
     
     static protected Task createTask(
-            String projectId,
+            UUID projectId,
             UUID employeeId,
             String employeeFullName,
             String name,
@@ -284,7 +311,7 @@ public class BaseProviderTest {
     static protected BugReport createBugReport(
             String name,
             String description,
-            String projectId,
+            UUID projectId,
             UUID employeeId,
             String employeeFullName,
             BugStatus status,
@@ -305,7 +332,7 @@ public class BaseProviderTest {
     static protected Event createEvent(
             String name,
             String description,
-            String projectId,
+            UUID projectId,
             UUID employeeId,
             String employeeFullName,
             LocalDateTime startDate,
@@ -326,7 +353,7 @@ public class BaseProviderTest {
     static protected Documentation createDocumentation(
             String name,
             String description,
-            String projectId,
+            UUID projectId,
             UUID employeeId,
             String employeeFullName,
             HashMap<String, String> body

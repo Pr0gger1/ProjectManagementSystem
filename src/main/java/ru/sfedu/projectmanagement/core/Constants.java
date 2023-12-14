@@ -60,4 +60,23 @@ public class Constants {
     public static final String TRACK_INFO_KEY_PROJECT_READINESS = "project_readiness";
     public static final String TRACK_INFO_KEY_TASK_STATUS = "task_status";
     public static final String TRACK_INFO_KEY_BUG_STATUS = "bug_status";
+
+    public static final String PROJECT_ERROR_KEY = "project";
+    public static final String EMPLOYEE_ERROR_KEY = "employee";
+    public static final String BUG_REPORT_ERROR_KEY = "bug report";
+    public static final String PROJECT_DOES_NOT_EXISTS = "project with id %s doesn't exists";
+
+    public static final String EMPLOYEE_DOES_NOT_EXISTS = "employee with id %s doesn't exists";
+
+    public static final String EMPLOYEE_INVALID_NAME = "invalid name";
+    public static final String EMPLOYEE_INVALID_LAST_NAME = "invalid last name";
+    public static final String EMPLOYEE_INVALID_POSITION = "invalid position value";
+    public static final String TASK_DOES_NOT_EXISTS = "task with id %s doesn't exists";
+    public static final String TASK_ERROR_KEY = "task";
+
+    public static final String ENTITY_INVALID_NAME = "invalid name";
+    public static final String EMPLOYEE_IS_NULL = "employee should be defined";
+    public static final String EMPLOYEE_INVALID_FULL_NAME = "invalid employee's full name";
+    public static final String EMPLOYEE_IS_NOT_LINKED_TO_PROJECT = "employee with id %s doesn't belong to the project";
+
 }

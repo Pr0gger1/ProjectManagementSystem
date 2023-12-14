@@ -25,7 +25,7 @@ public abstract class ProjectEntity implements Entity {
     protected String description;
 
     @XmlElement(required = true)
-    protected String projectId;
+    protected UUID projectId;
 
     @XmlElement(required = true)
     protected UUID employeeId;
@@ -49,7 +49,7 @@ public abstract class ProjectEntity implements Entity {
             String description,
             UUID employeeId,
             String employeeFullName,
-            String projectId,
+            UUID projectId,
             EntityType entityType
     ) {
         this.entityType = entityType;
@@ -68,7 +68,7 @@ public abstract class ProjectEntity implements Entity {
             String name,
             String description,
             UUID id,
-            String projectId,
+            UUID projectId,
             UUID employeeId,
             String employeeFullName,
             LocalDateTime createdAt,
@@ -100,11 +100,11 @@ public abstract class ProjectEntity implements Entity {
         this.id = id;
     }
 
-    public void setProjectId(String id) {
+    public void setProjectId(UUID id) {
         this.projectId = id;
     }
 
-    public String getProjectId() {
+    public UUID getProjectId() {
         return projectId;
     }
 

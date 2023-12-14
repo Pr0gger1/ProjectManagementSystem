@@ -3,6 +3,7 @@ package ru.sfedu.projectmanagement.core.api;
 import jakarta.xml.bind.JAXBException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.utils.DataSourceType;
 import ru.sfedu.projectmanagement.core.utils.DataSourceFileUtil;
@@ -12,12 +13,13 @@ import ru.sfedu.projectmanagement.core.utils.xml.Wrapper;
 import ru.sfedu.projectmanagement.core.utils.ResultCode;
 import ru.sfedu.projectmanagement.core.utils.xml.XmlUtil;
 
-import static ru.sfedu.projectmanagement.core.utils.FileUtil.createFileIfNotExists;
 import static ru.sfedu.projectmanagement.core.utils.FileUtil.createFolderIfNotExists;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.TreeMap;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class XmlDataProvider extends DataProvider {
     private final Logger logger = LogManager.getLogger(XmlDataProvider.class);
@@ -34,16 +36,21 @@ public class XmlDataProvider extends DataProvider {
         }
     }
 
+
     /**
-     * @param project
+     * @param project - instance of Project
      * @return
      */
     @Override
     public Result<?> processNewProject(Project project) {
         try {
-            XmlUtil.createRecord(dataSourceFileUtil.projectsFilePath, project);
-            logger.debug("processNewProject[1]: project was written in xml {}", project);
-            return new Result<>(ResultCode.SUCCESS);
+            Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(project);
+            if (validateResult.getCode() == ResultCode.SUCCESS) {
+                XmlUtil.createRecord(dataSourceFileUtil.projectsFilePath, project);
+                logger.debug("processNewProject[1]: project was written in xml {}", project);
+                return new Result<>(ResultCode.SUCCESS);
+            }
+            return validateResult;
         }
         catch (JAXBException exception) {
             logger.error("processNewProject[2]: {}", exception.getMessage());
@@ -59,13 +66,13 @@ public class XmlDataProvider extends DataProvider {
     @Override
     public Result<?> processNewTask(Task task) {
         try {
-            if (XmlUtil.isRecordExists(dataSourceFileUtil.projectsFilePath, task.getProjectId()) &&
-                XmlUtil.isRecordExists(dataSourceFileUtil.employeesFilePath, task.getEmployeeId())) {
+            Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(task);
+            if (validateResult.getCode() == ResultCode.SUCCESS) {
                 XmlUtil.createRecord(dataSourceFileUtil.tasksFilePath, task);
                 logger.debug("processNewTask[1]: task was written in xml {}", task);
                 return new Result<>(ResultCode.SUCCESS);
             }
-            else return new Result<>(ResultCode.ERROR, String.format("project with id %s doesn't exists", task.getId()));
+            else return validateResult;
         }
         catch (JAXBException exception) {
             logger.error("processNewTask[2]: {}", exception.getMessage());
@@ -80,9 +87,14 @@ public class XmlDataProvider extends DataProvider {
     @Override
     public Result<?> processNewBugReport(BugReport bugReport) {
         try {
-            XmlUtil.createRecord(dataSourceFileUtil.bugReportsFilePath, bugReport);
-            logger.debug("processBugReport[1]: bug report was written in xml {}", bugReport);
-            return new Result<>(ResultCode.SUCCESS);
+            Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(bugReport);
+            if (validateResult.getCode() == ResultCode.SUCCESS) {
+                XmlUtil.createRecord(dataSourceFileUtil.bugReportsFilePath, bugReport);
+                logger.debug("processBugReport[1]: bug report was written in xml {}", bugReport);
+                return new Result<>(ResultCode.SUCCESS);
+            }
+
+            return validateResult;
         }
         catch (JAXBException exception) {
             logger.error("processBugReport[2]: {}", exception.getMessage());
@@ -97,9 +109,13 @@ public class XmlDataProvider extends DataProvider {
     @Override
     public Result<?> processNewDocumentation(Documentation documentation) {
         try {
-            XmlUtil.createRecord(dataSourceFileUtil.documentationsFilePath, documentation);
-            logger.debug("processNewDocumentation[1]: documentation was written in xml {}", documentation);
-            return new Result<>(ResultCode.SUCCESS);
+            Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(documentation);
+            if (validateResult.getCode() == ResultCode.SUCCESS) {
+                XmlUtil.createRecord(dataSourceFileUtil.documentationsFilePath, documentation);
+                logger.debug("processNewDocumentation[1]: documentation was written in xml {}", documentation);
+                return new Result<>(ResultCode.SUCCESS);
+            }
+            return validateResult;
         }
         catch (JAXBException exception) {
             logger.error("processNewDocumentation[2]: {}", exception.getMessage());
@@ -110,9 +126,13 @@ public class XmlDataProvider extends DataProvider {
     @Override
     public Result<?> processNewEmployee(Employee employee) {
         try {
-            XmlUtil.createRecord(dataSourceFileUtil.employeesFilePath, employee);
-            logger.debug("processNewEmployee[1]: employee was written in xml {}", employee);
-            return new Result<>(ResultCode.SUCCESS);
+            Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(employee);
+            if (validateResult.getCode() == ResultCode.SUCCESS) {
+                XmlUtil.createRecord(dataSourceFileUtil.employeesFilePath, employee);
+                logger.debug("processNewEmployee[1]: employee was written in xml {}", employee);
+                return new Result<>(ResultCode.SUCCESS);
+            }
+            return validateResult;
         }
         catch (JAXBException exception) {
             logger.error("processNewEmployee[2]: {}", exception.getMessage());
@@ -127,9 +147,13 @@ public class XmlDataProvider extends DataProvider {
     @Override
     public Result<?> processNewEvent(Event event) {
         try {
-            XmlUtil.createRecord(dataSourceFileUtil.eventsFilePath, event);
-            logger.debug("processNewEvent[1]: task was written in xml {}", event);
-            return new Result<>(ResultCode.SUCCESS);
+            Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(event);
+            if (validateResult.getCode() == ResultCode.SUCCESS) {
+                XmlUtil.createRecord(dataSourceFileUtil.eventsFilePath, event);
+                logger.debug("processNewEvent[1]: task was written in xml {}", event);
+                return new Result<>(ResultCode.SUCCESS);
+            }
+            return validateResult;
         }
         catch (JAXBException exception) {
             logger.error("processNewEvent[2]: {}", exception.getMessage());
@@ -142,7 +166,7 @@ public class XmlDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<Project> getProjectById(String projectId) {
+    public Result<Project> getProjectById(UUID projectId) {
         Wrapper<Project> projectWrapper = XmlUtil.read(dataSourceFileUtil.projectsFilePath);
        return projectWrapper.getList()
                 .stream()
@@ -270,7 +294,7 @@ public class XmlDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, String projectId) {
+    public Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, UUID projectId) {
         Wrapper<Task> taskWrapper = XmlUtil.read(dataSourceFileUtil.tasksFilePath);
         ArrayList<Task> tasks = taskWrapper.getList()
                 .stream()
@@ -287,7 +311,7 @@ public class XmlDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<ArrayList<Task>> getTasksByProjectId(String projectId) {
+    public Result<ArrayList<Task>> getTasksByProjectId(UUID projectId) {
         Wrapper<Task> taskWrapper = XmlUtil.read(dataSourceFileUtil.tasksFilePath);
         ArrayList<Task> tasks = taskWrapper.getList()
                 .stream()
@@ -320,7 +344,7 @@ public class XmlDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<ArrayList<BugReport>> getBugReportsByProjectId(String projectId) {
+    public Result<ArrayList<BugReport>> getBugReportsByProjectId(UUID projectId) {
         Wrapper<BugReport> bugReportWrapper = XmlUtil.read(dataSourceFileUtil.bugReportsFilePath);
         ArrayList<BugReport> bugReports = bugReportWrapper.getList()
                 .stream()
@@ -337,8 +361,16 @@ public class XmlDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<ArrayList<Event>> getEventsByProjectId(String projectId) {
-        return null;
+    public Result<ArrayList<Event>> getEventsByProjectId(UUID projectId) {
+        Wrapper<Event> eventWrapper = XmlUtil.read(dataSourceFileUtil.eventsFilePath);
+        ArrayList<Event> events = eventWrapper.getList()
+                .stream()
+                .filter(event -> event.getProjectId().equals(projectId))
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+
+        if (events.isEmpty())
+            return new Result<>(events, ResultCode.NOT_FOUND);
+        return new Result<>(events, ResultCode.SUCCESS);
     }
 
     /**
@@ -346,8 +378,16 @@ public class XmlDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<ArrayList<Documentation>> getDocumentationsByProjectId(String projectId) {
-        return null;
+    public Result<ArrayList<Documentation>> getDocumentationsByProjectId(UUID projectId) {
+        Wrapper<Documentation> documentationWrapper = XmlUtil.read(dataSourceFileUtil.documentationsFilePath);
+        ArrayList<Documentation> documentations = documentationWrapper.getList()
+                .stream()
+                .filter(doc -> doc.getProjectId().equals(projectId))
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+
+        if (documentations.isEmpty())
+            return new Result<>(documentations, ResultCode.NOT_FOUND);
+        return new Result<>(documentations, ResultCode.SUCCESS);
     }
 
     /**
@@ -355,55 +395,19 @@ public class XmlDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<ArrayList<Employee>> getProjectTeam(String projectId) {
-        return null;
-    }
+    public Result<ArrayList<Employee>> getProjectTeam(UUID projectId) {
+        Wrapper<EmployeeProjectObject> employeeWrapper = XmlUtil.read(dataSourceFileUtil.employeeProjectFilePath);
+        ArrayList<Employee> employees = employeeWrapper.getList()
+                .stream()
+                .filter(record -> record.getId().equals(projectId))
+                .map(record -> getEmployeeById(record.getEmployeeId()))
+                .filter(result -> result.getCode() == ResultCode.SUCCESS)
+                .map(Result::getData)
+                .collect(Collectors.toCollection(ArrayList::new));
 
-    /**
-     * @param projectId
-     * @param checkLaborEfficiency
-     * @param trackBugs
-     * @return
-     */
-    @Override
-    public TrackInfo<String, ?> monitorProjectCharacteristics(String projectId, boolean checkLaborEfficiency, boolean trackBugs) {
-        return null;
-    }
-
-    /**
-     * @param projectId
-     * @return
-     */
-    @Override
-    protected float calculateProjectReadiness(String projectId) {
-        return 0;
-    }
-
-    /**
-     * @param projectId
-     * @return
-     */
-    @Override
-    protected TrackInfo<Employee, Float> calculateLaborEfficiency(String projectId) {
-        return null;
-    }
-
-    /**
-     * @param projectId
-     * @return
-     */
-    @Override
-    protected TrackInfo<Task, String> trackTaskStatus(String projectId) {
-        return null;
-    }
-
-    /**
-     * @param projectId
-     * @return
-     */
-    @Override
-    protected TrackInfo<BugReport, String> trackBugReportStatus(String projectId) {
-        return null;
+        return employees.isEmpty() ?
+                new Result<>(ResultCode.NOT_FOUND, "No employees found for the project") :
+                new Result<>(employees, ResultCode.SUCCESS);
     }
 
     /**
@@ -412,7 +416,7 @@ public class XmlDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> bindEmployeeToProject(UUID employeeId, String projectId) {
+    public Result<?> bindEmployeeToProject(UUID employeeId, UUID projectId) {
         try {
             if (
                 XmlUtil.isRecordExists(dataSourceFileUtil.projectsFilePath, projectId) &&
@@ -436,9 +440,38 @@ public class XmlDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> bindProjectManager(UUID managerId, String projectId) {
-        return null;
+    public Result<?> bindProjectManager(UUID managerId, UUID projectId) {
+        Result<Employee> employeeResult = getEmployeeById(managerId);
+        Result<?> result = new Result<>(ResultCode.SUCCESS);
+
+        if (employeeResult.getCode() != ResultCode.SUCCESS) {
+            return new Result<>(ResultCode.ERROR, employeeResult.getMessage());
+        }
+
+        Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.checkIfEmployeeBelongsToProject(employeeResult.getData());
+        if (validateResult.getCode() != ResultCode.SUCCESS) {
+            return validateResult;
+        }
+
+        Wrapper<Project> projectWrapper = XmlUtil.read(dataSourceFileUtil.projectsFilePath);
+        projectWrapper.getList()
+                .stream()
+                .filter(project -> project.getId().equals(projectId))
+                .findFirst()
+                .ifPresent(project -> {
+                    project.setManager(employeeResult.getData());
+                    try {
+                        XmlUtil.createOrUpdateRecord(dataSourceFileUtil.projectsFilePath, project);
+                        result.setCode(ResultCode.SUCCESS);
+                    } catch (JAXBException e) {
+                        result.setCode(ResultCode.ERROR);
+                        result.setMessage(e.getMessage());
+                    }
+                });
+
+        return result;
     }
+
 
     /**
      * @param executorId
@@ -448,8 +481,40 @@ public class XmlDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, String projectId) {
-        return null;
+    public Result<Task> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId) {
+        Result<Task> validationResult = dataSourceFileUtil.checkEntitiesBeforeBindTaskExecutor(
+                executorId, taskId, projectId
+        );
+
+        if (validationResult.getCode() != ResultCode.SUCCESS) {
+            return validationResult;
+        }
+
+        Result<Employee> employeeResult = getEmployeeById(executorId);
+        Result<Task> result = new Result<>(null, ResultCode.SUCCESS);
+        if (employeeResult.getCode() != ResultCode.SUCCESS)
+            return new Result<>(null, ResultCode.ERROR, employeeResult.getMessage());
+
+        Wrapper<Task> taskWrapper = XmlUtil.read(dataSourceFileUtil.tasksFilePath);
+        taskWrapper.getList()
+                .stream()
+                .filter(task -> task.getId().equals(taskId))
+                .findFirst()
+                .ifPresent(task -> {
+                    task.setEmployeeId(employeeResult.getData().getId());
+                    task.setEmployeeFullName(employeeResult.getData().getFullName());
+                    try {
+                        XmlUtil.createOrUpdateRecord(dataSourceFileUtil.tasksFilePath, task);
+                        result.setCode(ResultCode.SUCCESS);
+                        result.setData(task);
+                    }
+                    catch (JAXBException e) {
+                        result.setCode(ResultCode.ERROR);
+                        result.setMessage(e.getMessage());
+                    }
+                });
+
+        return result;
     }
 
     /**
@@ -457,7 +522,7 @@ public class XmlDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> deleteProject(String projectId) {
+    public Result<?> deleteProject(UUID projectId) {
         return null;
     }
 

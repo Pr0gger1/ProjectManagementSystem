@@ -8,9 +8,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.Entity;
+import ru.sfedu.projectmanagement.core.model.enums.EntityType;
 
 import java.io.File;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class XmlUtil {
@@ -44,8 +46,13 @@ public class XmlUtil {
      * @param <T>
      * @return
      */
-    public static <T extends Entity> boolean isRecordExists(String filePath, Object id) {
+    public static <T extends Entity> boolean isRecordExists(String filePath, UUID id) {
         Wrapper<T> wrapper = XmlUtil.read(filePath);
+        if (wrapper.getList().stream().allMatch(entity -> entity.getEntityType() == EntityType.EmployeeProject)) {
+            return wrapper.getList()
+                    .stream()
+                    .anyMatch(entity -> ((EmployeeProjectObject) entity).getEmployeeId().equals(id));
+        }
         return wrapper.getList()
                 .stream()
                 .anyMatch(entity -> entity.getId().equals(id));
@@ -79,7 +86,7 @@ public class XmlUtil {
         logger.debug("createRecord[0]: {}", list);
 
         for (T entity : list) {
-            if (entity.getId().equals(object.getId())) {
+            if (entity.getId().equals(object.getId()) && entity.getEntityType() != EntityType.EmployeeProject) {
                 String errorMessage = String.format("record with id = %s already exists", entity.getId());
                 throw new JAXBException(errorMessage);
             }

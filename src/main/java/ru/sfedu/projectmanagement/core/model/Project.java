@@ -28,7 +28,7 @@ public class Project implements Entity {
     private String description;
 
     @XmlAttribute(required = true)
-    private String id;
+    private UUID id;
 
     @XmlElement(required = true)
     private WorkStatus status = WorkStatus.IN_PROGRESS;
@@ -67,7 +67,7 @@ public class Project implements Entity {
     public Project(
             String name,
             String description,
-            String id,
+            UUID id,
             LocalDateTime deadline,
             WorkStatus status,
             Employee manager,
@@ -90,7 +90,7 @@ public class Project implements Entity {
         this.bugReports = bugReports;
     }
 
-    public Project(String name, String description, String id, Employee manager) {
+    public Project(String name, String description, UUID id, Employee manager) {
         this.name = name;
         this.description = description;
         this.id = id;
@@ -174,11 +174,11 @@ public class Project implements Entity {
         this.status = status;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -212,7 +212,7 @@ public class Project implements Entity {
                 "deadline=" + deadline +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
-                ", id='" + getId() + '\'' +
+                ", id='" + id + '\'' +
                 ", status=" + status +
                 ", manager=" + manager +
                 ", team=" + team +

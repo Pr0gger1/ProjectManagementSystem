@@ -27,7 +27,7 @@ public class Documentation extends ProjectEntity {
             String description,
             UUID employeeId,
             String employeeFullName,
-            String projectId
+            UUID projectId
     ) {
         super(name, description, employeeId, employeeFullName, projectId, EntityType.Documentation);
     }
@@ -38,7 +38,7 @@ public class Documentation extends ProjectEntity {
             HashMap<String, String> body,
             UUID employeeId,
             String employeeFullName,
-            String projectId
+            UUID projectId
     ) {
         super(name, description, employeeId, employeeFullName, projectId, EntityType.Documentation);
         this.body = body;
@@ -48,7 +48,7 @@ public class Documentation extends ProjectEntity {
             String name,
             String description,
             UUID id,
-            String projectId,
+            UUID projectId,
             UUID employeeId,
             String employeeFullName,
             LocalDateTime createdAt,

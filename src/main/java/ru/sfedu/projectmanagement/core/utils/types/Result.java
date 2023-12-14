@@ -3,16 +3,24 @@ package ru.sfedu.projectmanagement.core.utils.types;
 import ru.sfedu.projectmanagement.core.utils.ResultCode;
 
 import java.util.Objects;
+import java.util.TreeMap;
 
 public class Result<T> {
     private ResultCode code;
     private T data;
     private String message;
+    private TreeMap<String, String> errors = new TreeMap<>();
 
     public Result(T data, ResultCode code, String message) {
         this.code = code;
         this.data = data;
         this.message = message;
+    }
+
+    public Result(T data, ResultCode code, TreeMap<String, String> errors) {
+        this.data = data;
+        this.code = code;
+        this.errors = errors;
     }
 
     public Result(T data, ResultCode code) {
@@ -27,6 +35,14 @@ public class Result<T> {
 
     public Result(ResultCode code) {
         this.code = code;
+    }
+
+    public void setErrors(TreeMap<String, String> errors) {
+        this.errors = errors;
+    }
+
+    public TreeMap<String, String> getErrors() {
+        return errors;
     }
 
     public ResultCode getCode() {

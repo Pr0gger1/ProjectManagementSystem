@@ -8,9 +8,7 @@ import ru.sfedu.projectmanagement.core.model.enums.BugStatus;
 import ru.sfedu.projectmanagement.core.model.enums.ChangeType;
 import ru.sfedu.projectmanagement.core.model.enums.Priority;
 import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
-import ru.sfedu.projectmanagement.core.utils.PostgresUtil;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
-import ru.sfedu.projectmanagement.core.utils.types.TrackInfo;
 import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.utils.config.ConfigPropertiesUtil;
 import ru.sfedu.projectmanagement.core.utils.types.Pair;
@@ -19,10 +17,8 @@ import ru.sfedu.projectmanagement.core.utils.ResultSetUtils;
 
 import java.sql.*;
 import java.sql.Date;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class PostgresDataProvider extends DataProvider {
@@ -99,7 +95,7 @@ public class PostgresDataProvider extends DataProvider {
      * prepares tables during initialization of postgres data provider
      */
     private void initDatabaseTables() {
-        String[] queries = {
+        ArrayList<String> queries = new ArrayList<>(List.of(
                 Queries.INIT_EMPLOYEE_TABLE_QUERY,
                 Queries.INIT_PROJECT_TABLE_QUERY,
                 Queries.INIT_TASK_TABLE_QUERY,
@@ -107,72 +103,27 @@ public class PostgresDataProvider extends DataProvider {
                 Queries.INIT_BUG_REPORT_TABLE_QUERY,
                 Queries.INIT_DOCUMENTATION_TABLE_QUERY,
                 Queries.INIT_EVENT_TABLE_QUERY
-        };
+        ));
 
-        try {
-            for (String query : queries) {
-                PreparedStatement statement = connection.prepareStatement(query);
+        Connection currentConnection = getConnection();
+        queries.forEach(query -> {
+            try {
+                PreparedStatement statement = currentConnection.prepareStatement(query);
                 statement.execute();
             }
+            catch (SQLException exception) {
+                logger.error("initDatabase[2]: {}", exception.getMessage());
 
-            logger.debug("initDatabase[1]: all entities were initialized successfully");
-        }
-        catch (SQLException exception) {
-            logger.error("initDatabase[2]: {}", exception.getMessage());
-        }
+            }
+            finally {
+                try {
+                    currentConnection.close();
+                } catch (SQLException e) {
+                    logger.debug("connection close error {}", e.getMessage());
+                }
+            }
+        });
     }
-
-    private String generateCreateProjectQuery(Project project) {
-        String filledQuery = String.format(
-                Queries.CREATE_PROJECT_QUERY,
-                Queries.PROJECT_TABLE_NAME,
-                PostgresUtil.convertObjectToSqlString(project.getId()),
-                PostgresUtil.convertObjectToSqlString(project.getName()),
-                PostgresUtil.convertObjectToSqlString(project.getDescription()),
-                PostgresUtil.convertObjectToSqlString(project.getStatus()),
-                PostgresUtil.convertObjectToSqlString(project.getDeadline()),
-                PostgresUtil.convertObjectToSqlString(project.getManagerId())
-        );
-
-        logger.debug("generateCreateProjectQuery[1]: result query = {}", filledQuery);
-        return filledQuery;
-    }
-
-    private String generateCreateTaskQuery(Task task) {
-        String formattedTags = task.getTags()
-                .stream()
-                .map(el -> "'" + el + "'")
-                .collect(Collectors.joining(", "));
-
-        String formattedDeadline = PostgresUtil.convertObjectToSqlString(task.getDeadline());
-        String formattedCreatedAt = PostgresUtil.convertObjectToSqlString(task.getCreatedAt());
-        String formattedCompletedAt = PostgresUtil.convertObjectToSqlString(task.getCompletedAt());
-
-        String filledQuery = String.format(
-                Queries.CREATE_TASK_QUERY,
-                Queries.TASKS_TABLE_NAME,
-                task.getId(),
-                task.getProjectId(),
-                task.getName(),
-                task.getDescription(),
-                task.getEmployeeId(),
-                task.getEmployeeFullName(),
-                task.getComment(),
-                task.getPriority(),
-                formattedTags,
-                task.getStatus(),
-                formattedDeadline,
-                formattedCreatedAt,
-                formattedCompletedAt
-        );
-
-        logger.debug("generateCreateTaskQuery[1]: result query = {}", filledQuery);
-        return filledQuery;
-    }
-
-//    private String generateCreateBugReportQuery(BugReport bugReport) {
-//        String filledQuery = String.format()
-//    }
 
     /**
      * @param entityName entity name for logging what you save
@@ -251,10 +202,6 @@ public class PostgresDataProvider extends DataProvider {
 
 
 
-    /** Creates new project
-     * @param project - instance of Project
-     * @return Result with execution code and message if it fails
-     */
     @Override
     public Result<?> processNewProject(Project project) {
         final String methodName = "processNewProject";
@@ -285,8 +232,7 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     /**
-     * @param employee Employee instance
-     * @return Result with execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEmployee(Employee)}
      */
     @Override
     public Result<?> processNewEmployee(Employee employee) {
@@ -318,8 +264,7 @@ public class PostgresDataProvider extends DataProvider {
 
 
     /**
-     * @param task Task instance
-     * @return Result with execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewTask(Task)}
      */
     @Override
     public Result<?> processNewTask(Task task) {
@@ -361,11 +306,8 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-
-
     /**
-     * @param bugReport BugReport instance
-     * @return Result with execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewBugReport(BugReport)}
      */
     @Override
     public Result<?> processNewBugReport(BugReport bugReport) {
@@ -396,8 +338,7 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     /**
-     * @param documentation Documentation instance
-     * @return Result with execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewDocumentation(Documentation)}
      */
     @Override
     public Result<?> processNewDocumentation(Documentation documentation) {
@@ -437,26 +378,7 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     /**
-     * @param docBody HashMap with article titles and article bodies
-     * @return Pair of two string arrays
-     */
-    private Pair<String[], String[]> splitDocumentationToArrays(HashMap<String, String> docBody) {
-        ArrayList<String> articleTitles = new ArrayList<>();
-        ArrayList<String> articles = new ArrayList<>();
-
-        for (Map.Entry<String, String> article : docBody.entrySet()) {
-            articleTitles.add(article.getKey());
-            articles.add(article.getValue());
-        }
-
-        logger.debug("splitDocumentationToArrays[1]: documentation was splitted into arrays:\n{}\n{}", articleTitles, articles);
-
-        return new Pair<>(articleTitles.toArray(new String[0]), articles.toArray(new String[0]));
-    }
-
-    /**
-     * @param event Event instance
-     * @return Result with execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEvent(Event)}
      */
     @Override
     public Result<?> processNewEvent(Event event) {
@@ -485,6 +407,26 @@ public class PostgresDataProvider extends DataProvider {
         );
         return result;
     }
+
+    /**
+     * @param docBody HashMap with article titles and article bodies
+     * @return Pair of two string arrays
+     */
+    private Pair<String[], String[]> splitDocumentationToArrays(HashMap<String, String> docBody) {
+        ArrayList<String> articleTitles = new ArrayList<>();
+        ArrayList<String> articles = new ArrayList<>();
+
+        for (Map.Entry<String, String> article : docBody.entrySet()) {
+            articleTitles.add(article.getKey());
+            articles.add(article.getValue());
+        }
+
+        logger.debug("splitDocumentationToArrays[1]: documentation was splitted into arrays:\n{}\n{}", articleTitles, articles);
+
+        return new Pair<>(articleTitles.toArray(new String[0]), articles.toArray(new String[0]));
+    }
+
+
 
     /**
      * @param query update query
@@ -712,13 +654,11 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-
     /**
-     * @param projectId - id of project you want to delete
-     * @return Result with execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteProject(UUID)}
      */
     @Override
-    public Result<?> deleteProject(String projectId) {
+    public Result<?> deleteProject(UUID projectId) {
         final String methodName = "deleteProject";
 
         try {
@@ -743,9 +683,9 @@ public class PostgresDataProvider extends DataProvider {
         return new Result<>(null, ResultCode.NOT_FOUND);
     }
 
+
     /**
-     * @param taskId - id of task you want to delete
-     * @return Result with execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteTask(UUID)}
      */
     @Override
     public Result<?> deleteTask(UUID taskId) {
@@ -753,28 +693,28 @@ public class PostgresDataProvider extends DataProvider {
 
         try {
             Result<Task> taskResult = getTaskById(taskId);
-            if (taskResult.getCode() == ResultCode.SUCCESS) {
-                Result<?> result = deleteEntity(Queries.TASKS_TABLE_NAME, taskId);
-                logEntity(
-                        taskResult.getData(),
-                        methodName,
-                        result.getCode(),
-                        ChangeType.DELETE
-                );
-                logger.debug("{}[1]: Task with id {} was deleted successfully", methodName, taskId);
-                return result;
-            }
+            if (taskResult.getCode() != ResultCode.SUCCESS)
+                return new Result<>(null, ResultCode.NOT_FOUND);
+
+            Result<?> result = deleteEntity(Queries.TASKS_TABLE_NAME, taskId);
+            logEntity(
+                    taskResult.getData(),
+                    methodName,
+                    result.getCode(),
+                    ChangeType.DELETE
+            );
+            logger.debug("{}[1]: Task with id {} was deleted successfully", methodName, taskId);
+            return result;
         }
         catch (SQLException exception) {
             logger.error("{}[2]: {}", methodName, exception.getMessage());
             return new Result<>(null, ResultCode.ERROR, exception.getMessage());
         }
-        return new Result<>(null, ResultCode.NOT_FOUND);
     }
 
+
     /**
-     * @param bugReportId - id of bug report you want to delete
-     * @return Result with execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteBugReport(UUID)}
      */
     @Override
     public Result<?> deleteBugReport(UUID bugReportId) {
@@ -782,29 +722,28 @@ public class PostgresDataProvider extends DataProvider {
 
         try {
             Result<BugReport> bugReportResult = getBugReportById(bugReportId);
-            if (bugReportResult.getCode() == ResultCode.SUCCESS) {
-                Result<?> result = deleteEntity(Queries.BUG_REPORTS_TABLE_NAME, bugReportId);
-                logEntity(
-                        bugReportResult.getData(),
-                        methodName,
-                        result.getCode(),
-                        ChangeType.DELETE
-                );
-                logger.debug("{}[1]: BugReport with id {} was deleted successfully", methodName, bugReportId);
-                return result;
-            }
+            if (bugReportResult.getCode() != ResultCode.SUCCESS)
+                return new Result<>(null, ResultCode.NOT_FOUND);
+
+            Result<?> result = deleteEntity(Queries.BUG_REPORTS_TABLE_NAME, bugReportId);
+            logEntity(
+                    bugReportResult.getData(),
+                    methodName,
+                    result.getCode(),
+                    ChangeType.DELETE
+            );
+            logger.debug("{}[1]: BugReport with id {} was deleted successfully", methodName, bugReportId);
+            return result;
         }
         catch (SQLException exception) {
             logger.error("{}[2]: {}", methodName, exception.getMessage());
             return new Result<>(null, ResultCode.ERROR, exception.getMessage());
         }
 
-        return new Result<>(null, ResultCode.NOT_FOUND);
     }
 
     /**
-     * @param eventId - id of event you want to delete
-     * @return Result with execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteEvent(UUID)}
      */
     @Override
     public Result<?> deleteEvent(UUID eventId) {
@@ -812,20 +751,20 @@ public class PostgresDataProvider extends DataProvider {
 
         try {
             Result<Event> eventResult = getEventById(eventId);
-            if (eventResult.getCode() == ResultCode.SUCCESS) {
-                Result<?> result = deleteEntity(Queries.EVENTS_TABLE_NAME, eventId);
-                logEntity(
-                        eventResult.getData(),
-                        methodName,
-                        result.getCode(),
-                        ChangeType.DELETE
-                );
+            if (eventResult.getCode() != ResultCode.SUCCESS)
+                return new Result<>(null, ResultCode.NOT_FOUND);
 
-                logger.debug("{}[1]: Event with id {} was deleted successfully", methodName, eventId);
-                return result;
-            }
+            Result<?> result = deleteEntity(Queries.EVENTS_TABLE_NAME, eventId);
+            logEntity(
+                    eventResult.getData(),
+                    methodName,
+                    result.getCode(),
+                    ChangeType.DELETE
+            );
 
-            return new Result<>(null, ResultCode.NOT_FOUND);
+            logger.debug("{}[1]: Event with id {} was deleted successfully", methodName, eventId);
+            return result;
+
         }
         catch (SQLException exception) {
             logger.error("{}[2]: {}", methodName, exception.getMessage());
@@ -833,39 +772,38 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+
     /**
-     * @param docId - id of documentation you want to delete
-     * @return Result with execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteDocumentation(UUID)}
      */
     @Override
     public Result<?> deleteDocumentation(UUID docId) {
         final String methodName = "deleteDocumentation";
         try {
             Result<Documentation> documentationResult = getDocumentationById(docId);
-            if (documentationResult.getCode() == ResultCode.SUCCESS) {
-                Result<?> result = deleteEntity(Queries.DOCUMENTATIONS_TABLE_NAME, docId);
-                logEntity(
-                        documentationResult,
-                        methodName,
-                        result.getCode(),
-                        ChangeType.DELETE
-                );
+            if (documentationResult.getCode() != ResultCode.SUCCESS)
+                return new Result<>(null, ResultCode.NOT_FOUND);
 
-                logger.debug("{}[1]: BugReport with id {} was deleted successfully", methodName, docId);
-                return result;
-            }
+            Result<?> result = deleteEntity(Queries.DOCUMENTATIONS_TABLE_NAME, docId);
+            logEntity(
+                    documentationResult,
+                    methodName,
+                    result.getCode(),
+                    ChangeType.DELETE
+            );
+
+            logger.debug("{}[1]: BugReport with id {} was deleted successfully", methodName, docId);
+            return result;
         }
         catch (SQLException exception) {
             logger.error("{}[2]: {}", methodName, exception.getMessage());
             return new Result<>(null, ResultCode.ERROR, exception.getMessage());
         }
 
-        return new Result<>(null, ResultCode.NOT_FOUND);
     }
 
     /**
-     * @param employeeId - id of employee you want to delete
-     * @return Result with execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteEmployee(UUID)}
      */
     @Override
     public Result<?> deleteEmployee(UUID employeeId) {
@@ -873,50 +811,49 @@ public class PostgresDataProvider extends DataProvider {
         try {
             Result<Employee> employeeResult = getEmployeeById(employeeId);
 
-            if (employeeResult.getCode() == ResultCode.SUCCESS) {
-                Result<?> result = deleteEntity(Queries.EMPLOYEES_TABLE_NAME, employeeId);
-                logEntity(
-                        employeeResult,
-                        methodName,
-                        result.getCode(),
-                        ChangeType.DELETE
-                );
+            if (employeeResult.getCode() != ResultCode.SUCCESS)
+                return new Result<>(null, ResultCode.NOT_FOUND);
 
-                logger.debug("{}[1]: BugReport with id {} was deleted successfully", methodName, employeeId);
-                return result;
-            }
+            Result<?> result = deleteEntity(Queries.EMPLOYEES_TABLE_NAME, employeeId);
+            logEntity(
+                    employeeResult,
+                    methodName,
+                    result.getCode(),
+                    ChangeType.DELETE
+            );
+
+            logger.debug("{}[1]: BugReport with id {} was deleted successfully", methodName, employeeId);
+            return result;
         }
         catch (SQLException exception) {
             logger.error("{}[2]: {}", methodName, exception);
             return new Result<>(null, ResultCode.ERROR, exception.getMessage());
         }
-
-        return new Result<>(null, ResultCode.NOT_FOUND);
     }
 
+
     /**
-     * @param managerId id of the manager who binds to the project
-     * @param projectId id of the project to which the manager is attached
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindProjectManager(UUID, UUID)}
      */
     @Override
-    public Result<?> bindProjectManager(UUID managerId, String projectId) {
+    public Result<?> bindProjectManager(UUID managerId, UUID projectId) {
         try {
             Result<ArrayList<Employee>> teamResult = getProjectTeam(projectId);
-            if (teamResult.getCode() == ResultCode.SUCCESS && !teamResult.getData().isEmpty()) {
-                ArrayList<Employee> team = teamResult.getData();
-                if (team.stream().anyMatch(employee -> employee.getId().equals(managerId))) {
-                    return updateEntityColumn(
-                            "Project",
-                            "bindProjectManager",
-                            Queries.PROJECT_TABLE_NAME,
-                            "manager_id",
-                            managerId,
-                            projectId
-                    );
-                }
-                else return new Result<>(ResultCode.ERROR, "Данный сотрудник не является участником проекта");
-            }
-            return new Result<>(ResultCode.NOT_FOUND);
+            if (teamResult.getCode() != ResultCode.SUCCESS && teamResult.getData().isEmpty())
+                return new Result<>(ResultCode.NOT_FOUND);
+
+            ArrayList<Employee> team = teamResult.getData();
+            if (team.stream().anyMatch(employee -> !employee.getId().equals(managerId)))
+                return new Result<>(ResultCode.ERROR, String.format("Employee with id %s doesn't belong to the project", managerId));
+
+            return updateEntityColumn(
+                        "Project",
+                        "bindProjectManager",
+                        Queries.PROJECT_TABLE_NAME,
+                        "manager_id",
+                        managerId,
+                        projectId
+                );
         }
         catch (SQLException exception) {
             return new Result<>(null, ResultCode.ERROR, exception.getMessage());
@@ -924,15 +861,13 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     /**
-     * @param executorId id of the employee that binds to the task
-     * @param taskId id of the task to which the employee is attached
-     * @param projectId id of the project which have this task
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindTaskExecutor(UUID, String, UUID, UUID)}
      */
     @Override
-    public Result<?> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, String projectId) {
+    public Result<?> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId) {
         String query = String.format("SELECT COUNT(*) FROM %s WHERE project_id = ?", Queries.EMPLOYEE_PROJECT_TABLE_NAME);
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, projectId);
+            statement.setObject(1, projectId);
             ResultSet resultSet = statement.executeQuery();
             int rowCount = 0;
             while (resultSet.next()) rowCount = resultSet.getInt("count");
@@ -951,12 +886,12 @@ public class PostgresDataProvider extends DataProvider {
                             updatedTask.getCode(),
                             ChangeType.UPDATE
                     );
-                }
-
-                if (result > 0) {
-                    return new Result<>(ResultCode.SUCCESS);
+                    if (result > 0) {
+                        return new Result<>(ResultCode.SUCCESS);
+                    }
                 }
             }
+
             return new Result<>(ResultCode.NOT_FOUND);
         }
         catch (SQLException exception) {
@@ -965,8 +900,11 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindEmployeeToProject(UUID, UUID)}
+     */
     @Override
-    public Result<?> bindEmployeeToProject(UUID employeeId, String projectId) {
+    public Result<?> bindEmployeeToProject(UUID employeeId, UUID projectId) {
         Result<?> createResult = processNewEntity(
                 "bindEmployeeToProject",
                 "bindEmployeeToProject",
@@ -986,15 +924,15 @@ public class PostgresDataProvider extends DataProvider {
         );
     }
 
+
     /**
-     * @param id id of Project
-     * @return Result with Project
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getProjectById(UUID)}
      */
     @Override
-    public Result<Project> getProjectById(String id) {
+    public Result<Project> getProjectById(UUID id) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.PROJECT_TABLE_NAME);
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, id);
+            statement.setObject(1, id);
             ResultSet queryResult = statement.executeQuery();
             Project project = null;
             while (queryResult.next()) project = ResultSetUtils.extractProject(queryResult, this);
@@ -1015,16 +953,16 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+
     /**
-     * @param projectId id of Project
-     * @return Result with ArrayList of tasks, execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByProjectId(UUID)}
      */
     @Override
-    public Result<ArrayList<Task>> getTasksByProjectId(String projectId) {
+    public Result<ArrayList<Task>> getTasksByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.TASKS_TABLE_NAME);
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, projectId);
+            statement.setObject(1, projectId);
             ArrayList<Task> tasks = new ArrayList<>();
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) tasks.add(ResultSetUtils.extractTask(resultSet));
@@ -1045,10 +983,9 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+
     /**
-     *
-     * @param employeeId id of the employee
-     * @return Result with ArrayList of tasks, execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByEmployeeId(UUID)}
      */
     @Override
     public Result<ArrayList<Task>> getTasksByEmployeeId(UUID employeeId) {
@@ -1076,8 +1013,11 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByTags(ArrayList, UUID)}
+     */
     @Override
-    public Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, String projectId) {
+    public Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, UUID projectId) {
         ArrayList<Task> tasks = getTasksByProjectId(projectId).getData();
         ArrayList<Task> result = tasks.stream()
                 .filter(task -> task.getTags().containsAll(tags))
@@ -1089,9 +1029,9 @@ public class PostgresDataProvider extends DataProvider {
                 .orElse(new Result<>(ResultCode.NOT_FOUND));
     }
 
+
     /**
-     * @param taskId id of task you want to get by id
-     * @return Result with Task, execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTaskById(UUID)}
      */
     @Override
     public Result<Task> getTaskById(UUID taskId) {
@@ -1116,15 +1056,14 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     /**
-     * @param projectId id of project where bug reports are loaded from
-     * @return Result with ArrayList of BugReport, execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getBugReportsByProjectId(UUID)}
      */
     @Override
-    public Result<ArrayList<BugReport>> getBugReportsByProjectId(String projectId) {
+    public Result<ArrayList<BugReport>> getBugReportsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.BUG_REPORTS_TABLE_NAME);
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, projectId);
+            statement.setObject(1, projectId);
             ResultSet resultSet = statement.executeQuery();
             ArrayList<BugReport> bugReports = new ArrayList<>();
 
@@ -1148,9 +1087,9 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+
     /**
-     * @param bugReportId id of BugReport you want to get
-     * @return Result with BugReport, execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getBugReportById(UUID)}
      */
     @Override
     public Result<BugReport> getBugReportById(UUID bugReportId) {
@@ -1178,16 +1117,16 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+
     /**
-     * @param projectId id of the project for which events are selected
-     * @return Result with ArrayList of Event, execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEventsByProjectId(UUID)}
      */
     @Override
-    public Result<ArrayList<Event>> getEventsByProjectId(String projectId) {
+    public Result<ArrayList<Event>> getEventsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.EVENTS_TABLE_NAME);
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, projectId);
+            statement.setObject(1, projectId);
             ResultSet resultSet = statement.executeQuery();
             ArrayList<Event> events = new ArrayList<>();
 
@@ -1213,8 +1152,7 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     /**
-     * @param eventId id of the event
-     * @return Result with Event, execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEventById(UUID)}
      */
     @Override
     public Result<Event> getEventById(UUID eventId) {
@@ -1245,8 +1183,7 @@ public class PostgresDataProvider extends DataProvider {
 
 
     /**
-     * @param docId UUID of documentation
-     * @return Result  with Documentation, execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getDocumentationById(UUID)}
      */
     @Override
     public Result<Documentation> getDocumentationById(UUID docId) {
@@ -1276,15 +1213,14 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     /**
-     * @param projectId id of the project for which documentation is selected
-     * @return Result with ArrayList of Documentation, execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getDocumentationsByProjectId(UUID)}
      */
     @Override
-    public Result<ArrayList<Documentation>> getDocumentationsByProjectId(String projectId) {
+    public Result<ArrayList<Documentation>> getDocumentationsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.DOCUMENTATIONS_TABLE_NAME);
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, projectId);
+            statement.setObject(1, projectId);
             ResultSet resultSet = statement.executeQuery();
             ArrayList<Documentation> documentations = new ArrayList<>();
 
@@ -1308,11 +1244,10 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     /**
-     * @param projectId id of project for which team is selected
-     * @return Result with ArrayList of Employee, execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getProjectTeam(UUID)}
      */
     @Override
-    public Result<ArrayList<Employee>> getProjectTeam(String projectId) {
+    public Result<ArrayList<Employee>> getProjectTeam(UUID projectId) {
         try(PreparedStatement statement = connection.prepareStatement(Queries.GET_PROJECT_TEAM_QUERY)) {
             ResultSet resultSet = statement.executeQuery();
             ArrayList<Employee> team = new ArrayList<>();
@@ -1336,8 +1271,7 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     /**
-     * @param employeeId id of the employee whose data is being extracted
-     * @return Result with Employee, execution code and message if it fails
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEmployeeById(UUID)}
      */
     @Override
     public Result<Employee> getEmployeeById(UUID employeeId) {
@@ -1365,148 +1299,5 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("getEmployee[3]: {}", exception.getMessage());
             return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
-    }
-
-    /**
-     * @param projectId id of the project
-     * @return TrackInfo which represents bug report and its string status
-     */
-    @Override
-    public TrackInfo<BugReport, String> trackBugReportStatus(String projectId) {
-        ArrayList<BugReport> bugReports = getBugReportsByProjectId(projectId).getData();
-        return Optional.of(bugReports)
-                .filter(bg -> !bg.isEmpty())
-                .map(bg -> {
-                    HashMap<BugReport, String> trackInfo = new HashMap<>();
-                    bg.forEach(el -> trackInfo.put(el, el.getStatus().name()));
-                    return new TrackInfo<>(trackInfo);
-                })
-                .orElse(null);
-    }
-
-    /**
-     * @param projectId id of the project
-     * @return TrackInfo which represents task and its string status
-     */
-    @Override
-    public TrackInfo<Task, String> trackTaskStatus(String projectId) {
-        ArrayList<Task> tasks = getTasksByProjectId(projectId).getData();
-        if (tasks != null) {
-            HashMap<Task, String> trackInfo = new HashMap<>();
-            tasks.forEach(task -> trackInfo.put(task, task.getStatus().name()));
-
-            return new TrackInfo<>(trackInfo);
-
-        }
-        return null;
-    }
-
-    /**
-     * @param projectId id of the project
-     * @param checkLaborEfficiency flag for calculating data of employee efficiency
-     * @param trackBugs flag for collecting data of bug report status
-     * @return TrackInfo which has key - id of
-     */
-
-    // тип выходного параметра временный, планируется реализовать отдельный класс для статистики
-    @Override
-    public TrackInfo<String, ?> monitorProjectCharacteristics(
-            String projectId, boolean checkLaborEfficiency, boolean trackBugs
-    ) {
-        HashMap<String, ?> mainData = new HashMap<>() {{
-            put(Constants.TRACK_INFO_KEY_PROJECT_READINESS, calculateProjectReadiness(projectId) );
-            put(Constants.TRACK_INFO_KEY_TASK_STATUS, trackTaskStatus(projectId));
-        }};
-
-        TrackInfo<String, ?> commonTrackInfo = new TrackInfo<>(mainData);
-
-        if (checkLaborEfficiency)
-            commonTrackInfo.addData(
-                    Constants.TRACK_INFO_KEY_LABOR_EFFICIENCY,
-                    calculateLaborEfficiency(projectId)
-            );
-        if (trackBugs)
-            commonTrackInfo.addData(
-                    Constants.TRACK_INFO_KEY_BUG_STATUS,
-                    trackBugReportStatus(projectId)
-            );
-
-        return commonTrackInfo;
-    }
-
-    /**
-     * @param projectId id of the project you want to calculate degree of readiness
-     * @return float value of readiness in per cent
-     */
-    @Override
-    public float calculateProjectReadiness(String projectId) {
-        ArrayList<Task> tasks = getTasksByProjectId(projectId).getData();
-        if (!tasks.isEmpty()) {
-            int countOfCompletedTasks = (int) tasks.stream()
-                    .filter(task -> task.getStatus() == WorkStatus.COMPLETED).count();
-
-            return ((float) countOfCompletedTasks / tasks.size()) * 100.0f;
-        }
-        return 0;
-    }
-
-    /**
-     * @param projectId id of the project
-     * @return TrackInfo which represents employee and his percentage of efficiency
-     */
-    @Override
-    public TrackInfo<Employee, Float> calculateLaborEfficiency(String projectId) {
-        ArrayList<Employee> team = getProjectTeam(projectId).getData();
-        HashMap<Employee, Float> trackInfo = new HashMap<>();
-
-        if (!team.isEmpty()) {
-            for (Employee employee : team) {
-                ArrayList<Task> employeeTasks = getTasksByEmployeeId(employee.getId()).getData();
-                if (!employeeTasks.isEmpty()) {
-                    float averageEffectiveness = checkEmployeeEfficiency(employeeTasks);
-                    trackInfo.put(employee, averageEffectiveness);
-                }
-                else {
-                    trackInfo.put(employee, 0f);
-                    return new TrackInfo<>(trackInfo);
-                }
-            }
-
-            return new TrackInfo<>(trackInfo);
-        }
-        return null;
-    }
-
-    /**
-     *
-     * @param tasks list with tasks
-     * @return the percentage of efficiency of a particular employee
-     */
-    private float checkEmployeeEfficiency(ArrayList<Task> tasks) {
-        int tasksCount = tasks.size();
-        // percentage of execution tasks efficiency
-        int taskEffectivenessSum = 0;
-
-        for (Task task : tasks) {
-            LocalDateTime taskDeadline = task.getDeadline();
-
-            if (task.getStatus() == WorkStatus.COMPLETED) {
-                // difference in days between date of completion and deadline
-                long timeDifference = Math.abs(Duration.between(taskDeadline, task.getCompletedAt()).toDays());
-                if (taskDeadline.isBefore(task.getCompletedAt()))
-                    taskEffectivenessSum += (int) (100 - timeDifference);
-                else taskEffectivenessSum += (int) (100 + timeDifference);
-            }
-            else if (task.getStatus() == WorkStatus.IN_PROGRESS) {
-                // if task is overdue - calculate work efficiency by subtracting the number of days from 100%
-                // else task execution efficiency equals 0
-                if (taskDeadline.isBefore(LocalDateTime.now())) {
-                    // difference in days between current date and deadline
-                    long timeDifference = Math.abs(Duration.between(taskDeadline, LocalDateTime.now()).toDays());
-                    taskEffectivenessSum += (int) (100 - timeDifference);
-                }
-            }
-        }
-        return (taskEffectivenessSum * 1.0f) / tasksCount;
     }
 }
