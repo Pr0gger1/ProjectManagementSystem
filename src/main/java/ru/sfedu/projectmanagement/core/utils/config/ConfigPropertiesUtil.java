@@ -43,7 +43,7 @@ public class ConfigPropertiesUtil {
             config.load(fileStream);
         }
         catch (IOException error) {
-            logger.error(error.getMessage());
+            logger.error("loadConfiguration[1]: {}", error.getMessage());
         }
         finally {
             assert fileStream != null;
@@ -57,7 +57,7 @@ public class ConfigPropertiesUtil {
             return getConfiguration().getProperty(key);
         }
         catch (IOException error) {
-            logger.error(error.getMessage());
+            logger.error("getEnvironment[1]: {}", error.getMessage());
         }
         return null;
     }
@@ -67,7 +67,7 @@ public class ConfigPropertiesUtil {
             return getConfiguration().getProperty(key).split(",");
         }
         catch (IOException error) {
-            logger.error(error.getMessage());
+            logger.error("getEnvironmentVariableList[1]: {}", error.getMessage());
         }
         return null;
     }
@@ -86,7 +86,7 @@ public class ConfigPropertiesUtil {
             return mapVariable;
         }
         catch (IOException error) {
-            logger.error(error.getMessage());
+            logger.error("getEnvironmentMapVariable[1]: {}", error.getMessage());
         }
 
         return null;

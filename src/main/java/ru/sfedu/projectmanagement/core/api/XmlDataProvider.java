@@ -3,12 +3,10 @@ package ru.sfedu.projectmanagement.core.api;
 import jakarta.xml.bind.JAXBException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.utils.DataSourceType;
 import ru.sfedu.projectmanagement.core.utils.DataSourceFileUtil;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
-import ru.sfedu.projectmanagement.core.utils.types.TrackInfo;
 import ru.sfedu.projectmanagement.core.utils.xml.Wrapper;
 import ru.sfedu.projectmanagement.core.utils.ResultCode;
 import ru.sfedu.projectmanagement.core.utils.xml.XmlUtil;
@@ -38,19 +36,26 @@ public class XmlDataProvider extends DataProvider {
 
 
     /**
-     * @param project - instance of Project
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewProject(Project)}
      */
     @Override
     public Result<?> processNewProject(Project project) {
         try {
-            Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(project);
-            if (validateResult.getCode() == ResultCode.SUCCESS) {
-                XmlUtil.createRecord(dataSourceFileUtil.projectsFilePath, project);
-                logger.debug("processNewProject[1]: project was written in xml {}", project);
-                return new Result<>(ResultCode.SUCCESS);
-            }
-            return validateResult;
+//            Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(project);
+//            if (validateResult.getCode() != ResultCode.SUCCESS)
+//                return validateResult;
+
+
+            XmlUtil.createRecord(dataSourceFileUtil.projectsFilePath, project);
+
+            if (!project.getTeam().isEmpty())
+                project.getTeam()
+                        .forEach(employee -> {
+                            processNewEmployee(employee);
+                            bindEmployeeToProject(employee.getId(), project.getId());
+                        });
+            logger.debug("processNewProject[1]: project was written in xml {}", project);
+            return new Result<>(ResultCode.SUCCESS);
         }
         catch (JAXBException exception) {
             logger.error("processNewProject[2]: {}", exception.getMessage());
@@ -60,19 +65,19 @@ public class XmlDataProvider extends DataProvider {
     }
 
     /**
-     * @param task
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewTask(Task)} )}
      */
     @Override
     public Result<?> processNewTask(Task task) {
         try {
             Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(task);
-            if (validateResult.getCode() == ResultCode.SUCCESS) {
-                XmlUtil.createRecord(dataSourceFileUtil.tasksFilePath, task);
-                logger.debug("processNewTask[1]: task was written in xml {}", task);
-                return new Result<>(ResultCode.SUCCESS);
-            }
-            else return validateResult;
+            if (validateResult.getCode() != ResultCode.SUCCESS)
+                return validateResult;
+            
+            XmlUtil.createRecord(dataSourceFileUtil.tasksFilePath, task);
+            logger.debug("processNewTask[1]: task was written in xml {}", task);
+            return new Result<>(ResultCode.SUCCESS);
+            
         }
         catch (JAXBException exception) {
             logger.error("processNewTask[2]: {}", exception.getMessage());
@@ -81,20 +86,18 @@ public class XmlDataProvider extends DataProvider {
     }
 
     /**
-     * @param bugReport
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewBugReport(BugReport)}
      */
     @Override
     public Result<?> processNewBugReport(BugReport bugReport) {
         try {
             Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(bugReport);
-            if (validateResult.getCode() == ResultCode.SUCCESS) {
-                XmlUtil.createRecord(dataSourceFileUtil.bugReportsFilePath, bugReport);
-                logger.debug("processBugReport[1]: bug report was written in xml {}", bugReport);
-                return new Result<>(ResultCode.SUCCESS);
-            }
-
-            return validateResult;
+            if (validateResult.getCode() != ResultCode.SUCCESS)
+                return validateResult;
+            
+            XmlUtil.createRecord(dataSourceFileUtil.bugReportsFilePath, bugReport);
+            logger.debug("processBugReport[1]: bug report was written in xml {}", bugReport);
+            return new Result<>(ResultCode.SUCCESS);
         }
         catch (JAXBException exception) {
             logger.error("processBugReport[2]: {}", exception.getMessage());
@@ -103,19 +106,18 @@ public class XmlDataProvider extends DataProvider {
     }
 
     /**
-     * @param documentation
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewDocumentation(Documentation)}
      */
     @Override
     public Result<?> processNewDocumentation(Documentation documentation) {
         try {
             Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(documentation);
-            if (validateResult.getCode() == ResultCode.SUCCESS) {
-                XmlUtil.createRecord(dataSourceFileUtil.documentationsFilePath, documentation);
-                logger.debug("processNewDocumentation[1]: documentation was written in xml {}", documentation);
-                return new Result<>(ResultCode.SUCCESS);
-            }
-            return validateResult;
+            if (validateResult.getCode() != ResultCode.SUCCESS)
+                return validateResult;
+            
+            XmlUtil.createRecord(dataSourceFileUtil.documentationsFilePath, documentation);
+            logger.debug("processNewDocumentation[1]: documentation was written in xml {}", documentation);
+            return new Result<>(ResultCode.SUCCESS);
         }
         catch (JAXBException exception) {
             logger.error("processNewDocumentation[2]: {}", exception.getMessage());
@@ -123,16 +125,19 @@ public class XmlDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEmployee(Employee)}
+     */
     @Override
     public Result<?> processNewEmployee(Employee employee) {
         try {
             Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(employee);
-            if (validateResult.getCode() == ResultCode.SUCCESS) {
-                XmlUtil.createRecord(dataSourceFileUtil.employeesFilePath, employee);
-                logger.debug("processNewEmployee[1]: employee was written in xml {}", employee);
-                return new Result<>(ResultCode.SUCCESS);
-            }
-            return validateResult;
+            if (validateResult.getCode() != ResultCode.SUCCESS)
+                return validateResult;
+            
+            XmlUtil.createRecord(dataSourceFileUtil.employeesFilePath, employee);
+            logger.debug("processNewEmployee[1]: employee was written in xml {}", employee);
+            return new Result<>(ResultCode.SUCCESS);
         }
         catch (JAXBException exception) {
             logger.error("processNewEmployee[2]: {}", exception.getMessage());
@@ -141,19 +146,18 @@ public class XmlDataProvider extends DataProvider {
     }
 
     /**
-     * @param event
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEvent(Event)}
      */
     @Override
     public Result<?> processNewEvent(Event event) {
         try {
             Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(event);
-            if (validateResult.getCode() == ResultCode.SUCCESS) {
-                XmlUtil.createRecord(dataSourceFileUtil.eventsFilePath, event);
-                logger.debug("processNewEvent[1]: task was written in xml {}", event);
-                return new Result<>(ResultCode.SUCCESS);
-            }
-            return validateResult;
+            if (validateResult.getCode() != ResultCode.SUCCESS)
+                return validateResult;
+                
+            XmlUtil.createRecord(dataSourceFileUtil.eventsFilePath, event);
+            logger.debug("processNewEvent[1]: task was written in xml {}", event);
+            return new Result<>(ResultCode.SUCCESS);
         }
         catch (JAXBException exception) {
             logger.error("processNewEvent[2]: {}", exception.getMessage());
@@ -162,136 +166,127 @@ public class XmlDataProvider extends DataProvider {
     }
 
     /**
-     * @param projectId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getProjectById(UUID)}
      */
     @Override
     public Result<Project> getProjectById(UUID projectId) {
         Wrapper<Project> projectWrapper = XmlUtil.read(dataSourceFileUtil.projectsFilePath);
        return projectWrapper.getList()
-                .stream()
-                .filter(p -> p.getId().equals(projectId))
-                .map(p -> {
-                    logger.debug("getProjectById[1]: received project {}", p);
-                    return new Result<>(p, ResultCode.SUCCESS);
-                })
-                .findFirst()
-                .orElseGet(() -> {
-                    logger.debug("getProjectById[2]: project with id {} was not found", projectId);
-                    return new Result<>(ResultCode.NOT_FOUND);
-                });
+            .stream()
+            .filter(p -> p.getId().equals(projectId))
+            .map(p -> {
+                logger.debug("getProjectById[1]: received project {}", p);
+                return new Result<>(p, ResultCode.SUCCESS);
+            })
+            .findFirst()
+            .orElseGet(() -> {
+                logger.debug("getProjectById[2]: project with id {} was not found", projectId);
+                return new Result<>(ResultCode.NOT_FOUND);
+            });
     }
 
     /**
-     * @param taskId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTaskById(UUID)}
      */
     @Override
     public Result<Task> getTaskById(UUID taskId) {
         Wrapper<Task> taskWrapper = XmlUtil.read(dataSourceFileUtil.tasksFilePath);
         return taskWrapper.getList()
-                .stream()
-                .filter(t -> t.getId().equals(taskId))
-                .map(t -> {
-                    logger.debug("getTaskById[1]: received task {}", t);
-                    return new Result<>(t, ResultCode.SUCCESS);
-                })
-                .findFirst()
-                .orElseGet(() -> {
-                    logger.debug("getTaskById[2]: task with id {} was not found", taskId);
-                    return new Result<>(ResultCode.NOT_FOUND);
-                });
-
+            .stream()
+            .filter(t -> t.getId().equals(taskId))
+            .map(t -> {
+                logger.debug("getTaskById[1]: received task {}", t);
+                return new Result<>(t, ResultCode.SUCCESS);
+            })
+            .findFirst()
+            .orElseGet(() -> {
+                logger.debug("getTaskById[2]: task with id {} was not found", taskId);
+                return new Result<>(ResultCode.NOT_FOUND);
+            });
     }
 
     /**
-     * @param bugReportId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getBugReportById(UUID)}
      */
     @Override
     public Result<BugReport> getBugReportById(UUID bugReportId) {
         Wrapper<BugReport> bugReportWrapper = XmlUtil.read(dataSourceFileUtil.bugReportsFilePath);
         return bugReportWrapper.getList()
-                .stream()
-                .filter(bg -> bg.getId().equals(bugReportId))
-                .map(bg -> {
-                    logger.debug("getBugReportById[1]: received bug report {}", bg);
-                    return new Result<>(bg, ResultCode.SUCCESS);
-                })
-                .findFirst()
-                .orElseGet(() -> {
-                    logger.debug("getBugReportsById[2]: bug report with id {} was not found", bugReportId);
-                    return new Result<>(ResultCode.NOT_FOUND);
-                });
+            .stream()
+            .filter(bg -> bg.getId().equals(bugReportId))
+            .map(bg -> {
+                logger.debug("getBugReportById[1]: received bug report {}", bg);
+                return new Result<>(bg, ResultCode.SUCCESS);
+            })
+            .findFirst()
+            .orElseGet(() -> {
+                logger.debug("getBugReportsById[2]: bug report with id {} was not found", bugReportId);
+                return new Result<>(ResultCode.NOT_FOUND);
+            });
     }
 
     /**
-     * @param docId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getDocumentationById(UUID)}
      */
     @Override
     public Result<Documentation> getDocumentationById(UUID docId) {
         Wrapper<Documentation> documentationWrapper = XmlUtil.read(dataSourceFileUtil.documentationsFilePath);
         return documentationWrapper.getList()
-                .stream()
-                .filter(doc -> doc.getId().equals(docId))
-                .map(doc -> {
-                    logger.debug("getDocumentationById[1]: received documentation {}", doc);
-                    return new Result<>(doc, ResultCode.SUCCESS);
-                })
-                .findFirst()
-                .orElseGet(() -> {
-                    logger.debug("getDocumentationById[2]: documentation with id {} was not found", docId);
-                    return new Result<>(ResultCode.NOT_FOUND);
-                });
+            .stream()
+            .filter(doc -> doc.getId().equals(docId))
+            .map(doc -> {
+                logger.debug("getDocumentationById[1]: received documentation {}", doc);
+                return new Result<>(doc, ResultCode.SUCCESS);
+            })
+            .findFirst()
+            .orElseGet(() -> {
+                logger.debug("getDocumentationById[2]: documentation with id {} was not found", docId);
+                return new Result<>(ResultCode.NOT_FOUND);
+            });
     }
 
     /**
-     * @param eventId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEventById(UUID)}
      */
     @Override
     public Result<Event> getEventById(UUID eventId) {
         Wrapper<Event> eventWrapper = XmlUtil.read(dataSourceFileUtil.eventsFilePath);
         return eventWrapper.getList()
-                .stream()
-                .filter(event -> event.getId().equals(eventId))
-                .map(event -> {
-                    logger.debug("getEventById[1]: received event {}", event);
-                    return new Result<>(event, ResultCode.SUCCESS);
-                })
-                .findFirst()
-                .orElseGet(() -> {
-                    logger.debug("getEventById[2]: event with id {} was not found", eventId);
-                    return new Result<>(ResultCode.NOT_FOUND);
-                });
+            .stream()
+            .filter(event -> event.getId().equals(eventId))
+            .map(event -> {
+                logger.debug("getEventById[1]: received event {}", event);
+                return new Result<>(event, ResultCode.SUCCESS);
+            })
+            .findFirst()
+            .orElseGet(() -> {
+                logger.debug("getEventById[2]: event with id {} was not found", eventId);
+                return new Result<>(ResultCode.NOT_FOUND);
+            });
     }
 
     /**
-     * @param employeeId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEmployeeById(UUID)}
      */
     @Override
     public Result<Employee> getEmployeeById(UUID employeeId) {
         Wrapper<Employee> employeeWrapper = XmlUtil.read(dataSourceFileUtil.employeesFilePath);
         return employeeWrapper.getList()
-                .stream()
-                .filter(employee -> employee.getId().equals(employeeId))
-                .map(employee -> {
-                    logger.debug("getEmployeeById[1]: received employee {}", employee);
-                    return new Result<>(employee, ResultCode.SUCCESS);
-                })
-                .findFirst()
-                .orElseGet(() -> {
-                    logger.debug("getEmployeeById[2]: employee with id {} was not found", employeeId);
-                    return new Result<>(ResultCode.NOT_FOUND);
-                });
+            .stream()
+            .filter(employee -> employee.getId().equals(employeeId))
+            .map(employee -> {
+                logger.debug("getEmployeeById[1]: received employee {}", employee);
+                return new Result<>(employee, ResultCode.SUCCESS);
+            })
+            .findFirst()
+            .orElseGet(() -> {
+                logger.debug("getEmployeeById[2]: employee with id {} was not found", employeeId);
+                return new Result<>(ResultCode.NOT_FOUND);
+            });
     }
 
     /**
-     * @param tags
-     * @param projectId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTaskById(UUID)}
      */
     @Override
     public Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, UUID projectId) {
@@ -307,8 +302,7 @@ public class XmlDataProvider extends DataProvider {
     }
 
     /**
-     * @param projectId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByProjectId(UUID)}
      */
     @Override
     public Result<ArrayList<Task>> getTasksByProjectId(UUID projectId) {
@@ -324,8 +318,7 @@ public class XmlDataProvider extends DataProvider {
     }
 
     /**
-     * @param employeeId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByEmployeeId(UUID)}
      */
     @Override
     public Result<ArrayList<Task>> getTasksByEmployeeId(UUID employeeId) {
@@ -340,8 +333,7 @@ public class XmlDataProvider extends DataProvider {
     }
 
     /**
-     * @param projectId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getBugReportsByProjectId(UUID)}
      */
     @Override
     public Result<ArrayList<BugReport>> getBugReportsByProjectId(UUID projectId) {
@@ -357,8 +349,7 @@ public class XmlDataProvider extends DataProvider {
     }
 
     /**
-     * @param projectId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEventsByProjectId(UUID)}
      */
     @Override
     public Result<ArrayList<Event>> getEventsByProjectId(UUID projectId) {
@@ -374,8 +365,7 @@ public class XmlDataProvider extends DataProvider {
     }
 
     /**
-     * @param projectId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getDocumentationsByProjectId(UUID)}
      */
     @Override
     public Result<ArrayList<Documentation>> getDocumentationsByProjectId(UUID projectId) {
@@ -391,29 +381,26 @@ public class XmlDataProvider extends DataProvider {
     }
 
     /**
-     * @param projectId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getProjectTeam(UUID)}
      */
     @Override
     public Result<ArrayList<Employee>> getProjectTeam(UUID projectId) {
         Wrapper<EmployeeProjectObject> employeeWrapper = XmlUtil.read(dataSourceFileUtil.employeeProjectFilePath);
         ArrayList<Employee> employees = employeeWrapper.getList()
-                .stream()
-                .filter(record -> record.getId().equals(projectId))
-                .map(record -> getEmployeeById(record.getEmployeeId()))
-                .filter(result -> result.getCode() == ResultCode.SUCCESS)
-                .map(Result::getData)
-                .collect(Collectors.toCollection(ArrayList::new));
+            .stream()
+            .filter(record -> record.getId().equals(projectId))
+            .map(record -> getEmployeeById(record.getEmployeeId()))
+            .filter(result -> result.getCode() == ResultCode.SUCCESS)
+            .map(Result::getData)
+            .collect(Collectors.toCollection(ArrayList::new));
 
-        return employees.isEmpty() ?
-                new Result<>(ResultCode.NOT_FOUND, "No employees found for the project") :
-                new Result<>(employees, ResultCode.SUCCESS);
+        if (employees.isEmpty())
+            return new Result<>(ResultCode.NOT_FOUND, "No employees found for the project");
+        return new Result<>(employees, ResultCode.SUCCESS);
     }
 
     /**
-     * @param employeeId
-     * @param projectId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindEmployeeToProject(UUID, UUID)}
      */
     @Override
     public Result<?> bindEmployeeToProject(UUID employeeId, UUID projectId) {
@@ -435,23 +422,19 @@ public class XmlDataProvider extends DataProvider {
     }
 
     /**
-     * @param managerId
-     * @param projectId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindProjectManager(UUID, UUID)}
      */
     @Override
     public Result<?> bindProjectManager(UUID managerId, UUID projectId) {
         Result<Employee> employeeResult = getEmployeeById(managerId);
         Result<?> result = new Result<>(ResultCode.SUCCESS);
 
-        if (employeeResult.getCode() != ResultCode.SUCCESS) {
+        if (employeeResult.getCode() != ResultCode.SUCCESS)
             return new Result<>(ResultCode.ERROR, employeeResult.getMessage());
-        }
 
         Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.checkIfEmployeeBelongsToProject(employeeResult.getData());
-        if (validateResult.getCode() != ResultCode.SUCCESS) {
+        if (validateResult.getCode() != ResultCode.SUCCESS)
             return validateResult;
-        }
 
         Wrapper<Project> projectWrapper = XmlUtil.read(dataSourceFileUtil.projectsFilePath);
         projectWrapper.getList()
@@ -474,11 +457,7 @@ public class XmlDataProvider extends DataProvider {
 
 
     /**
-     * @param executorId
-     * @param executorFullName
-     * @param taskId
-     * @param projectId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindTaskExecutor(UUID, String, UUID, UUID)}
      */
     @Override
     public Result<Task> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId) {
@@ -486,9 +465,8 @@ public class XmlDataProvider extends DataProvider {
                 executorId, taskId, projectId
         );
 
-        if (validationResult.getCode() != ResultCode.SUCCESS) {
+        if (validationResult.getCode() != ResultCode.SUCCESS)
             return validationResult;
-        }
 
         Result<Employee> employeeResult = getEmployeeById(executorId);
         Result<Task> result = new Result<>(null, ResultCode.SUCCESS);
@@ -518,56 +496,164 @@ public class XmlDataProvider extends DataProvider {
     }
 
     /**
-     * @param projectId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteProject(UUID)}
      */
     @Override
     public Result<?> deleteProject(UUID projectId) {
-        return null;
+        Wrapper<Project> projectWrapper = XmlUtil.read(dataSourceFileUtil.projectsFilePath);
+        if (!XmlUtil.isRecordExists(dataSourceFileUtil.projectsFilePath, projectId))
+            return new Result<>(ResultCode.NOT_FOUND);
+
+        projectWrapper.setList(projectWrapper.getList()
+            .stream()
+            .filter(project -> !project.getId().equals(projectId))
+            .collect(ArrayList::new, ArrayList::add, ArrayList::addAll)
+        );
+
+        try {
+            XmlUtil.setContainer(dataSourceFileUtil.projectsFilePath, projectWrapper);
+            logger.info("deleteProject[1]: project with id {} was deleted successfully", projectId);
+            return new Result<>(ResultCode.SUCCESS);
+        }
+        catch (JAXBException exception) {
+            logger.error("deleteProject[2]: {}", exception.getMessage());
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
+        }
     }
 
     /**
-     * @param taskId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteTask(UUID)}
      */
     @Override
     public Result<?> deleteTask(UUID taskId) {
-        return null;
+        if (!XmlUtil.isRecordExists(dataSourceFileUtil.tasksFilePath, taskId))
+            return new Result<>(ResultCode.NOT_FOUND, String.format("Task with id %s doesn't exist", taskId
+        ));
+
+        Wrapper<Task> taskWrapper = XmlUtil.read(dataSourceFileUtil.tasksFilePath);
+        taskWrapper.setList(
+                taskWrapper.getList()
+                    .stream()
+                    .filter(task -> !task.getId().equals(taskId))
+                    .collect(ArrayList::new, ArrayList::add, ArrayList::addAll)
+        );
+
+        try {
+            XmlUtil.setContainer(dataSourceFileUtil.tasksFilePath, taskWrapper);
+            logger.info("deleteTask[1]: task with id {} was deleted successfully", taskId);
+            return new Result<>(ResultCode.SUCCESS);
+        }
+        catch (JAXBException exception) {
+            logger.error("deleteTask[2]: {}", exception.getMessage());
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
+        }
     }
 
     /**
-     * @param bugReportId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteBugReport(UUID)}
      */
     @Override
     public Result<?> deleteBugReport(UUID bugReportId) {
-        return null;
+        if (!XmlUtil.isRecordExists(dataSourceFileUtil.bugReportsFilePath, bugReportId))
+            return new Result<>(ResultCode.NOT_FOUND, String.format("bug report with id %s doesn't exist", bugReportId));
+
+        Wrapper<BugReport> bugReportWrapper = XmlUtil.read(dataSourceFileUtil.bugReportsFilePath);
+        bugReportWrapper.setList(
+                bugReportWrapper.getList()
+                        .stream()
+                        .filter(bugReport -> !bugReport.getId().equals(bugReportId))
+                        .collect(ArrayList::new, ArrayList::add, ArrayList::addAll)
+        );
+
+        try {
+            XmlUtil.setContainer(dataSourceFileUtil.bugReportsFilePath, bugReportWrapper);
+            logger.info("deleteBugReport[1]: bug report with id {} was deleted successfully", bugReportId);
+            return new Result<>(ResultCode.SUCCESS);
+        }
+        catch (JAXBException exception) {
+            logger.error("deleteBugReport[2]: {}", exception.getMessage());
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
+        }
     }
 
     /**
-     * @param eventId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteEvent(UUID)}
      */
     @Override
     public Result<?> deleteEvent(UUID eventId) {
-        return null;
+        if (!XmlUtil.isRecordExists(dataSourceFileUtil.eventsFilePath, eventId))
+            return new Result<>(ResultCode.NOT_FOUND);
+
+        Wrapper<Event> eventWrapper = XmlUtil.read(dataSourceFileUtil.eventsFilePath);
+        eventWrapper.setList(
+                eventWrapper.getList()
+                        .stream()
+                        .filter(task -> !task.getId().equals(eventId))
+                        .collect(ArrayList::new, ArrayList::add, ArrayList::addAll)
+        );
+
+        try {
+            XmlUtil.setContainer(dataSourceFileUtil.eventsFilePath, eventWrapper);
+            logger.info("deleteEvent[1]: event with id {} was deleted successfully", eventId);
+            return new Result<>(ResultCode.SUCCESS);
+        }
+        catch (JAXBException exception) {
+            logger.error("deleteEvent[2]: {}", exception.getMessage());
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
+        }
     }
 
     /**
-     * @param docId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteDocumentation(UUID)}
      */
     @Override
     public Result<?> deleteDocumentation(UUID docId) {
-        return null;
+        if (!XmlUtil.isRecordExists(dataSourceFileUtil.documentationsFilePath, docId))
+            return new Result<>(ResultCode.NOT_FOUND, String.format("documentation with id %s doesn't exist", docId));
+
+        Wrapper<Documentation> documentationWrapper = XmlUtil.read(dataSourceFileUtil.documentationsFilePath);
+        documentationWrapper.setList(
+                documentationWrapper.getList()
+                        .stream()
+                        .filter(task -> !task.getId().equals(docId))
+                        .collect(ArrayList::new, ArrayList::add, ArrayList::addAll)
+        );
+
+        try {
+            XmlUtil.setContainer(dataSourceFileUtil.documentationsFilePath, documentationWrapper);
+            logger.info("deleteDocumentation[1]: documentation with id {} was deleted successfully", docId);
+            return new Result<>(ResultCode.SUCCESS);
+        }
+        catch (JAXBException exception) {
+            logger.error("deleteDocumentation[2]: {}", exception.getMessage());
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
+        }
     }
 
     /**
-     * @param employeeId
-     * @return
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteEmployee(UUID)}
      */
     @Override
     public Result<?> deleteEmployee(UUID employeeId) {
-        return null;
+        if (!XmlUtil.isRecordExists(dataSourceFileUtil.employeesFilePath, employeeId))
+            return new Result<>(ResultCode.NOT_FOUND);
+
+        Wrapper<Employee> taskWrapper = XmlUtil.read(dataSourceFileUtil.employeesFilePath);
+        taskWrapper.setList(
+                taskWrapper.getList()
+                        .stream()
+                        .filter(task -> !task.getId().equals(employeeId))
+                        .collect(ArrayList::new, ArrayList::add, ArrayList::addAll)
+        );
+
+        try {
+            XmlUtil.setContainer(dataSourceFileUtil.employeesFilePath, taskWrapper);
+            logger.info("deleteEmployee[1]: employee with id {} was deleted successfully", employeeId);
+            return new Result<>(ResultCode.SUCCESS);
+        }
+        catch (JAXBException exception) {
+            logger.error("deleteEmployee[2]: {}", exception.getMessage());
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
+        }
     }
 }

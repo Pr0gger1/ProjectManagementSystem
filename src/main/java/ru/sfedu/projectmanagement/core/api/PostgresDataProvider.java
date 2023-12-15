@@ -23,27 +23,17 @@ import java.util.stream.Collectors;
 
 public class PostgresDataProvider extends DataProvider {
     private final Logger logger = LogManager.getLogger(PostgresDataProvider.class);
-    private Connection connection = null;
     private final Environment dbEnvironment;
     private String dbName;
 
     public PostgresDataProvider() {
         dbEnvironment = Environment.valueOf(ConfigPropertiesUtil.getEnvironmentVariable(Constants.ENVIRONMENT));
-        initProvider();
-    }
-
-
-    /**
-     * initializes all entity tables before executing queries
-     */
-    private void initProvider() {
         // define db name (prod or test)
         setDbName();
-        // getting database connection
-        connection = getConnection();
         // create tables if not exists
         initDatabaseTables();
     }
+
 
     /**
      * set database name for test or production environment
@@ -79,6 +69,7 @@ public class PostgresDataProvider extends DataProvider {
         logger.debug("getConnection[1]: dbUrl = {}", dbUrl);
         logger.debug("getConnection[2]: dbUser = {}", dbUser);
         logger.debug("getConnection[3]: dbUrl = {}", dbPassword);
+        Connection connection = null;
 
         try {
             connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
@@ -89,6 +80,13 @@ public class PostgresDataProvider extends DataProvider {
         }
 
         return connection;
+    }
+
+    private void closeConnection(Connection connection) {
+        try { connection.close(); }
+        catch (SQLException exception) {
+            logger.error("closeConnection[1]: {}", exception.getMessage());
+        }
     }
 
     /**
@@ -112,18 +110,13 @@ public class PostgresDataProvider extends DataProvider {
                 statement.execute();
             }
             catch (SQLException exception) {
-                logger.error("initDatabase[2]: {}", exception.getMessage());
-
-            }
-            finally {
-                try {
-                    currentConnection.close();
-                } catch (SQLException e) {
-                    logger.debug("connection close error {}", e.getMessage());
-                }
+                logger.error("initDatabaseTables[1]: {}", exception.getMessage());
             }
         });
+
+       closeConnection(currentConnection);
     }
+
 
     /**
      * @param entityName entity name for logging what you save
@@ -133,7 +126,8 @@ public class PostgresDataProvider extends DataProvider {
      * @return Result with execution code and message if it fails
      */
     private Result<?> processNewEntity(String entityName, String methodName, String query, Object ...fields) {
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        Connection currentConnection = getConnection();
+        try (PreparedStatement statement = currentConnection.prepareStatement(query)) {
             int paramIndex = 0;
             for (Object field : fields) {
                 if (field instanceof LocalDateTime) {
@@ -152,6 +146,9 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("{}[2]: {}", methodName, exception.getMessage());
             return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
+        finally {
+           closeConnection(currentConnection);
+        }
         return new Result<>(ResultCode.SUCCESS);
     }
 
@@ -161,10 +158,12 @@ public class PostgresDataProvider extends DataProvider {
      * @return Result with execution code and message if it fails
      */
     private Result<?> deleteEntity(String tableName, Object id) throws SQLException {
+        Connection connection = getConnection();
         String query = String.format(Queries.DELETE_ENTITY_QUERY, tableName);
         PreparedStatement statement = connection.prepareStatement(query);
         statement.setObject(1, id);
         statement.executeUpdate();
+        connection.close();
 
         return new Result<>(ResultCode.SUCCESS);
     }
@@ -190,11 +189,13 @@ public class PostgresDataProvider extends DataProvider {
     ) throws SQLException {
         int paramIndex = 0;
         String query = String.format(Queries.UPDATE_COLUMN_ENTITY_QUERY, tableName, columnName);
+        Connection connection = getConnection();
 
         PreparedStatement statement = connection.prepareStatement(query);
         statement.setObject(++paramIndex, newValue);
         statement.setObject(++paramIndex, conditionValue);
         statement.executeUpdate();
+        connection.close();
 
         logger.debug("{}[0]: {} updated successfully", methodName, entityName);
         return new Result<>(ResultCode.SUCCESS);
@@ -205,9 +206,6 @@ public class PostgresDataProvider extends DataProvider {
     @Override
     public Result<?> processNewProject(Project project) {
         final String methodName = "processNewProject";
-        if (project.getManager() != null && getEmployeeById(project.getManagerId()).getCode() == ResultCode.NOT_FOUND) {
-            processNewEmployee(project.getManager());
-        }
         Result<?> result = processNewEntity(
                 project.getClass().getName(),
                 methodName,
@@ -217,9 +215,13 @@ public class PostgresDataProvider extends DataProvider {
                 project.getDescription(),
                 project.getStatus().name(),
                 project.getDeadline() == null ? null :
-                        Timestamp.valueOf(project.getDeadline()),
-                project.getManager() == null ? null : project.getManager().getId()
+                        Timestamp.valueOf(project.getDeadline())
         );
+
+
+        Result<?> initEntitiesResult = initProjectEntities(project);
+        if (initEntitiesResult.getCode() != ResultCode.SUCCESS)
+            return initEntitiesResult;
 
         logEntity(
                 project,
@@ -230,6 +232,43 @@ public class PostgresDataProvider extends DataProvider {
 
         return result;
     }
+
+    private Result<?> initProjectEntities(Project project) {
+        ArrayList<Result<?>> results = new ArrayList<>();
+
+        project.getTeam().forEach(employee -> {
+            Result<?> createEmployeeResult = processNewEmployee(employee);
+            Result<?> bindEmployee = bindEmployeeToProject(employee.getId(), project.getId());
+            results.addAll(List.of(createEmployeeResult, bindEmployee));
+
+
+            if (project.getManager() != null && employee.getId().equals(project.getManagerId()))
+                bindProjectManager(employee.getId(), project.getId());
+        });
+
+
+        results.addAll(project.getBugReports().stream()
+                .map(bugReport -> processNewBugReport((BugReport) bugReport))
+                .toList());
+
+        results.addAll(project.getDocumentations().stream()
+                .map(doc -> processNewDocumentation((Documentation) doc))
+                .toList());
+
+        results.addAll(project.getEvents().stream()
+                .map(event -> processNewEvent((Event) event))
+                .toList());
+
+        results.addAll(project.getTasks().stream()
+                .map(task -> processNewTask((Task) task))
+                .toList());
+
+        return results.stream()
+                .filter(result -> result.getCode() != ResultCode.SUCCESS)
+                .findFirst()
+                .orElse(new Result<>(ResultCode.SUCCESS));
+    }
+
 
     /**
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEmployee(Employee)}
@@ -269,6 +308,7 @@ public class PostgresDataProvider extends DataProvider {
     @Override
     public Result<?> processNewTask(Task task) {
         final String methodName = "processNewTask";
+        Connection connection = getConnection();
 
         try {
             Result<?> result = processNewEntity(
@@ -303,6 +343,9 @@ public class PostgresDataProvider extends DataProvider {
         catch (SQLException exception) {
             logger.error("processNewTask[2]: {}", exception.getMessage());
             return new Result<>(ResultCode.ERROR);
+        }
+        finally {
+            closeConnection(connection);
         }
     }
 
@@ -344,6 +387,7 @@ public class PostgresDataProvider extends DataProvider {
     public Result<?> processNewDocumentation(Documentation documentation) {
         final String methodName = "processNewDocumentation";
         Pair<String[], String[]> documentationBody = splitDocumentationToArrays(documentation.getBody());
+        Connection connection = getConnection();
 
         try {
             Result<?> result = processNewEntity(
@@ -374,6 +418,9 @@ public class PostgresDataProvider extends DataProvider {
         catch (SQLException exception) {
             logger.error("processNewDocumentation[1]: {}", exception.getMessage());
             return new Result<>(null, ResultCode.ERROR, exception.getMessage());
+        }
+        finally {
+            closeConnection(connection);
         }
     }
 
@@ -437,6 +484,7 @@ public class PostgresDataProvider extends DataProvider {
             String query,
             Object ...params
     ) throws SQLException {
+        Connection connection = getConnection();
         PreparedStatement statement = connection.prepareStatement(query);
         int paramIndex = 0;
         for (Object param : params) {
@@ -445,213 +493,9 @@ public class PostgresDataProvider extends DataProvider {
             else statement.setObject(++paramIndex, param);
         }
         statement.executeUpdate();
+        connection.close();
 
         return statement.getUpdateCount();
-    }
-
-//    public Result<?> updateProject(Project project) {
-//        try {
-//            int updateResult = updateEntity(
-//                    Constants.UPDATE_PROJECT_QUERY,
-//                    project.getName(),
-//                    project.getDescription(),
-//                    project.getStatus(),
-//                    project.getDeadline(),
-//                    project.getManager() == null ?
-//                            null : project.getManager().getId(),
-//                    project.getId()
-//            );
-//
-//            ArrayList<ProjectEntity> tasks = project.getTasks();
-//            ArrayList<ProjectEntity> bugReports = project.getBugReports();
-//            ArrayList<ProjectEntity> events = project.getEvents();
-//            ArrayList<ProjectEntity> documentations = project.getDocumentations();
-//            ArrayList<Employee> team = project.getTeam();
-//
-//            for (ProjectEntity task : tasks) {
-//                Result<?> result = updateTask((Task) task);
-//                if (result.getCode() == ResultCode.ERROR || result.getCode() == ResultCode.NOT_FOUND)
-//                    return new Result<>(null, ResultCode.ERROR, result.getMessage());
-//            }
-//
-//            for (ProjectEntity bugReport : bugReports) {
-//                Result<?> result = updateBugReport((BugReport) bugReport);
-//                if (result.getCode() == ResultCode.ERROR || result.getCode() == ResultCode.NOT_FOUND)
-//                    return new Result<>(null, ResultCode.ERROR, result.getMessage());
-//            }
-//
-//            for (ProjectEntity event : events) {
-//                Result<?> result = updateEvent((Event) event);
-//                if (result.getCode() == ResultCode.ERROR || result.getCode() == ResultCode.NOT_FOUND)
-//                    return new Result<>(null, ResultCode.ERROR, result.getMessage());
-//            }
-//
-//            for (ProjectEntity doc : documentations) {
-//                Result<?> result = updateDocumentation((Documentation) doc);
-//                if (result.getCode() == ResultCode.ERROR || result.getCode() == ResultCode.NOT_FOUND)
-//                    return new Result<>(null, ResultCode.ERROR, result.getMessage());
-//            }
-//
-//            for (Employee employee : team) {
-//                Result<?> result = updateEmployee(employee);
-//                if (result.getCode() == ResultCode.ERROR || result.getCode() == ResultCode.NOT_FOUND)
-//                    return new Result<>(null, ResultCode.ERROR, result.getMessage());
-//            }
-//
-//            if (updateResult > 0) {
-//                logEntity(project, "updateProject", ResultCode.SUCCESS, ChangeType.UPDATE);
-//                return new Result<>(ResultCode.SUCCESS);
-//            }
-//            return new Result<>(ResultCode.NOT_FOUND);
-//        }
-//        catch (SQLException exception) {
-//            logger.error("updateProject[2]: {}", exception.getMessage());
-//            return new Result<>(ResultCode.ERROR, exception.getMessage());
-//        }
-//    }
-
-    public Result<?> updateEmployee(Employee employee) {
-        try {
-            int result = updateEntity(
-                    Queries.UPDATE_EMPLOYEE_QUERY,
-                    employee.getFirstName(),
-                    employee.getLastName(),
-                    employee.getPatronymic(),
-                    employee.getBirthday(),
-                    employee.getEmail(),
-                    employee.getPhoneNumber(),
-                    employee.getPosition(),
-                    employee.getId()
-            );
-
-            if (result > 0) {
-                logEntity(employee, "updateEmployee", ResultCode.SUCCESS, ChangeType.UPDATE);
-                return new Result<>(ResultCode.SUCCESS);
-            }
-
-            return new Result<>(ResultCode.NOT_FOUND);
-        }
-        catch (SQLException exception) {
-            logger.error("updateEmployee[2]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
-        }
-    }
-
-    public Result<?> updateTask(Task task) {
-        try {
-            int result = updateEntity(
-                    Queries.UPDATE_TASK_QUERY,
-                    task.getProjectId(),
-                    task.getName(),
-                    task.getDescription(),
-                    task.getEmployeeId(),
-                    task.getEmployeeFullName(),
-                    task.getComment(),
-                    task.getPriority(),
-                    connection.createArrayOf("VARCHAR", task.getTags().toArray()),
-                    task.getStatus(),
-                    task.getDeadline(),
-                    task.getCreatedAt(),
-                    task.getCompletedAt(),
-                    task.getId()
-            );
-
-            if (result > 0) {
-                logEntity(task, "updateTask", ResultCode.SUCCESS, ChangeType.UPDATE);
-                return new Result<>(ResultCode.SUCCESS);
-            }
-
-            return new Result<>(ResultCode.NOT_FOUND);
-        }
-        catch (SQLException exception) {
-            logger.error("updateTask[2]: {}", exception.getMessage());
-            return new Result<>(null, ResultCode.ERROR, exception.getMessage());
-        }
-    }
-
-    public Result<?> updateBugReport(BugReport bugReport) {
-        try {
-            int result = updateEntity(
-                    Queries.UPDATE_BUG_REPORT_QUERY,
-                    bugReport.getProjectId(),
-                    bugReport.getStatus(),
-                    bugReport.getPriority(),
-                    bugReport.getName(),
-                    bugReport.getDescription(),
-                    bugReport.getEmployeeId(),
-                    bugReport.getEmployeeFullName(),
-                    bugReport.getCreatedAt(),
-                    bugReport.getId()
-            );
-
-            if (result > 0) {
-                logEntity(bugReport, "updateBugReport", ResultCode.SUCCESS, ChangeType.UPDATE);
-                return new Result<>(ResultCode.SUCCESS);
-            }
-
-            return new Result<>(ResultCode.NOT_FOUND);
-        }
-        catch (SQLException exception) {
-            logger.error("updateBugReport[2]: {}", exception.getMessage());
-            return new Result<>(null, ResultCode.ERROR, exception.getMessage());
-        }
-    }
-
-    public Result<?> updateEvent(Event event) {
-        try {
-            int result = updateEntity(
-                    Queries.UPDATE_EVENT_QUERY,
-                    event.getName(),
-                    event.getDescription(),
-                    event.getProjectId(),
-                    event.getEmployeeId(),
-                    event.getEmployeeFullName(),
-                    event.getStartDate(),
-                    event.getEndDate(),
-                    event.getCreatedAt(),
-                    event.getId()
-            );
-
-            if (result > 0) {
-                logEntity(event, "updateEvent", ResultCode.SUCCESS, ChangeType.UPDATE);
-                return new Result<>(ResultCode.SUCCESS);
-            }
-
-            return new Result<>(ResultCode.NOT_FOUND);
-        }
-        catch (SQLException exception) {
-            logger.error("updateEvent[2]: {}", exception.getMessage());
-            return new Result<>(null, ResultCode.ERROR, exception.getMessage());
-        }
-    }
-
-    public Result<?> updateDocumentation(Documentation documentation) {
-        Pair<String[], String[]> documentationBody = splitDocumentationToArrays(documentation.getBody());
-        try {
-            int result = updateEntity(
-                    Queries.UPDATE_DOCUMENTATION_QUERY,
-                    documentation.getProjectId(),
-                    documentation.getName(),
-                    documentation.getDescription(),
-                    documentation.getEmployeeId(),
-                    documentation.getEmployeeFullName(),
-                    documentationBody.getKey(),
-                    documentationBody.getValue(),
-                    documentation.getCreatedAt(),
-                    documentation.getId()
-            );
-
-            if (result > 0) {
-                logEntity(documentation, "updateBugReport", ResultCode.SUCCESS, ChangeType.UPDATE);
-                return new Result<>(ResultCode.SUCCESS);
-            }
-
-            return new Result<>(null, ResultCode.NOT_FOUND);
-        }
-        catch (SQLException exception) {
-            logger.error("updateDocumentation[2]: {}", exception.getMessage());
-            return new Result<>(null, ResultCode.ERROR, exception.getMessage());
-        }
     }
 
     /**
@@ -866,6 +710,8 @@ public class PostgresDataProvider extends DataProvider {
     @Override
     public Result<?> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId) {
         String query = String.format("SELECT COUNT(*) FROM %s WHERE project_id = ?", Queries.EMPLOYEE_PROJECT_TABLE_NAME);
+        Connection connection = getConnection();
+
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, projectId);
             ResultSet resultSet = statement.executeQuery();
@@ -898,6 +744,9 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("bindTaskExecutor[2]: {}", exception.getMessage());
             return new Result<>(null, ResultCode.ERROR);
         }
+        finally {
+            closeConnection(connection);
+        }
     }
 
     /**
@@ -912,8 +761,10 @@ public class PostgresDataProvider extends DataProvider {
                 employeeId, projectId
         );
 
-        if (createResult.getCode() == ResultCode.ERROR)
-            return new Result<>(null, ResultCode.NOT_FOUND, "Unable to link employee to project");
+        if (createResult.getCode() == ResultCode.ERROR) {
+            createResult.setMessage("Unable to link employee to project");
+            return createResult;
+        }
 
         return new Result<>(
                 ResultCode.SUCCESS,
@@ -931,6 +782,8 @@ public class PostgresDataProvider extends DataProvider {
     @Override
     public Result<Project> getProjectById(UUID id) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.PROJECT_TABLE_NAME);
+        Connection connection = getConnection();
+
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, id);
             ResultSet queryResult = statement.executeQuery();
@@ -951,6 +804,9 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("getProjectById[3]: {}", exception.getMessage());
             return new Result<>(null, ResultCode.ERROR, exception.getMessage());
         }
+        finally {
+            closeConnection(connection);
+        }
     }
 
 
@@ -960,6 +816,7 @@ public class PostgresDataProvider extends DataProvider {
     @Override
     public Result<ArrayList<Task>> getTasksByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.TASKS_TABLE_NAME);
+        Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, projectId);
@@ -981,6 +838,9 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("getTasksByProjectId[3]: {}", exception.getMessage());
             return new Result<>(null, ResultCode.ERROR, exception.getMessage());
         }
+        finally {
+            closeConnection(connection);
+        }
     }
 
 
@@ -989,6 +849,8 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<ArrayList<Task>> getTasksByEmployeeId(UUID employeeId) {
+        Connection connection = getConnection();
+
         try (PreparedStatement statement = connection.prepareStatement(Queries.GET_TASKS_BY_EMPLOYEE_ID_QUERY)) {
             statement.setObject(1, employeeId);
             ArrayList<Task> tasks = new ArrayList<>();
@@ -1010,6 +872,9 @@ public class PostgresDataProvider extends DataProvider {
         catch (SQLException exception) {
             logger.error("getTasksByEmployeeId[3]: {}", exception.getMessage());
             return new Result<>(ResultCode.ERROR, exception.getMessage());
+        }
+        finally {
+            closeConnection(connection);
         }
     }
 
@@ -1036,6 +901,7 @@ public class PostgresDataProvider extends DataProvider {
     @Override
     public Result<Task> getTaskById(UUID taskId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.TASKS_TABLE_NAME);
+        Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, taskId);
@@ -1053,6 +919,9 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("getTaskById[2]: {}", exception.getMessage());
             return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
+        finally {
+            closeConnection(connection);
+        }
     }
 
     /**
@@ -1061,6 +930,7 @@ public class PostgresDataProvider extends DataProvider {
     @Override
     public Result<ArrayList<BugReport>> getBugReportsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.BUG_REPORTS_TABLE_NAME);
+        Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, projectId);
@@ -1085,6 +955,9 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("getBugReportsByProjectId[3]: {}", exception.getMessage());
             return new Result<>(null, ResultCode.ERROR);
         }
+        finally {
+            closeConnection(connection);
+        }
     }
 
 
@@ -1094,6 +967,7 @@ public class PostgresDataProvider extends DataProvider {
     @Override
     public Result<BugReport> getBugReportById(UUID bugReportId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.BUG_REPORTS_TABLE_NAME);
+        Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, bugReportId);
@@ -1115,6 +989,9 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("getBugReportById[3]: {}", exception.getMessage());
             return new Result<>(null, ResultCode.ERROR);
         }
+        finally {
+            closeConnection(connection);
+        }
     }
 
 
@@ -1124,6 +1001,7 @@ public class PostgresDataProvider extends DataProvider {
     @Override
     public Result<ArrayList<Event>> getEventsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.EVENTS_TABLE_NAME);
+        Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, projectId);
@@ -1149,6 +1027,9 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("getEventsByProjectId[3]: {}", exception.getMessage());
             return new Result<>(null, ResultCode.ERROR);
         }
+        finally {
+            closeConnection(connection);
+        }
     }
 
     /**
@@ -1157,6 +1038,7 @@ public class PostgresDataProvider extends DataProvider {
     @Override
     public Result<Event> getEventById(UUID eventId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.EVENTS_TABLE_NAME);
+        Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, eventId);
@@ -1179,6 +1061,9 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("getEventById[3]: {}", exception.getMessage());
             return new Result<>(null, ResultCode.ERROR);
         }
+        finally {
+            closeConnection(connection);
+        }
     }
 
 
@@ -1188,6 +1073,7 @@ public class PostgresDataProvider extends DataProvider {
     @Override
     public Result<Documentation> getDocumentationById(UUID docId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.DOCUMENTATIONS_TABLE_NAME);
+        Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, docId);
@@ -1210,6 +1096,9 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("getDocumentationById[3]: {}", exception.getMessage());
             return new Result<>(null, ResultCode.ERROR, exception.getMessage());
         }
+        finally {
+            closeConnection(connection);
+        }
     }
 
     /**
@@ -1218,6 +1107,7 @@ public class PostgresDataProvider extends DataProvider {
     @Override
     public Result<ArrayList<Documentation>> getDocumentationsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.DOCUMENTATIONS_TABLE_NAME);
+        Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, projectId);
@@ -1241,6 +1131,9 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("getDocumentationByProjectId[3]: {}", exception.getMessage());
             return new Result<>(null, ResultCode.ERROR);
         }
+        finally {
+            closeConnection(connection);
+        }
     }
 
     /**
@@ -1248,7 +1141,10 @@ public class PostgresDataProvider extends DataProvider {
      */
     @Override
     public Result<ArrayList<Employee>> getProjectTeam(UUID projectId) {
-        try(PreparedStatement statement = connection.prepareStatement(Queries.GET_PROJECT_TEAM_QUERY)) {
+        Connection connection = getConnection();
+
+        try (PreparedStatement statement = connection.prepareStatement(Queries.GET_PROJECT_TEAM_QUERY)) {
+            statement.setObject(1, projectId);
             ResultSet resultSet = statement.executeQuery();
             ArrayList<Employee> team = new ArrayList<>();
 
@@ -1268,6 +1164,9 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("getProjectTeam[3]: {}", exception.getMessage());
             return new Result<>(null, ResultCode.ERROR, exception.getMessage());
         }
+        finally {
+            closeConnection(connection);
+        }
     }
 
     /**
@@ -1276,6 +1175,7 @@ public class PostgresDataProvider extends DataProvider {
     @Override
     public Result<Employee> getEmployeeById(UUID employeeId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.EMPLOYEES_TABLE_NAME);
+        Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, employeeId);
@@ -1298,6 +1198,9 @@ public class PostgresDataProvider extends DataProvider {
         catch (SQLException exception) {
             logger.error("getEmployee[3]: {}", exception.getMessage());
             return new Result<>(ResultCode.ERROR, exception.getMessage());
+        }
+        finally {
+            closeConnection(connection);
         }
     }
 }

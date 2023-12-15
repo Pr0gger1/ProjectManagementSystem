@@ -11,6 +11,7 @@ import ru.sfedu.projectmanagement.core.model.Entity;
 import ru.sfedu.projectmanagement.core.model.enums.EntityType;
 
 import java.io.File;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -119,8 +120,15 @@ public class XmlUtil {
         if (!isFound.get())
             wrapper.addNode(object);
 
+        StringWriter logStringWriter = new StringWriter();
+
         marshaller.marshal(wrapper, new File(filePath));
-        marshaller.marshal(wrapper, System.out);
+        marshaller.marshal(wrapper, logStringWriter);
+        logger.debug("createOrUpdateRecord[1]: content {}", logStringWriter);
+    }
+
+    public static <T> void setContainer(String filePath, Wrapper<T> wrapper) throws JAXBException {
+        marshaller.marshal(wrapper, new File(filePath));
     }
 }
 

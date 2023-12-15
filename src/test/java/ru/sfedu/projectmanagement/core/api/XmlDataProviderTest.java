@@ -51,8 +51,7 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(1)
     @Test
     public void processNewProject() {
-        xmlDataProvider.processNewEmployee(employee1);
-        Result<?> actual = xmlDataProvider.processNewProject(project);
+        Result<?> actual = xmlDataProvider.processNewProject(project1);
 
         logger.debug("processNewProject[1]: actual result code {}", actual.getCode());
         logger.debug("processNewProject[2]: expected result code: {}", ResultCode.SUCCESS);
@@ -65,9 +64,8 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(2)
     @Test
     public void createExistingProject() {
-        xmlDataProvider.processNewEmployee(employee1);
-        xmlDataProvider.processNewProject(project);
-        Result<?> actual = xmlDataProvider.processNewProject(project);
+        xmlDataProvider.processNewProject(project1);
+        Result<?> actual = xmlDataProvider.processNewProject(project1);
 
         logger.debug("createExistingProject[1]: actual result code {}", actual.getCode());
         logger.debug("createExistingProject[2]: expected result code: {}", ResultCode.ERROR);
@@ -107,9 +105,7 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(5)
     @Test
     public void processNewTask() {
-        xmlDataProvider.processNewEmployee(employee1);
-        xmlDataProvider.processNewProject(project);
-        xmlDataProvider.bindEmployeeToProject(employee1.getId(), project.getId());
+        xmlDataProvider.processNewProject(project1);
         tasks.forEach(task -> {
             Result<?> actual = xmlDataProvider.processNewTask(task);
             int logIndex = 0;
@@ -126,6 +122,8 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(6)
     @Test
     public void createExistingTasks() {
+        xmlDataProvider.processNewProject(project1);
+
         tasks.forEach(xmlDataProvider::processNewTask);
         tasks.forEach(task -> {
             Result<?> actual = xmlDataProvider.processNewTask(task);
@@ -143,9 +141,8 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(7)
     @Test
     public void processNewBugReport() {
-        xmlDataProvider.processNewEmployee(employee1);
-        xmlDataProvider.processNewProject(project);
-        xmlDataProvider.bindEmployeeToProject(employee1.getId(), project.getId());
+        xmlDataProvider.processNewProject(project1);
+
         Result<?> actual = xmlDataProvider.processNewBugReport(bugReport);
 
         logger.debug("processNewBugReport[1]: actual result code {}", actual.getCode());
@@ -159,6 +156,8 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(8)
     @Test
     public void createExistingBugReports() {
+        xmlDataProvider.processNewProject(project1);
+
         xmlDataProvider.processNewBugReport(bugReport);
         Result<?> actual = xmlDataProvider.processNewBugReport(bugReport);
 
@@ -173,9 +172,7 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(9)
     @Test
     public void processNewDocumentation() {
-        xmlDataProvider.processNewEmployee(employee1);
-        xmlDataProvider.processNewProject(project);
-        xmlDataProvider.bindEmployeeToProject(employee1.getId(), project.getId());
+        xmlDataProvider.processNewProject(project1);
         Result<?> actual = xmlDataProvider.processNewDocumentation(documentation);
 
         logger.debug("processNewDocumentation[1]: actual result code {}", actual.getCode());
@@ -189,6 +186,7 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(10)
     @Test
     public void createExistingDocumentation() {
+        xmlDataProvider.processNewProject(project1);
         xmlDataProvider.processNewDocumentation(documentation);
         Result<?> actual = xmlDataProvider.processNewDocumentation(documentation);
 
@@ -203,9 +201,7 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(11)
     @Test
     public void processNewEvent() {
-        xmlDataProvider.processNewEmployee(employee1);
-        xmlDataProvider.processNewProject(project);
-        xmlDataProvider.bindEmployeeToProject(employee1.getId(), project.getId());
+        xmlDataProvider.processNewProject(project1);
         Result<?> actual = xmlDataProvider.processNewEvent(event);
 
         logger.debug("processNewEvent[1]: actual result code {}", actual.getCode());
@@ -218,6 +214,7 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(12)
     @Test
     public void createExistingEvent() {
+        xmlDataProvider.processNewProject(project1);
         xmlDataProvider.processNewEvent(event);
         Result<?> actual = xmlDataProvider.processNewEvent(event);
 
@@ -231,15 +228,14 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(13)
     @Test
     public void getProjectById() {
-        xmlDataProvider.processNewEmployee(employee1);
-        xmlDataProvider.processNewProject(project);
-        Result<Project> actual = xmlDataProvider.getProjectById(project.getId());
+        xmlDataProvider.processNewProject(project1);
+        Result<Project> actual = xmlDataProvider.getProjectById(project1.getId());
 
         logger.debug("getProjectById[1]: actual result code {}", actual.getCode());
         logger.debug("getProjectById[2]: expected result code {}", ResultCode.SUCCESS);
         logger.debug("getProjectById[3]: result {}", actual);
         assertEquals(ResultCode.SUCCESS, actual.getCode());
-        assertEquals(project, actual.getData());
+        assertEquals(project1, actual.getData());
 
     }
 
@@ -259,11 +255,10 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(15)
     @Test
     public void getTasksByProjectId() {
-        xmlDataProvider.processNewEmployee(employee1);
-        xmlDataProvider.processNewProject(project);
-        xmlDataProvider.bindEmployeeToProject(employee1.getId(), project.getId());
+        xmlDataProvider.processNewProject(project1);
+
         tasks.forEach(xmlDataProvider::processNewTask);
-        Result<ArrayList<Task>> actual = xmlDataProvider.getTasksByProjectId(project.getId());
+        Result<ArrayList<Task>> actual = xmlDataProvider.getTasksByProjectId(project1.getId());
 
         logger.debug("getTasksByProjectId[1]: actual result code {}", actual.getCode());
         logger.debug("getTasksByProjectId[2]: expected result code {}", ResultCode.SUCCESS);
@@ -276,8 +271,8 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(16)
     @Test
     public void getTasksFromProjectWithNoTasks() {
-        xmlDataProvider.processNewProject(project);
-        Result<ArrayList<Task>> actual = xmlDataProvider.getTasksByProjectId(project.getId());
+        xmlDataProvider.processNewProject(project1);
+        Result<ArrayList<Task>> actual = xmlDataProvider.getTasksByProjectId(project1.getId());
 
         logger.debug("getTasksFromProjectWithNoTasks[1]: actual result code {}", actual.getCode());
         logger.debug("getTasksFromProjectWithNoTasks[2]: expected result code {}", ResultCode.NOT_FOUND);
@@ -290,7 +285,7 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(17)
     @Test
     public void getTasksByNonExistentProjectId() {
-        Result<ArrayList<Task>> actual = xmlDataProvider.getTasksByProjectId(project.getId());
+        Result<ArrayList<Task>> actual = xmlDataProvider.getTasksByProjectId(project1.getId());
         logger.debug("getTasksByProjectId[1]: actual result code {}", actual.getCode());
         logger.debug("getTasksByProjectId[2]: expected result code {}", ResultCode.NOT_FOUND);
         logger.debug("getTasksByProjectId[1]: actual array length {}", actual.getData().size());
@@ -308,9 +303,8 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Order(18)
     @Test
     public void getTaskById() {
-        xmlDataProvider.processNewEmployee(employee1);
-        xmlDataProvider.processNewProject(project);
-        xmlDataProvider.bindEmployeeToProject(employee1.getId(), project.getId());
+        xmlDataProvider.processNewProject(project1);
+
         tasks.forEach(xmlDataProvider::processNewTask);
         tasks.forEach(task -> {
             Result<?> actual = xmlDataProvider.getTaskById(task.getId());
@@ -339,9 +333,7 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Override
     @Test
     public void getTasksByEmployeeId() {
-        xmlDataProvider.processNewEmployee(employee1);
-        xmlDataProvider.processNewProject(project);
-        xmlDataProvider.bindEmployeeToProject(employee1.getId(), project.getId());
+        xmlDataProvider.processNewProject(project1);
         tasks.forEach(xmlDataProvider::processNewTask);
 
         Result<ArrayList<Task>> actual = xmlDataProvider.getTasksByEmployeeId(employee1.getId());
@@ -368,13 +360,11 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Override
     @Test
     public void getTasksByTags() {
-        xmlDataProvider.processNewEmployee(employee1);
-        xmlDataProvider.processNewProject(project);
-        xmlDataProvider.bindEmployeeToProject(employee1.getId(), project.getId());
+        xmlDataProvider.processNewProject(project1);
         tasks.forEach(xmlDataProvider::processNewTask);
         Result<ArrayList<Task>> actual = xmlDataProvider.getTasksByTags(
                 new ArrayList<>(List.of("Tag1")),
-                project.getId()
+                project1.getId()
         );
 
         logger.debug("getTasksByTags[1]: actual result code {}", actual.getCode());
@@ -390,7 +380,7 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
         tasks.forEach(xmlDataProvider::processNewTask);
         Result<ArrayList<Task>> actual = xmlDataProvider.getTasksByTags(
                 new ArrayList<>(List.of("Tag5")),
-                project.getId()
+                project1.getId()
         );
 
         logger.debug("getTasksByTags[1]: actual result code {}", actual.getCode());
@@ -403,12 +393,10 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Override
     @Test
     public void getBugReportsByProjectId() {
-        xmlDataProvider.processNewEmployee(employee1);
-        xmlDataProvider.processNewProject(project);
-        xmlDataProvider.bindEmployeeToProject(employee1.getId(), project.getId());
+        xmlDataProvider.processNewProject(project1);
 
         bugReports.forEach(xmlDataProvider::processNewBugReport);
-        Result<ArrayList<BugReport>> actual = xmlDataProvider.getBugReportsByProjectId(project.getId());
+        Result<ArrayList<BugReport>> actual = xmlDataProvider.getBugReportsByProjectId(project1.getId());
 
         logger.debug("getBugReportsByProjectId[1]: actual result code {}", actual.getCode());
         logger.debug("getBugReportsByProjectId[2]: expected result code {}", ResultCode.SUCCESS);
@@ -482,11 +470,8 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Override
     @Test
     public void getProjectTeam() {
-        xmlDataProvider.processNewEmployee(employee1);
-        xmlDataProvider.processNewProject(project);
-        xmlDataProvider.bindEmployeeToProject(employee1.getId(), project.getId());
-
-        Result<ArrayList<Employee>> actual = xmlDataProvider.getProjectTeam(project.getId());
+        xmlDataProvider.processNewProject(project1);
+        Result<ArrayList<Employee>> actual = xmlDataProvider.getProjectTeam(project1.getId());
 
         logger.debug("getProjectTeam[1]: actual result code {}", actual.getCode());
         logger.debug("getProjectTeam[2]: expected result code {}", ResultCode.SUCCESS);
@@ -574,9 +559,9 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Override
     @Test
     public void bindEmployeeToProject() {
-        xmlDataProvider.processNewEmployee(employee1);
-        xmlDataProvider.processNewProject(project);
-        Result<?> actual = xmlDataProvider.bindEmployeeToProject(employee1.getId(), project.getId());
+        xmlDataProvider.processNewEmployee(employee2);
+        xmlDataProvider.processNewProject(project1);
+        Result<?> actual = xmlDataProvider.bindEmployeeToProject(employee1.getId(), project1.getId());
         assertEquals(ResultCode.SUCCESS, actual.getCode());
     }
 
@@ -593,35 +578,38 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
                 new ArrayList<>(),
                 new ArrayList<>(),
                 new ArrayList<>(),
-                new ArrayList<>(),
-                null
+                new ArrayList<>(List.of(employee1, employee2)),
+                employee1
             );
 
-        xmlDataProvider.processNewEmployee(employee1);
         xmlDataProvider.processNewProject(project1);
-        xmlDataProvider.bindEmployeeToProject(employee1.getId(), project1.getId());
+        xmlDataProvider.processNewEmployee(employee2);
 
         Result<?> actual = xmlDataProvider.bindProjectManager(employee1.getId(), project1.getId());
+
+        logger.debug("bindProjectManager[1]: actual result code {}", actual.getCode());
+        logger.debug("bindProjectManager[2]: expected result code {}", ResultCode.SUCCESS);
+        logger.debug("bindProjectManager[3]: result {}", actual);
         assertEquals(ResultCode.SUCCESS, actual.getCode());
     }
 
     @Override
     @Test
     public void bindTaskExecutor() {
-        xmlDataProvider.processNewEmployee(employee1);
         xmlDataProvider.processNewEmployee(employee2);
-        xmlDataProvider.processNewProject(project);
-        xmlDataProvider.bindEmployeeToProject(employee1.getId(), project.getId());
-        xmlDataProvider.bindEmployeeToProject(employee2.getId(), project.getId());
+        xmlDataProvider.processNewProject(project1);
+        xmlDataProvider.bindEmployeeToProject(employee2.getId(), project1.getId());
         xmlDataProvider.processNewTask(task);
 
         Result<?> actual = xmlDataProvider.bindTaskExecutor(
                 employee2.getId(),
                 employee2.getFullName(),
                 task.getId(),
-                project.getId()
+                project1.getId()
         );
 
+        logger.debug("bindTaskExecutor[1]: actual result code {}", actual.getCode());
+        logger.debug("bindTaskExecutor[2]: expected result code {}", ResultCode.SUCCESS);
         logger.debug("bindTaskExecutor[1]: errors {}", actual.getErrors());
         assertEquals(ResultCode.SUCCESS, actual.getCode());
     }
@@ -629,66 +617,143 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Override
     @Test
     public void deleteProject() {
+        xmlDataProvider.processNewProject(project1);
+        Result<?> actual = xmlDataProvider.deleteProject(project1.getId());
+
+        logger.debug("deleteProject[1]: actual result code {}", actual.getCode());
+        logger.debug("deleteProject[2]: expected result code {}", ResultCode.SUCCESS);
+        logger.debug("deleteProject[3]: result {}", actual);
+        assertEquals(ResultCode.SUCCESS, actual.getCode());
     }
 
     @Override
     @Test
     public void deleteNonExistentProject() {
+        Result<?> actual = xmlDataProvider.deleteProject(project1.getId());
 
+        logger.debug("deleteNonExistentProject[1]: actual result code {}", actual.getCode());
+        logger.debug("deleteNonExistentProject[2]: expected result code {}", ResultCode.NOT_FOUND);
+        logger.debug("deleteNonExistentProject[3]: result {}", actual);
+        assertEquals(ResultCode.NOT_FOUND, actual.getCode());
     }
 
     @Override
     @Test
     public void deleteTask() {
+        xmlDataProvider.processNewProject(project1);
+        xmlDataProvider.processNewTask(task);
+        Result<?> actual = xmlDataProvider.deleteTask(task.getId());
+
+        logger.debug("deleteTask[1]: actual result code {}", actual.getCode());
+        logger.debug("deleteTask[2]: expected result code {}", ResultCode.SUCCESS);
+        logger.debug("deleteTask[3]: result {}", actual);
+        assertEquals(ResultCode.SUCCESS, actual.getCode());
     }
 
     @Override
     @Test
     public void deleteNonExistentTask() {
+        Result<?> actual = xmlDataProvider.deleteTask(task.getId());
 
+        logger.debug("deleteNonExistentTask[1]: actual result code {}", actual.getCode());
+        logger.debug("deleteNonExistentTask[2]: expected result code {}", ResultCode.NOT_FOUND);
+        logger.debug("deleteNonExistentTask[3]: result {}", actual);
+        assertEquals(ResultCode.NOT_FOUND, actual.getCode());
     }
 
     @Override
     @Test
     public void deleteBugReport() {
+        xmlDataProvider.processNewProject(project1);
+        xmlDataProvider.processNewBugReport(bugReport);
+        Result<?> actual = xmlDataProvider.deleteBugReport(bugReport.getId());
+
+        logger.debug("deleteBugReport[1]: actual result code {}", actual.getCode());
+        logger.debug("deleteBugReport[2]: expected result code {}", ResultCode.SUCCESS);
+        logger.debug("deleteBugReport[3]: result {}", actual);
+        assertEquals(ResultCode.SUCCESS, actual.getCode());
     }
 
     @Override
     @Test
     public void deleteNonExistentBugReport() {
+        Result<?> actual = xmlDataProvider.deleteBugReport(bugReport.getId());
 
+        logger.debug("deleteBugReport[1]: actual result code {}", actual.getCode());
+        logger.debug("deleteBugReport[2]: expected result code {}", ResultCode.NOT_FOUND);
+        logger.debug("deleteBugReport[3]: result {}", actual);
+        assertEquals(ResultCode.NOT_FOUND, actual.getCode());
     }
 
     @Override
     @Test
     public void deleteEvent() {
+        xmlDataProvider.processNewProject(project1);
+        xmlDataProvider.processNewEvent(event);
+        Result<?> actual = xmlDataProvider.deleteEvent(event.getId());
+
+        logger.debug("deleteEvent[1]: actual result code {}", actual.getCode());
+        logger.debug("deleteEvent[2]: expected result code {}", ResultCode.SUCCESS);
+        logger.debug("deleteEvent[3]: result {}", actual);
+        assertEquals(ResultCode.SUCCESS, actual.getCode());
     }
 
     @Override
     @Test
     public void deleteNonExistentEvent() {
+        xmlDataProvider.processNewEvent(event);
+        Result<?> actual = xmlDataProvider.deleteEvent(event.getId());
 
+        logger.debug("deleteNonExistentEvent[1]: actual result code {}", actual.getCode());
+        logger.debug("deleteNonExistentEvent[2]: expected result code {}", ResultCode.NOT_FOUND);
+        logger.debug("deleteNonExistentEvent[3]: result {}", actual);
+        assertEquals(ResultCode.NOT_FOUND, actual.getCode());
     }
 
     @Override
     @Test
     public void deleteDocumentation() {
+        xmlDataProvider.processNewProject(project1);
+        xmlDataProvider.processNewDocumentation(documentation);
+        Result<?> actual = xmlDataProvider.deleteDocumentation(documentation.getId());
+
+        logger.debug("deleteDocumentation[1]: actual result code {}", actual.getCode());
+        logger.debug("deleteDocumentation[2]: expected result code {}", ResultCode.SUCCESS);
+        logger.debug("deleteDocumentation[3]: result {}", actual);
+        assertEquals(ResultCode.SUCCESS, actual.getCode());
     }
 
     @Override
     @Test
     public void deleteNonExistentDocumentation() {
+        Result<?> actual = xmlDataProvider.deleteDocumentation(documentation.getId());
 
+        logger.debug("deleteNonExistentDocumentation[1]: actual result code {}", actual.getCode());
+        logger.debug("deleteNonExistentDocumentation[2]: expected result code {}", ResultCode.NOT_FOUND);
+        logger.debug("deleteNonExistentDocumentation[3]: result {}", actual);
+        assertEquals(ResultCode.NOT_FOUND, actual.getCode());
     }
 
     @Override
     @Test
     public void deleteEmployee() {
+        xmlDataProvider.processNewProject(project1);
+        Result<?> actual = xmlDataProvider.deleteEmployee(employee1.getId());
+
+        logger.debug("deleteEmployee[1]: actual result code {}", actual.getCode());
+        logger.debug("deleteEmployee[2]: expected result code {}", ResultCode.SUCCESS);
+        logger.debug("deleteEmployee[3]: result {}", actual);
+        assertEquals(ResultCode.SUCCESS, actual.getCode());
     }
 
     @Override
     @Test
     public void deleteNonExistentEmployee() {
+        Result<?> actual = xmlDataProvider.deleteEmployee(employee1.getId());
 
+        logger.debug("deleteNonExistentEmployee[1]: actual result code {}", actual.getCode());
+        logger.debug("deleteNonExistentEmployee[2]: expected result code {}", ResultCode.NOT_FOUND);
+        logger.debug("deleteNonExistentEmployee[3]: result {}", actual);
+        assertEquals(ResultCode.NOT_FOUND, actual.getCode());
     }
 }

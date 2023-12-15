@@ -109,8 +109,8 @@ public class Queries {
 
     // postgres create entity queries
     public static final String CREATE_PROJECT_QUERY = String.format("""
-        INSERT INTO %s (id, name, description, status, deadline, manager_id)
-        VALUES (?, ?, ?, ?, ?, ?);
+        INSERT INTO %s (id, name, description, status, deadline)
+        VALUES (?, ?, ?, ?, ?);
     """, PROJECT_TABLE_NAME);
 
     public static final String CREATE_EMPLOYEE_QUERY = String.format("""
@@ -238,7 +238,7 @@ public class Queries {
         SELECT * FROM %s WHERE project_id = ?
     """;
     public static final String GET_PROJECT_TEAM_QUERY = String.format("""
-        SELECT p.* FROM %s ep JOIN %s p ON ep.employee_id = p.id;
+        SELECT p.* FROM %s ep JOIN %s p ON ep.employee_id = p.id WHERE project_id = ?;
     """, EMPLOYEE_PROJECT_TABLE_NAME, EMPLOYEES_TABLE_NAME);
 
     public static final String GET_TASKS_BY_EMPLOYEE_ID_QUERY = String.format("""

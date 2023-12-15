@@ -122,7 +122,7 @@ public class DataSourceFileUtil {
             errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT);
 
         if (!errors.isEmpty())
-            return new Result<>(errors, ResultCode.ERROR);
+            return new Result<>(null, ResultCode.ERROR, errors);
 
         logger.info("checkProjectAndEmployeeExistence[2]: is valid: {}", true);
         return new Result<>(ResultCode.SUCCESS);
@@ -140,9 +140,9 @@ public class DataSourceFileUtil {
         if (entity.getEmployeeFullName().isEmpty())
             errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_INVALID_FULL_NAME);
 
-        if (!errors.isEmpty()) {
+        if (!errors.isEmpty() || !result.getErrors().isEmpty()) {
             result.setCode(ResultCode.INVALID_DATA);
-            result.getData().putAll(errors);
+            result.addError(errors);
         }
 
         logger.info("createProjectEntityValidation[2]: is valid: {}", true);

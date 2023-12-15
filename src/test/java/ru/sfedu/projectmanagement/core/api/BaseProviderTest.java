@@ -9,10 +9,7 @@ import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.UUID;
+import java.util.*;
 
 public class BaseProviderTest {
     protected static final ArrayList<Employee> team = new ArrayList<>();
@@ -42,7 +39,21 @@ public class BaseProviderTest {
     );
 
 
-    protected static final Project project = createProject(
+    protected static final Project project1 = createProject(
+            UUID.randomUUID(),
+            "mobile bank app",
+            "mobile app for bank based on kotlin and swift",
+            WorkStatus.IN_PROGRESS,
+            LocalDateTime.of(2025, Month.MARCH, 1, 0,0),
+            new ArrayList<>(),
+            new ArrayList<>(),
+            new ArrayList<>(),
+            new ArrayList<>(),
+            new ArrayList<>(List.of(employee1)),
+            employee1
+    );
+
+    protected static final Project project2 = createProject(
             UUID.randomUUID(),
             "mobile bank app",
             "mobile app for bank based on kotlin and swift",
@@ -53,11 +64,11 @@ public class BaseProviderTest {
             new ArrayList<>(),
             new ArrayList<>(),
             new ArrayList<>(),
-            employee1
+            null
     );
 
     protected static final Task task = createTask(
-            project.getId(),
+            project1.getId(),
             employee1.getId(),
             employee1.getFullName(),
             "task",
@@ -70,26 +81,13 @@ public class BaseProviderTest {
             Priority.MEDIUM
     );
 
-    protected static final Task taskWithoutExecutor = createTask(
-            project.getId(),
-            null,
-            "",
-            "task",
-            "task description",
-            "create main page of application",
-            WorkStatus.IN_PROGRESS,
-            new ArrayList<>(),
-            null,
-            LocalDateTime.of(2024, Month.JANUARY, 1, 0, 0),
-            Priority.MEDIUM
-    );
 
     protected static final BugReport bugReport = new BugReport(
             "mobile_bank_report_12-05-2023",
             "this is a bug report description",
             employee1.getId(),
             employee1.getFullName(),
-            project.getId(),
+            project1.getId(),
             Priority.HIGH
     );
 
@@ -98,7 +96,7 @@ public class BaseProviderTest {
             "show client what we did",
             employee1.getId(),
             employee1.getFullName(),
-            project.getId(),
+            project1.getId(),
             LocalDateTime.of(2023, Month.DECEMBER, 22, 15, 0),
             LocalDateTime.of(2023, Month.DECEMBER, 22, 10, 0)
     );
@@ -112,7 +110,7 @@ public class BaseProviderTest {
             }},
             employee1.getId(),
             employee1.getFullName(),
-            project.getId()
+            project1.getId()
     );
 
     protected static final ArrayList<Task> tasks = new ArrayList<>();
@@ -123,7 +121,7 @@ public class BaseProviderTest {
     @BeforeAll
     public static void createTaskList() {
         Task task1 = createTask(
-                project.getId(),
+                project1.getId(),
                 employee1.getId(),
                 employee1.getFullName(),
                 "Task 1",
@@ -137,7 +135,7 @@ public class BaseProviderTest {
         );
 
         Task task2 = createTask(
-                project.getId(),
+                project1.getId(),
                 employee1.getId(),
                 employee1.getFullName(),
                 "Task 2",
@@ -151,7 +149,7 @@ public class BaseProviderTest {
         );
 
         Task task3 = createTask(
-                project.getId(),
+                project1.getId(),
                 employee1.getId(),
                 employee1.getFullName(),
                 "Task 3",
@@ -209,6 +207,8 @@ public class BaseProviderTest {
                 "Дизайнер"
         );
         team.add(employee3);
+
+        project2.setTeam(team);
     }
 
     @BeforeAll
@@ -216,7 +216,7 @@ public class BaseProviderTest {
         BugReport bugReport1 = createBugReport(
                 "Bug 1",
                 "Description 1",
-                project.getId(),
+                project1.getId(),
                 employee1.getId(),
                 employee1.getFullName(),
                 BugStatus.IN_PROGRESS,
@@ -226,7 +226,7 @@ public class BaseProviderTest {
         BugReport bugReport2 = createBugReport(
                 "Bug 2",
                 "Description 2",
-                project.getId(),
+                project1.getId(),
                 employee1.getId(),
                 employee1.getFullName(),
                 BugStatus.OPENED,
@@ -236,7 +236,7 @@ public class BaseProviderTest {
         BugReport bugReport3 = createBugReport(
                 "Bug 3",
                 "Description 3",
-                project.getId(),
+                project1.getId(),
                 employee1.getId(),
                 employee1.getFullName(),
                 BugStatus.CLOSED,

@@ -5,6 +5,8 @@ import ru.sfedu.projectmanagement.core.utils.ResultCode;
 import java.util.Objects;
 import java.util.TreeMap;
 
+class NoData {}
+
 public class Result<T> {
     private ResultCode code;
     private T data;
@@ -37,6 +39,10 @@ public class Result<T> {
         this.code = code;
     }
 
+    public Result() {
+
+    }
+
     public void setErrors(TreeMap<String, String> errors) {
         this.errors = errors;
     }
@@ -45,6 +51,9 @@ public class Result<T> {
         return errors;
     }
 
+    public void addError(TreeMap<String, String> errors) {
+        this.errors.putAll(errors);
+    }
     public ResultCode getCode() {
         return code;
     }
@@ -75,6 +84,7 @@ public class Result<T> {
                 "code=" + code +
                 ", data=" + data +
                 ", message='" + message + '\'' +
+                ", errors=" + errors +
                 '}';
     }
 
