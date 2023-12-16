@@ -116,10 +116,6 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
     }
 
-    @Override
-    public void initDataForMonitorProjectCharacteristics() {
-
-    }
 
     @Override
     @Test

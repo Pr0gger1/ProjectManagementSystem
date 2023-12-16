@@ -5,7 +5,6 @@ import ru.sfedu.projectmanagement.core.utils.ResultCode;
 import java.util.Objects;
 import java.util.TreeMap;
 
-class NoData {}
 
 public class Result<T> {
     private ResultCode code;
@@ -97,7 +96,7 @@ public class Result<T> {
     public boolean equals(Object object) {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
-        Result<?> result = (Result<?>) object;
+        Result<NoData> result = (Result<NoData>) object;
         return code == result.code && Objects.equals(data, result.data) && Objects.equals(message, result.message);
     }
 }

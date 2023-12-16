@@ -156,6 +156,10 @@ public class Queries {
         UPDATE %s SET %s = ? WHERE id = ?
     """;
 
+    public static final String UPDATE_ENTITY = """
+        UPDATE %s SET %s WHERE id = ?
+    """;
+
     public static final String UPDATE_PROJECT_QUERY = String.format(
             "UPDATE %s SET name = ?, description = ?, status = ?, deadline = ?, manager_id = ? WHERE id = ?;",
             PROJECT_TABLE_NAME

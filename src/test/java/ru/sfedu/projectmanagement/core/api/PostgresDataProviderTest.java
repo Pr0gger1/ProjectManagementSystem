@@ -7,6 +7,7 @@ import ru.sfedu.projectmanagement.core.Queries;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
 import ru.sfedu.projectmanagement.core.utils.ResultCode;
+import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
 import ru.sfedu.projectmanagement.core.utils.types.TrackInfo;
 
@@ -64,8 +65,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     static void truncateTable(Statement statement, String dbName) throws SQLException {
         statement.executeUpdate("TRUNCATE TABLE " + dbName + " CASCADE");
     }
-
-
+    
     @Override
     @Order(1)
     @Test
@@ -78,7 +78,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
             logger.error("processNewProject[1]: {}", exception.getMessage());
         }
 
-        Result<?> actual = postgresProvider.processNewProject(project1);
+        Result<NoData> actual = postgresProvider.processNewProject(project1);
 
         logger.debug("processNewProject[2]: actual result code {}", actual.getCode());
         logger.debug("processNewProject[3]: expected result code {}", ResultCode.SUCCESS);
@@ -92,7 +92,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Test
     public void createExistingProject() {
         postgresProvider.processNewProject(project1);
-        Result<?> actual = postgresProvider.processNewProject(project1);
+        Result<NoData> actual = postgresProvider.processNewProject(project1);
         logger.debug("createExistingProject[2]: actual result code {}", actual.getCode());
         logger.debug("createExistingProject[1]: expected result code {}", ResultCode.ERROR);
         logger.debug("createExistingProject[1]: result {}", actual);
@@ -112,7 +112,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
             logger.error("processNewEmployee[1]: {}", exception.getMessage());
         }
 
-        Result<?> actual = postgresProvider.processNewEmployee(employee1);
+        Result<NoData> actual = postgresProvider.processNewEmployee(employee1);
 
         assertEquals(ResultCode.SUCCESS, actual.getCode());
 
@@ -125,7 +125,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Test
     public void createExistingEmployee() {
         postgresProvider.processNewEmployee(employee1);
-        Result<?> actual = postgresProvider.processNewEmployee(employee1);
+        Result<NoData> actual = postgresProvider.processNewEmployee(employee1);
 
         assertEquals(ResultCode.ERROR, actual.getCode());
 
@@ -141,7 +141,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     public void processNewTask() {
         postgresProvider.processNewProject(project1);
         tasks.forEach(task -> {
-            Result<?> actual = postgresProvider.processNewTask(task);
+            Result<NoData> actual = postgresProvider.processNewTask(task);
             assertEquals(ResultCode.SUCCESS, actual.getCode());
             int logIndex = 0;
 
@@ -157,7 +157,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     public void createExistingTasks() {
         tasks.forEach(task -> {
             postgresProvider.processNewTask(task);
-            Result<?> actual = postgresProvider.processNewTask(task);
+            Result<NoData> actual = postgresProvider.processNewTask(task);
             assertEquals(ResultCode.ERROR, actual.getCode());
             int logIndex = 0;
 
@@ -172,7 +172,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Test
     public void processNewBugReport() {
         bugReports.forEach(bugReport -> {
-            Result<?> actual = postgresProvider.processNewBugReport(bugReport);
+            Result<NoData> actual = postgresProvider.processNewBugReport(bugReport);
             assertEquals(ResultCode.SUCCESS, actual.getCode());
             int logIndex = 0;
 
@@ -188,7 +188,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     public void createExistingBugReports() {
         bugReports.forEach(bugReport -> {
             postgresProvider.processNewBugReport(bugReport);
-            Result<?> actual = postgresProvider.processNewBugReport(bugReport);
+            Result<NoData> actual = postgresProvider.processNewBugReport(bugReport);
             assertEquals(ResultCode.ERROR, actual.getCode());
             int logIndex = 0;
 
@@ -202,7 +202,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Order(9)
     @Test
     public void processNewDocumentation() {
-        Result<?> actual = postgresProvider.processNewDocumentation(documentation);
+        Result<NoData> actual = postgresProvider.processNewDocumentation(documentation);
 
         assertEquals(ResultCode.SUCCESS, actual.getCode());
         logger.debug("processNewDocumentation[1]: actual {}", actual.getCode());
@@ -215,7 +215,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Test
     public void createExistingDocumentation() {
         postgresProvider.processNewDocumentation(documentation);
-        Result<?> actual = postgresProvider.processNewDocumentation(documentation);
+        Result<NoData> actual = postgresProvider.processNewDocumentation(documentation);
 
         assertEquals(ResultCode.ERROR, actual.getCode());
         logger.debug("processNewDocumentation[1]: actual {}", actual.getCode());
@@ -227,7 +227,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Order(11)
     @Test
     public void processNewEvent() {
-        Result<?> actual = postgresProvider.processNewEvent(event);
+        Result<NoData> actual = postgresProvider.processNewEvent(event);
         logger.debug("processNewEvent[1]: expected {}", ResultCode.SUCCESS);
         logger.debug("processNewEvent[2]: actual {}", actual.getCode());
         assertEquals(ResultCode.SUCCESS, actual.getCode());
@@ -238,7 +238,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Test
     public void createExistingEvent() {
         postgresProvider.processNewEvent(event);
-        Result<?> actual = postgresProvider.processNewEvent(event);
+        Result<NoData> actual = postgresProvider.processNewEvent(event);
         assertEquals(ResultCode.ERROR, actual.getCode());
 
         logger.debug("processNewEvent[1]: actual {}", actual.getCode());
@@ -264,24 +264,10 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     }
 
     @Override
-    public void initDataForMonitorProjectCharacteristics() {
-        tasks.forEach(postgresProvider::processNewTask);
-
-        postgresProvider.bindEmployeeToProject(employee1.getId(), project1.getId());
-        for (Task task : tasks) {
-            Result<?> bindEmployeeToTaskResult = postgresProvider.bindTaskExecutor(
-                    employee1.getId(), employee1.getFullName(),
-                    task.getId(), project1.getId()
-            );
-            assertEquals(ResultCode.SUCCESS, bindEmployeeToTaskResult.getCode());
-        }
-    }
-
-    @Override
     @Order(13)
     @Test
     public void monitorProjectCharacteristics() {
-        initDataForMonitorProjectCharacteristics();
+        initDataForMonitorProjectCharacteristics(postgresProvider);
 
         float projectReadiness = postgresProvider.calculateProjectReadiness(project1.getId());
         TrackInfo<Task, String> trackTasks = postgresProvider.trackTaskStatus(project1.getId());
@@ -301,7 +287,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Order(14)
     @Test
     public void monitorProjectCharacteristicsWithLaborEfficiency() {
-        initDataForMonitorProjectCharacteristics();
+        initDataForMonitorProjectCharacteristics(postgresProvider);
         ProjectStatistics expectedData = new ProjectStatistics();
         float projectReadiness = postgresProvider.calculateProjectReadiness(project1.getId());
         TrackInfo<Task, String> trackTasks = postgresProvider.trackTaskStatus(project1.getId());
@@ -323,7 +309,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Order(15)
     @Test
     public void monitorProjectCharacteristicsWithBugStatusAndLaborEfficiency() {
-        initDataForMonitorProjectCharacteristics();
+        initDataForMonitorProjectCharacteristics(postgresProvider);
         ProjectStatistics expectedData = new ProjectStatistics();
         float projectReadiness = postgresProvider.calculateProjectReadiness(project1.getId());
         TrackInfo<Task, String> trackTasks = postgresProvider.trackTaskStatus(project1.getId());
@@ -344,17 +330,16 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     }
 
     @Override
-    @Order(16)
     @Test
     public void calculateProjectReadiness() {
         ArrayList<Task> tasks1 = new ArrayList<>() {{ addAll(tasks); }};
         int completedTasksCount = (int) tasks1.stream()
                 .filter(task -> task.getStatus() == WorkStatus.COMPLETED).count();
         float expectedReadiness = ((float) completedTasksCount / tasks.size()) * 100.0f;
-        for (Task task : tasks1) {
+        tasks1.forEach(task ->  {
             postgresProvider.processNewTask(task);
             postgresProvider.bindTaskExecutor(employee1.getId(), employee1.getFullName(), task.getId(), project1.getId());
-        }
+        });
 
         float actualReadiness = postgresProvider.calculateProjectReadiness(project1.getId());
         assertEquals(expectedReadiness, actualReadiness);
@@ -364,7 +349,6 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     }
 
     @Override
-    @Order(17)
     @Test
     public void calculateProjectReadinessIfHasNoTasks() {
         float actualReadiness = postgresProvider.calculateProjectReadiness(project1.getId());
@@ -387,14 +371,13 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
         tasks1.get(2).setCompletedAt(LocalDateTime.of(2023, Month.DECEMBER, 14, 17,24));
 
         tasks1.forEach(postgresProvider::processNewTask);
-//        postgresProvider.processNewProject(project2);
 
         TrackInfo<Employee, Float> expectedData = new TrackInfo<>(
                 new HashMap<>() {{put(employee1, 102.0f);}}
         );
 
         tasks1.forEach(task -> {
-            Result<?> bindTaskExecutorResult = postgresProvider.bindTaskExecutor(
+            Result<NoData> bindTaskExecutorResult = postgresProvider.bindTaskExecutor(
                     employee1.getId(), employee1.getFullName(), task.getId(), task.getProjectId()
             );
             assertEquals(ResultCode.SUCCESS, bindTaskExecutorResult.getCode());
@@ -444,7 +427,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Test
     public void bindProjectManager() {
         postgresProvider.bindEmployeeToProject(employee1.getId(), project1.getId());
-        Result<?> actual = postgresProvider
+        Result<NoData> actual = postgresProvider
                 .bindProjectManager(employee1.getId(), project1.getId());
 
         logger.debug("processNewProject[1]: expected {}", ResultCode.SUCCESS);
@@ -465,7 +448,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
         postgresProvider.bindEmployeeToProject(newExecutor.getId(), project1.getId());
         postgresProvider.processNewTask(task);
 
-        Result<?> actual = postgresProvider.bindTaskExecutor(
+        Result<NoData> actual = postgresProvider.bindTaskExecutor(
                 newExecutor.getId(), newExecutor.getFullName(), task.getId(), project1.getId()
         );
 
@@ -479,32 +462,37 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Override
     @Test
     public void bindEmployeeToProject() {
-        for (Employee employee : team) {
+        team.forEach(employee -> {
             postgresProvider.processNewEmployee(employee);
+            Result<NoData> actual = postgresProvider.bindEmployeeToProject(employee.getId(), project1.getId());
 
-            Result<?> bindResult = postgresProvider.bindEmployeeToProject(employee.getId(), project1.getId());
-            assertEquals(ResultCode.SUCCESS, bindResult.getCode());
-        }
+            logger.debug("bindEmployeeToProject[1]: actual result code {}", actual.getCode());
+            logger.debug("bindEmployeeToProject[2]: expected result code {}", ResultCode.SUCCESS);
+            logger.debug("bindEmployeeToProject[3]: result {}", actual);
+            assertEquals(ResultCode.SUCCESS, actual.getCode());
+        });
     }
 
     @Override
     @Test
     public void deleteProject() {
-        Result<?> actual = postgresProvider.deleteProject(project1.getId());
+        Result<NoData> actual = postgresProvider.deleteProject(project1.getId());
         assertEquals(ResultCode.SUCCESS, actual.getCode());
 
         logger.debug("deleteProject[1]: delete project actual: {}", actual.getCode());
         logger.debug("deleteProject[2]: delete project expected: {}", ResultCode.SUCCESS);
+        logger.debug("deleteProject[3]: result {}", actual);
     }
 
     @Override
     @Test
     public void deleteNonExistentProject() {
-        Result<?> actual = postgresProvider.deleteProject(UUID.randomUUID());
+        Result<NoData> actual = postgresProvider.deleteProject(UUID.randomUUID());
         assertEquals(ResultCode.NOT_FOUND, actual.getCode());
 
         logger.debug("deleteNonExistentProject[1]: delete nonexistent project actual: {}", actual.getCode());
         logger.debug("deleteNonExistentProject[2]: delete nonexistent project expected: {}", ResultCode.NOT_FOUND);
+        logger.debug("deleteNonExistentProject[3]: result {}", actual);
     }
 
     @Override
@@ -512,7 +500,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     public void deleteTask() {
         postgresProvider.processNewTask(task);
 
-        Result<?> actual = postgresProvider.deleteTask(task.getId());
+        Result<NoData> actual = postgresProvider.deleteTask(task.getId());
         assertEquals(ResultCode.SUCCESS, actual.getCode());
 
         logger.debug("deleteTask[1]: delete task actual: {}", actual.getCode());
@@ -522,7 +510,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Override
     @Test
     public void deleteNonExistentTask() {
-        Result<?> actual = postgresProvider.deleteTask(UUID.randomUUID());
+        Result<NoData> actual = postgresProvider.deleteTask(UUID.randomUUID());
         assertEquals(ResultCode.NOT_FOUND, actual.getCode());
 
         logger.debug("deleteNonExistentTask[1]: delete nonexistent task actual: {}", actual.getCode());
@@ -533,7 +521,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Test
     public void deleteBugReport() {
         postgresProvider.processNewBugReport(bugReport);
-        Result<?> actual = postgresProvider.deleteBugReport(bugReport.getId());
+        Result<NoData> actual = postgresProvider.deleteBugReport(bugReport.getId());
         assertEquals(ResultCode.SUCCESS, actual.getCode());
 
         logger.debug("deleteBugReport[1]: delete bug report actual {}", actual.getCode());
@@ -543,7 +531,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Override
     @Test
     public void deleteNonExistentBugReport() {
-        Result<?> actual = postgresProvider.deleteBugReport(UUID.randomUUID());
+        Result<NoData> actual = postgresProvider.deleteBugReport(UUID.randomUUID());
         assertEquals(ResultCode.NOT_FOUND, actual.getCode());
 
         logger.debug("deleteNonExistentBugReport[1]: delete nonexistent bug report actual {}", actual.getCode());
@@ -555,7 +543,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     public void deleteEvent() {
         postgresProvider.processNewEvent(event);
 
-        Result<?> actual = postgresProvider.deleteEvent(event.getId());
+        Result<NoData> actual = postgresProvider.deleteEvent(event.getId());
         assertEquals(ResultCode.SUCCESS, actual.getCode());
 
         logger.debug("deleteBugReport[1]: delete existent event actual {}", actual.getCode());
@@ -565,7 +553,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Override
     @Test
     public void deleteNonExistentEvent() {
-        Result<?> actual = postgresProvider.deleteEvent(UUID.randomUUID());
+        Result<NoData> actual = postgresProvider.deleteEvent(UUID.randomUUID());
         assertEquals(ResultCode.NOT_FOUND, actual.getCode());
 
         logger.debug("deleteNonExistentEvent[1]: delete nonexistent event actual {}", actual.getCode());
@@ -577,7 +565,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     public void deleteDocumentation() {
         postgresProvider.processNewDocumentation(documentation);
 
-        Result<?> actual = postgresProvider.deleteDocumentation(documentation.getId());
+        Result<NoData> actual = postgresProvider.deleteDocumentation(documentation.getId());
         assertEquals(ResultCode.SUCCESS, actual.getCode());
 
         logger.debug("deleteDocumentation[1]: delete documentation actual {}", actual.getCode());
@@ -587,7 +575,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Override
     @Test
     public void deleteNonExistentDocumentation() {
-        Result<?> actual = postgresProvider.deleteDocumentation(UUID.randomUUID());
+        Result<NoData> actual = postgresProvider.deleteDocumentation(UUID.randomUUID());
         assertEquals(ResultCode.NOT_FOUND, actual.getCode());
 
         logger.debug("deleteNonExistentDocumentation[1]: delete nonexistent documentation actual {}", actual.getCode());
@@ -597,7 +585,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Override
     @Test
     public void deleteEmployee() {
-        Result<?> actual = postgresProvider.deleteEmployee(employee1.getId());
+        Result<NoData> actual = postgresProvider.deleteEmployee(employee1.getId());
         assertEquals(ResultCode.SUCCESS, actual.getCode());
 
         logger.debug("deleteEmployee[1]: delete employee actual {}", actual.getCode());
@@ -607,7 +595,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Override
     @Test
     public void deleteNonExistentEmployee() {
-        Result<?> actual = postgresProvider.deleteEmployee(UUID.randomUUID());
+        Result<NoData> actual = postgresProvider.deleteEmployee(UUID.randomUUID());
         assertEquals(ResultCode.NOT_FOUND, actual.getCode());
 
         logger.debug("deleteNonExistentEmployee[1]: delete nonexistent employee actual {}", actual.getCode());
@@ -756,7 +744,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Test
     public void getBugReportsByProjectId() {
         for (BugReport bugReport : bugReports) {
-            Result<?> createBugReportsResult = postgresProvider.processNewBugReport(bugReport);
+            Result<NoData> createBugReportsResult = postgresProvider.processNewBugReport(bugReport);
             assertEquals(ResultCode.SUCCESS, createBugReportsResult.getCode());
         }
 
@@ -916,13 +904,14 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     public void getDocumentationsByNonExistentProjectId() {
         Result<ArrayList<Documentation>> actual = postgresProvider.getDocumentationsByProjectId(documentation.getProjectId());
 
-        assertEquals(ResultCode.NOT_FOUND, actual.getCode());
-        assertEquals(0, actual.getData().size());
-
         logger.debug("getDocumentationByProjectId[2]: actual result code {}", actual.getCode());
         logger.debug("getDocumentationByProjectId[2]: expected result code {}", ResultCode.NOT_FOUND);
         logger.debug("getDocumentationByProjectId[3]: actual data {}", actual.getData());
         logger.debug("getDocumentationByProjectId[4]: expected data []");
+
+        assertEquals(ResultCode.NOT_FOUND, actual.getCode());
+        assertEquals(0, actual.getData().size());
+
     }
 
     @Override

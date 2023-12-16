@@ -13,6 +13,7 @@ import ru.sfedu.projectmanagement.core.model.enums.ActionStatus;
 
 import java.util.Date;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 public class HistoryRecord<T> {
@@ -39,7 +40,9 @@ public class HistoryRecord<T> {
             ChangeType changeType
     ) {
         id = UUID.randomUUID();
-        this.className = object.getClass().getSimpleName();
+        this.className = Optional.ofNullable(object)
+                .map(obj -> obj.getClass().getSimpleName())
+                .orElse(null);
         this.changeType = changeType;
         this.object = object;
         this.createdAt = new Date();

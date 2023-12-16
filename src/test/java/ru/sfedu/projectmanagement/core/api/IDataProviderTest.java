@@ -16,7 +16,7 @@ public interface IDataProviderTest {
 
 
     void monitorProjectCharacteristics();
-    void initDataForMonitorProjectCharacteristics();
+    void initDataForMonitorProjectCharacteristics(DataProvider provider);
     void monitorProjectCharacteristicsWithBugStatusAndLaborEfficiency();
     void monitorProjectCharacteristicsWithLaborEfficiency();
     void calculateProjectReadiness();

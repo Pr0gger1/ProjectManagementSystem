@@ -6,6 +6,7 @@ import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.enums.ChangeType;
 import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
 import ru.sfedu.projectmanagement.core.utils.types.HistoryRecord;
+import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
 import ru.sfedu.projectmanagement.core.utils.types.TrackInfo;
 import ru.sfedu.projectmanagement.core.model.enums.ActionStatus;
@@ -13,10 +14,7 @@ import ru.sfedu.projectmanagement.core.utils.ResultCode;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public abstract class DataProvider {
     private final Logger logger = LogManager.getLogger(DataProvider.class);
@@ -45,37 +43,37 @@ public abstract class DataProvider {
      * @param project - instance of Project
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<?> processNewProject(Project project);
+    public abstract Result<NoData> processNewProject(Project project);
 
     /**
      * @param task Task instance
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<?> processNewTask(Task task);
+    public abstract Result<NoData> processNewTask(Task task);
 
     /**
      * @param bugReport BugReport instance
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<?> processNewBugReport(BugReport bugReport);
+    public abstract Result<NoData> processNewBugReport(BugReport bugReport);
 
     /**
      * @param documentation Documentation instance
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<?> processNewDocumentation(Documentation documentation);
+    public abstract Result<NoData> processNewDocumentation(Documentation documentation);
 
     /**
      * @param event Event instance
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<?> processNewEvent(Event event);
+    public abstract Result<NoData> processNewEvent(Event event);
 
     /**
      * @param employee Employee instance
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<?> processNewEmployee(Employee employee);
+    public abstract Result<NoData> processNewEmployee(Employee employee);
 
 
     /**
@@ -207,56 +205,56 @@ public abstract class DataProvider {
         return (taskEffectivenessSum * 1.0f) / tasksCount;
     }
 
-    public abstract Result<?> bindEmployeeToProject(UUID employeeId, UUID projectId);
+    public abstract Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId);
 
     /**
      * @param managerId id of the manager who binds to the project
      * @param projectId id of the project to which the manager is attached
      */
-    public abstract Result<?> bindProjectManager(UUID managerId, UUID projectId);
+    public abstract Result<NoData> bindProjectManager(UUID managerId, UUID projectId);
 
     /**
      * @param executorId id of the employee that binds to the task
      * @param taskId id of the task to which the employee is attached
      * @param projectId id of the project which have this task
      */
-    public abstract Result<?> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId);
+    public abstract Result<NoData> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId);
 
     /**
      * @param projectId id of the project you want to delete
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<?> deleteProject(UUID projectId);
+    public abstract Result<NoData> deleteProject(UUID projectId);
 
     /**
      * @param taskId id of task you want to delete
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<?> deleteTask(UUID taskId);
+    public abstract Result<NoData> deleteTask(UUID taskId);
 
     /**
      * @param bugReportId id of bug report you want to delete
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<?> deleteBugReport(UUID bugReportId);
+    public abstract Result<NoData> deleteBugReport(UUID bugReportId);
 
     /**
      * @param eventId id of event you want to delete
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<?> deleteEvent(UUID eventId);
+    public abstract Result<NoData> deleteEvent(UUID eventId);
 
     /**
      * @param docId id of documentation you want to delete
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<?> deleteDocumentation(UUID docId);
+    public abstract Result<NoData> deleteDocumentation(UUID docId);
 
     /**
      * @param employeeId id of employee you want to delete
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<?> deleteEmployee(UUID employeeId);
+    public abstract Result<NoData> deleteEmployee(UUID employeeId);
 
 
     /**
@@ -338,4 +336,40 @@ public abstract class DataProvider {
      * @return Result with Employee, execution code and message if it fails
      */
     public abstract Result<Employee> getEmployeeById(UUID employeeId);
+
+    protected Result<NoData> initProjectEntities(Project project) {
+        ArrayList<Result<NoData>> results = new ArrayList<>();
+
+        project.getTeam().forEach(employee -> {
+            Result<NoData> createEmployeeResult = processNewEmployee(employee);
+            Result<NoData> bindEmployee = bindEmployeeToProject(employee.getId(), project.getId());
+            results.addAll(List.of(createEmployeeResult, bindEmployee));
+
+
+            if (project.getManager() != null && employee.getId().equals(project.getManagerId()))
+                bindProjectManager(employee.getId(), project.getId());
+        });
+
+
+        results.addAll(project.getBugReports().stream()
+                .map(bugReport -> processNewBugReport((BugReport) bugReport))
+                .toList());
+
+        results.addAll(project.getDocumentations().stream()
+                .map(doc -> processNewDocumentation((Documentation) doc))
+                .toList());
+
+        results.addAll(project.getEvents().stream()
+                .map(event -> processNewEvent((Event) event))
+                .toList());
+
+        results.addAll(project.getTasks().stream()
+                .map(task -> processNewTask((Task) task))
+                .toList());
+
+        return results.stream()
+                .filter(result -> result.getCode() != ResultCode.SUCCESS)
+                .findFirst()
+                .orElse(new Result<>(ResultCode.SUCCESS));
+    }
 }

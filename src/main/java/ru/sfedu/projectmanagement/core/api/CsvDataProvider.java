@@ -1,6 +1,7 @@
 package ru.sfedu.projectmanagement.core.api;
 
 import ru.sfedu.projectmanagement.core.model.*;
+import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
 import ru.sfedu.projectmanagement.core.utils.types.TrackInfo;
 
@@ -14,7 +15,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> processNewProject(Project project) {
+    public Result<NoData> processNewProject(Project project) {
         return null;
     }
 
@@ -23,7 +24,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> processNewTask(Task task) {
+    public Result<NoData> processNewTask(Task task) {
         return null;
     }
 
@@ -32,7 +33,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> processNewBugReport(BugReport bugReport) {
+    public Result<NoData> processNewBugReport(BugReport bugReport) {
         return null;
     }
 
@@ -41,7 +42,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> processNewDocumentation(Documentation documentation) {
+    public Result<NoData> processNewDocumentation(Documentation documentation) {
         return null;
     }
 
@@ -50,7 +51,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> processNewEvent(Event event) {
+    public Result<NoData> processNewEvent(Event event) {
         return null;
     }
 
@@ -59,7 +60,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> processNewEmployee(Employee employee) {
+    public Result<NoData> processNewEmployee(Employee employee) {
         return null;
     }
 
@@ -116,7 +117,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> bindEmployeeToProject(UUID employeeId, UUID projectId) {
+    public Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
         return null;
     }
 
@@ -126,7 +127,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> bindProjectManager(UUID managerId, UUID projectId) {
+    public Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
         return null;
     }
 
@@ -137,7 +138,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId) {
+    public Result<NoData> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId) {
         return null;
     }
 
@@ -146,7 +147,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> deleteProject(UUID projectId) {
+    public Result<NoData> deleteProject(UUID projectId) {
         return null;
     }
 
@@ -155,7 +156,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> deleteTask(UUID taskId) {
+    public Result<NoData> deleteTask(UUID taskId) {
         return null;
     }
 
@@ -164,7 +165,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> deleteBugReport(UUID bugReportId) {
+    public Result<NoData> deleteBugReport(UUID bugReportId) {
         return null;
     }
 
@@ -173,7 +174,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> deleteEvent(UUID eventId) {
+    public Result<NoData> deleteEvent(UUID eventId) {
         return null;
     }
 
@@ -182,7 +183,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> deleteDocumentation(UUID docId) {
+    public Result<NoData> deleteDocumentation(UUID docId) {
         return null;
     }
 
@@ -191,7 +192,7 @@ public class CsvDataProvider extends DataProvider {
      * @return
      */
     @Override
-    public Result<?> deleteEmployee(UUID employeeId) {
+    public Result<NoData> deleteEmployee(UUID employeeId) {
         return null;
     }
 

@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.utils.DataSourceType;
 import ru.sfedu.projectmanagement.core.utils.DataSourceFileUtil;
+import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
 import ru.sfedu.projectmanagement.core.utils.xml.Wrapper;
 import ru.sfedu.projectmanagement.core.utils.ResultCode;
@@ -15,7 +16,6 @@ import static ru.sfedu.projectmanagement.core.utils.FileUtil.createFolderIfNotEx
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -39,23 +39,17 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewProject(Project)}
      */
     @Override
-    public Result<?> processNewProject(Project project) {
+    public Result<NoData> processNewProject(Project project) {
         try {
-//            Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(project);
-//            if (validateResult.getCode() != ResultCode.SUCCESS)
-//                return validateResult;
-
-
+            Result<NoData> result = new Result<>(ResultCode.SUCCESS);
             XmlUtil.createRecord(dataSourceFileUtil.projectsFilePath, project);
+            Result<NoData> initResult = initProjectEntities(project);
 
-            if (!project.getTeam().isEmpty())
-                project.getTeam()
-                        .forEach(employee -> {
-                            processNewEmployee(employee);
-                            bindEmployeeToProject(employee.getId(), project.getId());
-                        });
+            if (initResult.getCode() != ResultCode.SUCCESS)
+                result = initResult;
+
             logger.debug("processNewProject[1]: project was written in xml {}", project);
-            return new Result<>(ResultCode.SUCCESS);
+            return result;
         }
         catch (JAXBException exception) {
             logger.error("processNewProject[2]: {}", exception.getMessage());
@@ -68,9 +62,9 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewTask(Task)} )}
      */
     @Override
-    public Result<?> processNewTask(Task task) {
+    public Result<NoData> processNewTask(Task task) {
         try {
-            Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(task);
+            Result<NoData> validateResult = dataSourceFileUtil.createValidation(task);
             if (validateResult.getCode() != ResultCode.SUCCESS)
                 return validateResult;
             
@@ -89,9 +83,9 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewBugReport(BugReport)}
      */
     @Override
-    public Result<?> processNewBugReport(BugReport bugReport) {
+    public Result<NoData> processNewBugReport(BugReport bugReport) {
         try {
-            Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(bugReport);
+            Result<NoData> validateResult = dataSourceFileUtil.createValidation(bugReport);
             if (validateResult.getCode() != ResultCode.SUCCESS)
                 return validateResult;
             
@@ -109,9 +103,9 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewDocumentation(Documentation)}
      */
     @Override
-    public Result<?> processNewDocumentation(Documentation documentation) {
+    public Result<NoData> processNewDocumentation(Documentation documentation) {
         try {
-            Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(documentation);
+            Result<NoData> validateResult = dataSourceFileUtil.createValidation(documentation);
             if (validateResult.getCode() != ResultCode.SUCCESS)
                 return validateResult;
             
@@ -129,9 +123,9 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEmployee(Employee)}
      */
     @Override
-    public Result<?> processNewEmployee(Employee employee) {
+    public Result<NoData> processNewEmployee(Employee employee) {
         try {
-            Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(employee);
+            Result<NoData> validateResult = dataSourceFileUtil.createValidation(employee);
             if (validateResult.getCode() != ResultCode.SUCCESS)
                 return validateResult;
             
@@ -149,9 +143,9 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEvent(Event)}
      */
     @Override
-    public Result<?> processNewEvent(Event event) {
+    public Result<NoData> processNewEvent(Event event) {
         try {
-            Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.createValidation(event);
+            Result<NoData> validateResult = dataSourceFileUtil.createValidation(event);
             if (validateResult.getCode() != ResultCode.SUCCESS)
                 return validateResult;
                 
@@ -395,7 +389,7 @@ public class XmlDataProvider extends DataProvider {
             .collect(Collectors.toCollection(ArrayList::new));
 
         if (employees.isEmpty())
-            return new Result<>(ResultCode.NOT_FOUND, "No employees found for the project");
+            return new Result<>(employees, ResultCode.NOT_FOUND, "employees were not found for the project");
         return new Result<>(employees, ResultCode.SUCCESS);
     }
 
@@ -403,7 +397,7 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindEmployeeToProject(UUID, UUID)}
      */
     @Override
-    public Result<?> bindEmployeeToProject(UUID employeeId, UUID projectId) {
+    public Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
         try {
             if (
                 XmlUtil.isRecordExists(dataSourceFileUtil.projectsFilePath, projectId) &&
@@ -425,14 +419,14 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindProjectManager(UUID, UUID)}
      */
     @Override
-    public Result<?> bindProjectManager(UUID managerId, UUID projectId) {
+    public Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
         Result<Employee> employeeResult = getEmployeeById(managerId);
-        Result<?> result = new Result<>(ResultCode.SUCCESS);
+        Result<NoData> result = new Result<>(ResultCode.SUCCESS);
 
         if (employeeResult.getCode() != ResultCode.SUCCESS)
             return new Result<>(ResultCode.ERROR, employeeResult.getMessage());
 
-        Result<TreeMap<String, String>> validateResult = dataSourceFileUtil.checkIfEmployeeBelongsToProject(employeeResult.getData());
+        Result<NoData> validateResult = dataSourceFileUtil.checkIfEmployeeBelongsToProject(employeeResult.getData());
         if (validateResult.getCode() != ResultCode.SUCCESS)
             return validateResult;
 
@@ -460,8 +454,8 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindTaskExecutor(UUID, String, UUID, UUID)}
      */
     @Override
-    public Result<Task> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId) {
-        Result<Task> validationResult = dataSourceFileUtil.checkEntitiesBeforeBindTaskExecutor(
+    public Result<NoData> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId) {
+        Result<NoData> validationResult = dataSourceFileUtil.checkEntitiesBeforeBindTaskExecutor(
                 executorId, taskId, projectId
         );
 
@@ -469,7 +463,7 @@ public class XmlDataProvider extends DataProvider {
             return validationResult;
 
         Result<Employee> employeeResult = getEmployeeById(executorId);
-        Result<Task> result = new Result<>(null, ResultCode.SUCCESS);
+        Result<NoData> result = new Result<>(null, ResultCode.SUCCESS);
         if (employeeResult.getCode() != ResultCode.SUCCESS)
             return new Result<>(null, ResultCode.ERROR, employeeResult.getMessage());
 
@@ -484,7 +478,7 @@ public class XmlDataProvider extends DataProvider {
                     try {
                         XmlUtil.createOrUpdateRecord(dataSourceFileUtil.tasksFilePath, task);
                         result.setCode(ResultCode.SUCCESS);
-                        result.setData(task);
+//                        result.setData(task);
                     }
                     catch (JAXBException e) {
                         result.setCode(ResultCode.ERROR);
@@ -499,7 +493,7 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteProject(UUID)}
      */
     @Override
-    public Result<?> deleteProject(UUID projectId) {
+    public Result<NoData> deleteProject(UUID projectId) {
         Wrapper<Project> projectWrapper = XmlUtil.read(dataSourceFileUtil.projectsFilePath);
         if (!XmlUtil.isRecordExists(dataSourceFileUtil.projectsFilePath, projectId))
             return new Result<>(ResultCode.NOT_FOUND);
@@ -525,7 +519,7 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteTask(UUID)}
      */
     @Override
-    public Result<?> deleteTask(UUID taskId) {
+    public Result<NoData> deleteTask(UUID taskId) {
         if (!XmlUtil.isRecordExists(dataSourceFileUtil.tasksFilePath, taskId))
             return new Result<>(ResultCode.NOT_FOUND, String.format("Task with id %s doesn't exist", taskId
         ));
@@ -553,7 +547,7 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteBugReport(UUID)}
      */
     @Override
-    public Result<?> deleteBugReport(UUID bugReportId) {
+    public Result<NoData> deleteBugReport(UUID bugReportId) {
         if (!XmlUtil.isRecordExists(dataSourceFileUtil.bugReportsFilePath, bugReportId))
             return new Result<>(ResultCode.NOT_FOUND, String.format("bug report with id %s doesn't exist", bugReportId));
 
@@ -580,7 +574,7 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteEvent(UUID)}
      */
     @Override
-    public Result<?> deleteEvent(UUID eventId) {
+    public Result<NoData> deleteEvent(UUID eventId) {
         if (!XmlUtil.isRecordExists(dataSourceFileUtil.eventsFilePath, eventId))
             return new Result<>(ResultCode.NOT_FOUND);
 
@@ -607,7 +601,7 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteDocumentation(UUID)}
      */
     @Override
-    public Result<?> deleteDocumentation(UUID docId) {
+    public Result<NoData> deleteDocumentation(UUID docId) {
         if (!XmlUtil.isRecordExists(dataSourceFileUtil.documentationsFilePath, docId))
             return new Result<>(ResultCode.NOT_FOUND, String.format("documentation with id %s doesn't exist", docId));
 
@@ -634,7 +628,7 @@ public class XmlDataProvider extends DataProvider {
      * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteEmployee(UUID)}
      */
     @Override
-    public Result<?> deleteEmployee(UUID employeeId) {
+    public Result<NoData> deleteEmployee(UUID employeeId) {
         if (!XmlUtil.isRecordExists(dataSourceFileUtil.employeesFilePath, employeeId))
             return new Result<>(ResultCode.NOT_FOUND);
 
