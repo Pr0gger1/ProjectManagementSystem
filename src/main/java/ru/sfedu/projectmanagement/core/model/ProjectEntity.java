@@ -1,5 +1,7 @@
 package ru.sfedu.projectmanagement.core.model;
 
+import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvIgnore;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import ru.sfedu.projectmanagement.core.model.enums.EntityType;
@@ -12,27 +14,35 @@ import java.util.UUID;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "ProjectEntity")
 public abstract class ProjectEntity implements Entity {
+    @CsvIgnore
     @XmlTransient
     private EntityType entityType;
 
+    @CsvBindByName(required = true)
     @XmlAttribute(required = true)
     protected UUID id;
 
+    @CsvBindByName(required = true)
     @XmlElement(required = true)
     protected String name;
 
+    @CsvBindByName
     @XmlElement(nillable = true)
     protected String description;
 
+    @CsvBindByName(required = true)
     @XmlElement(required = true)
     protected UUID projectId;
 
+    @CsvBindByName(required = true)
     @XmlElement(required = true)
     protected UUID employeeId;
 
+    @CsvBindByName(required = true)
     @XmlElement(required = true)
     protected String employeeFullName;
 
+    @CsvBindByName(required = true)
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     protected LocalDateTime createdAt;

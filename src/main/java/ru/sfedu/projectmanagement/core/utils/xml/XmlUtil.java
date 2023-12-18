@@ -48,7 +48,7 @@ public class XmlUtil {
      * @return
      */
     public static <T extends Entity> boolean isRecordExists(String filePath, UUID id) {
-        Wrapper<T> wrapper = XmlUtil.read(filePath);
+        Wrapper<T> wrapper = XmlUtil.readFile(filePath);
         if (wrapper.getList().stream().allMatch(entity -> entity.getEntityType() == EntityType.EmployeeProject)) {
             return wrapper.getList()
                     .stream()
@@ -66,7 +66,12 @@ public class XmlUtil {
         marshaller.marshal(new Wrapper<>(), file);
     }
 
-    public static <T extends Entity> Wrapper<T> read(String entityFilePath) {
+    /**
+     * @param entityFilePath 
+     * @param <T>
+     * @return
+     */
+    public static <T extends Entity> Wrapper<T> readFile(String entityFilePath) {
         File file = new File(entityFilePath);
 
         try {
@@ -81,8 +86,14 @@ public class XmlUtil {
         }
     }
 
+    /**
+     * @param filePath
+     * @param object
+     * @param <T>
+     * @throws JAXBException
+     */
     public static <T extends Entity> void createRecord(String filePath, T object) throws JAXBException {
-        Wrapper<T> wrapper = read(filePath);
+        Wrapper<T> wrapper = readFile(filePath);
         List<T> list = wrapper.getList();
         logger.debug("createRecord[0]: {}", list);
 
@@ -99,10 +110,17 @@ public class XmlUtil {
         marshaller.marshal(wrapper, System.out);
     }
 
+
+    /**
+     * @param filePath
+     * @param object
+     * @param <T>
+     * @throws JAXBException
+     */
     public static <T extends Entity> void createOrUpdateRecord(String filePath, T object) throws JAXBException {
         Wrapper<T> wrapper = new Wrapper<>();
         logger.debug("createOrUpdateRecord[0]: {}", wrapper.getList());
-        wrapper = read(filePath);
+        wrapper = readFile(filePath);
         List<T> list = wrapper.getList();
 
         AtomicBoolean isFound = new AtomicBoolean(false);
@@ -127,6 +145,12 @@ public class XmlUtil {
         logger.debug("createOrUpdateRecord[1]: content {}", logStringWriter);
     }
 
+    /**
+     * @param filePath
+     * @param wrapper
+     * @param <T>
+     * @throws JAXBException
+     */
     public static <T> void setContainer(String filePath, Wrapper<T> wrapper) throws JAXBException {
         marshaller.marshal(wrapper, new File(filePath));
     }

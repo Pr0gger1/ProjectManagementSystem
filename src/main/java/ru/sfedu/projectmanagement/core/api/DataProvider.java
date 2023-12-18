@@ -40,7 +40,7 @@ public abstract class DataProvider {
     }
 
     /** Creates new project
-     * @param project - instance of Project
+     * @param project Project instance
      * @return Result with execution code and message if it fails
      */
     public abstract Result<NoData> processNewProject(Project project);

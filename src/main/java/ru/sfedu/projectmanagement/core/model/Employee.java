@@ -1,5 +1,8 @@
 package ru.sfedu.projectmanagement.core.model;
 
+import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvDate;
+import com.opencsv.bean.CsvIgnore;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import ru.sfedu.projectmanagement.core.model.enums.EntityType;
@@ -13,34 +16,45 @@ import java.util.UUID;
 @XmlRootElement(name = "employee")
 @XmlType(name = "Employee")
 public class Employee implements Entity {
+    @CsvIgnore
     @XmlTransient
     private final EntityType entityType = EntityType.Employee;
 
+    @CsvBindByName(required = true)
     @XmlAttribute(required = true)
     private UUID id;
 
+    @CsvBindByName(required = true)
     @XmlElement(required = true)
     private String firstName;
 
+    @CsvBindByName(required = true)
     @XmlElement(required = true)
     private String lastName;
 
+    @CsvBindByName
     @XmlElement()
     private String patronymic;
 
+    @CsvBindByName(required = true)
     @XmlElement(required = true)
     private String fullName;
 
+    @CsvBindByName(required = true)
+    @CsvDate("yyyy-MM-dd")
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(XmlLocalDateAdapter.class)
     private LocalDate birthday;
 
+    @CsvBindByName(required = true)
     @XmlElement(required = true)
     private String email;
 
-    @XmlElement()
+    @CsvBindByName
+    @XmlElement
     private String phoneNumber;
 
+    @CsvBindByName(required = true)
     @XmlElement(required = true)
     private String position;
 
@@ -142,6 +156,7 @@ public class Employee implements Entity {
         updateFullName();
     }
 
+
     public String getLastName() {
         return lastName;
     }
@@ -193,23 +208,18 @@ public class Employee implements Entity {
 
     @Override
     public String toString() {
-        return String.format("""
-        Employee: {
-            id: %s,
-            fullName: %s,
-            firstName: %s,
-            lastName: %s,
-            patronymic: %s,
-            birthday: %s,
-            phoneNumber: %s,
-            email: %s,
-            position: %s
-        }
-        """, getId(), fullName,
-                firstName, lastName,
-                patronymic, birthday.toString(),
-                phoneNumber, email, position
-            );
+        return "Employee{" +
+                "entityType=" + entityType +
+                ", id=" + id +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", patronymic='" + patronymic + '\'' +
+                ", fullName='" + fullName + '\'' +
+                ", birthday=" + birthday +
+                ", email='" + email + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", position='" + position + '\'' +
+                '}';
     }
 
     @Override

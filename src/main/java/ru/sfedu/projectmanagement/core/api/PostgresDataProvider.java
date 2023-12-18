@@ -4,10 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.Queries;
 import ru.sfedu.projectmanagement.core.model.*;
-import ru.sfedu.projectmanagement.core.model.enums.BugStatus;
 import ru.sfedu.projectmanagement.core.model.enums.ChangeType;
-import ru.sfedu.projectmanagement.core.model.enums.Priority;
-import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
 import ru.sfedu.projectmanagement.core.utils.PostgresUtil;
 import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
@@ -168,7 +165,6 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("processNewProject[2]: {}", exception.getMessage());
             result.setCode(ResultCode.ERROR);
             result.setMessage(exception.getMessage());
-            return result;
         }
         finally {
             closeConnection(connection);
@@ -179,12 +175,10 @@ public class PostgresDataProvider extends DataProvider {
                 ChangeType.CREATE
             );
         }
+        return result;
     }
 
 
-    /**
-     * {@link DataProvider#processNewEmployee(Employee)}
-     */
     @Override
     public Result<NoData> processNewEmployee(Employee employee) {
         Connection connection = getConnection();
@@ -211,7 +205,6 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("processNewEmployee[2]: {}", exception.getMessage());
             result.setCode(ResultCode.ERROR);
             result.setMessage(exception.getMessage());
-            return result;
         }
         finally {
             closeConnection(connection);
@@ -222,12 +215,10 @@ public class PostgresDataProvider extends DataProvider {
                 ChangeType.CREATE
             );
         }
+        return result;
     }
 
 
-    /**
-     * {@link DataProvider#processNewTask(Task)}
-     */
     @Override
     public Result<NoData> processNewTask(Task task) {
         Connection connection = getConnection();
@@ -266,7 +257,6 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("processNewTask[2]: {}", exception.getMessage());
             result.setCode(ResultCode.ERROR);
             result.setMessage(exception.getMessage());
-            return result;
         }
         finally {
             closeConnection(connection);
@@ -277,11 +267,9 @@ public class PostgresDataProvider extends DataProvider {
                 ChangeType.CREATE
             );
         }
+        return result;
     }
 
-    /**
-     * {@link DataProvider#processNewBugReport(BugReport)}
-     */
     @Override
     public Result<NoData> processNewBugReport(BugReport bugReport) {
         Connection connection = getConnection();
@@ -313,7 +301,6 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("processNewBugReport[1]: {}", exception.getMessage());
             result.setCode(ResultCode.ERROR);
             result.setMessage(exception.getMessage());
-            return result;
         }
         finally {
             closeConnection(connection);
@@ -324,11 +311,9 @@ public class PostgresDataProvider extends DataProvider {
                     ChangeType.CREATE
             );
         }
+        return result;
     }
 
-    /**
-     * {@link DataProvider#processNewDocumentation(Documentation)}
-     */
     @Override
     public Result<NoData> processNewDocumentation(Documentation documentation) {
         Pair<String[], String[]> documentationBody = splitDocumentationToArrays(documentation.getBody());
@@ -368,7 +353,6 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("processNewDocumentation[1]: {}", exception.getMessage());
             result.setCode(ResultCode.ERROR);
             result.setMessage(exception.getMessage());
-            return result;
         }
         finally {
             closeConnection(connection);
@@ -379,11 +363,9 @@ public class PostgresDataProvider extends DataProvider {
                 ChangeType.CREATE
             );
         }
+        return result;
     }
 
-    /**
-     * {@link DataProvider#processNewEvent(Event)}
-     */
     @Override
     public Result<NoData> processNewEvent(Event event) {
         Connection connection = getConnection();
@@ -414,7 +396,6 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("processNewEvent[2]: {}", exception.getMessage());
             result.setCode(ResultCode.ERROR);
             result.setMessage(exception.getMessage());
-            return result;
         }
         finally {
             closeConnection(connection);
@@ -425,6 +406,7 @@ public class PostgresDataProvider extends DataProvider {
                 ChangeType.CREATE
             );
         }
+        return result;
     }
 
     /**
@@ -445,32 +427,6 @@ public class PostgresDataProvider extends DataProvider {
         return new Pair<>(articleTitles.toArray(new String[0]), articles.toArray(new String[0]));
     }
 
-    /**
-     * @param query update query
-     * @param params entity fields
-     * @return Result with execution code and message if it fails
-     */
-    private int updateEntity(
-            String query,
-            Object ...params
-    ) throws SQLException {
-        Connection connection = getConnection();
-        PreparedStatement statement = connection.prepareStatement(query);
-        int paramIndex = 0;
-        for (Object param : params) {
-            if (param instanceof Priority || param instanceof WorkStatus || param instanceof BugStatus)
-                statement.setObject(++paramIndex, param, Types.VARCHAR);
-            else statement.setObject(++paramIndex, param);
-        }
-        statement.executeUpdate();
-        connection.close();
-
-        return statement.getUpdateCount();
-    }
-
-    /**
-     * {@link DataProvider#deleteProject(UUID)}
-     */
     @Override
     public Result<NoData> deleteProject(UUID projectId) {
         Connection connection = getConnection();
@@ -501,7 +457,6 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("deleteProject[2]: {}", exception.getMessage());
             result.setCode(ResultCode.ERROR);
             result.setMessage(exception.getMessage());
-            return result;
         }
         finally {
             closeConnection(connection);
@@ -512,11 +467,9 @@ public class PostgresDataProvider extends DataProvider {
                 ChangeType.DELETE
             );
         }
+        return result;
     }
 
-    /**
-     * {@link DataProvider#deleteTask(UUID)}
-     */
     @Override
     public Result<NoData> deleteTask(UUID taskId) {
         Connection connection = getConnection();
@@ -559,9 +512,6 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-    /**
-     * {@link DataProvider#deleteBugReport(UUID)}
-     */
     @Override
     public Result<NoData> deleteBugReport(UUID bugReportId) {
         Connection connection = getConnection();
@@ -604,9 +554,6 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-    /**
-     * {@link DataProvider#deleteEvent(UUID)}
-     */
     @Override
     public Result<NoData> deleteEvent(UUID eventId) {
         Connection connection = getConnection();
@@ -647,9 +594,6 @@ public class PostgresDataProvider extends DataProvider {
     }
 
 
-    /**
-     * {@link DataProvider#deleteDocumentation(UUID)}
-     */
     @Override
     public Result<NoData> deleteDocumentation(UUID docId) {
         Connection connection = getConnection();
@@ -689,9 +633,6 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-    /**
-     * {@link DataProvider#deleteEmployee(UUID)}
-     */
     @Override
     public Result<NoData> deleteEmployee(UUID employeeId) {
         Connection connection = getConnection();
@@ -730,10 +671,6 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-
-    /**
-     * {@link DataProvider#bindProjectManager(UUID, UUID)}
-     */
     @Override
     public Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
         Connection connection = getConnection();
@@ -779,24 +716,22 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-    /**
-     * {@link DataProvider#bindTaskExecutor(UUID, String, UUID, UUID)}
-     */
     @Override
     public Result<NoData> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId) {
         Connection connection = getConnection();
+        String query = generateSqlQuery(
+            Queries.UPDATE_TASK_EXECUTOR_QUERY,
+            executorId, executorFullName, taskId, projectId
+        );
 
-        try {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            int result = statement.executeUpdate();
             if (PostgresUtil.isRecordExists(
                     connection,
                     Queries.EMPLOYEE_PROJECT_TABLE_NAME,
                     "project_id",
                     projectId
             )) {
-                int result = updateEntity(
-                        Queries.UPDATE_TASK_EXECUTOR_QUERY,
-                        executorId, executorFullName, taskId, projectId
-                );
 
                 Result<Task> updatedTask = getTaskById(taskId);
                 if (updatedTask.getCode() == ResultCode.SUCCESS) {
@@ -824,9 +759,6 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-    /**
-     * {@link DataProvider#bindEmployeeToProject(UUID, UUID)}
-     */
     @Override
     public Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
         Connection connection = getConnection();
@@ -847,17 +779,13 @@ public class PostgresDataProvider extends DataProvider {
             logger.error("bindEmployeeToProject[1]: {}", exception.getMessage());
             result.setCode(ResultCode.ERROR);
             result.setMessage(exception.getMessage());
-            return result;
         }
         finally {
             closeConnection(connection);
         }
+        return result;
     }
 
-
-    /**
-     * {@link DataProvider#getProjectById(UUID)}
-     */
     @Override
     public Result<Project> getProjectById(UUID id) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.PROJECT_TABLE_NAME);
@@ -889,9 +817,6 @@ public class PostgresDataProvider extends DataProvider {
     }
 
 
-    /**
-     * {@link DataProvider#getTasksByProjectId(UUID)}
-     */
     @Override
     public Result<ArrayList<Task>> getTasksByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.TASKS_TABLE_NAME);
@@ -923,9 +848,6 @@ public class PostgresDataProvider extends DataProvider {
     }
 
 
-    /**
-     * {@link DataProvider#getTasksByEmployeeId(UUID)}
-     */
     @Override
     public Result<ArrayList<Task>> getTasksByEmployeeId(UUID employeeId) {
         Connection connection = getConnection();
@@ -957,9 +879,6 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-    /**
-     * {@link DataProvider#getTasksByTags(ArrayList, UUID)}
-     */
     @Override
     public Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, UUID projectId) {
         ArrayList<Task> tasks = getTasksByProjectId(projectId).getData();
@@ -974,9 +893,6 @@ public class PostgresDataProvider extends DataProvider {
     }
 
 
-    /**
-     * {@link DataProvider#getTaskById(UUID)}
-     */
     @Override
     public Result<Task> getTaskById(UUID taskId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.TASKS_TABLE_NAME);
@@ -1003,9 +919,6 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-    /**
-     * {@link DataProvider#getBugReportsByProjectId(UUID)}
-     */
     @Override
     public Result<ArrayList<BugReport>> getBugReportsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.BUG_REPORTS_TABLE_NAME);
@@ -1040,9 +953,6 @@ public class PostgresDataProvider extends DataProvider {
     }
 
 
-    /**
-     * {@link DataProvider#getBugReportById(UUID)}
-     */
     @Override
     public Result<BugReport> getBugReportById(UUID bugReportId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.BUG_REPORTS_TABLE_NAME);
@@ -1073,10 +983,6 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-
-    /**
-     * {@link DataProvider#getEventsByProjectId(UUID)}
-     */
     @Override
     public Result<ArrayList<Event>> getEventsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.EVENTS_TABLE_NAME);
@@ -1111,9 +1017,6 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-    /**
-     * {@link DataProvider#getEventById(UUID)}
-     */
     @Override
     public Result<Event> getEventById(UUID eventId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.EVENTS_TABLE_NAME);
@@ -1145,10 +1048,6 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-
-    /**
-     * {@link DataProvider#getDocumentationById(UUID)}
-     */
     @Override
     public Result<Documentation> getDocumentationById(UUID docId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.DOCUMENTATIONS_TABLE_NAME);
@@ -1180,9 +1079,6 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-    /**
-     * {@link DataProvider#getDocumentationsByProjectId(UUID)}
-     */
     @Override
     public Result<ArrayList<Documentation>> getDocumentationsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.DOCUMENTATIONS_TABLE_NAME);
@@ -1215,9 +1111,6 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-    /**
-     * {@link DataProvider#getProjectTeam(UUID)}
-     */
     @Override
     public Result<ArrayList<Employee>> getProjectTeam(UUID projectId) {
         Connection connection = getConnection();
@@ -1248,9 +1141,6 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-    /**
-     * {@link DataProvider#getEmployeeById(UUID)}
-     */
     @Override
     public Result<Employee> getEmployeeById(UUID employeeId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.EMPLOYEES_TABLE_NAME);

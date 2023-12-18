@@ -1,5 +1,6 @@
 package ru.sfedu.projectmanagement.core.model;
 
+import com.opencsv.bean.CsvBindByName;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import ru.sfedu.projectmanagement.core.model.enums.EntityType;
@@ -14,6 +15,7 @@ import java.util.UUID;
 @XmlType(name = "Documentation")
 @XmlRootElement(name = "documentation")
 public class Documentation extends ProjectEntity {
+    @CsvBindByName
     @XmlElement
     @XmlJavaTypeAdapter(XmlDocumentationAdapter.class)
     private HashMap<String, String> body;

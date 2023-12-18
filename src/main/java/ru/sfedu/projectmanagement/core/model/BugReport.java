@@ -1,5 +1,6 @@
 package ru.sfedu.projectmanagement.core.model;
 
+import com.opencsv.bean.CsvBindByName;
 import jakarta.xml.bind.annotation.*;
 import ru.sfedu.projectmanagement.core.model.enums.BugStatus;
 import ru.sfedu.projectmanagement.core.model.enums.EntityType;
@@ -14,9 +15,11 @@ import java.util.UUID;
 @XmlRootElement(name = "bug_report")
 @XmlType(name = "BugReport")
 public class BugReport extends ProjectEntity {
+    @CsvBindByName(required = true)
     @XmlElement(required = true)
     private Priority priority = Priority.LOW;
 
+    @CsvBindByName(required = true)
     @XmlElement(required = true)
     private BugStatus status = BugStatus.OPENED;
 

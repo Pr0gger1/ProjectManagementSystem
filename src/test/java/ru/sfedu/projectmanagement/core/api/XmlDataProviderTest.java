@@ -4,6 +4,7 @@ import jakarta.xml.bind.JAXBException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.*;
+import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
 import ru.sfedu.projectmanagement.core.utils.DataSourceFileUtil;
@@ -32,14 +33,44 @@ class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
     @BeforeEach
     void resetDb() throws JAXBException {
+        String actualDatasourcePath = Constants.DATASOURCE_TEST_PATH_XML;
+
+        String projectsFilePath = actualDatasourcePath
+                .concat(Constants.PROJECTS_FILE_PATH)
+                .concat(Constants.FILE_XML_EXTENSION);
+
+        String employeesFilePath = actualDatasourcePath
+                .concat(Constants.EMPLOYEES_FILE_PATH)
+                .concat(Constants.FILE_XML_EXTENSION);
+
+        String tasksFilePath = actualDatasourcePath
+                .concat(Constants.TASKS_FILE_PATH)
+                .concat(Constants.FILE_XML_EXTENSION);
+
+        String bugReportsFilePath = actualDatasourcePath
+                .concat(Constants.BUG_REPORTS_FILE_PATH)
+                .concat(Constants.FILE_XML_EXTENSION);
+
+        String eventsFilePath = actualDatasourcePath
+                .concat(Constants.EVENTS_FILE_PATH)
+                .concat(Constants.FILE_XML_EXTENSION);
+
+        String documentationsFilePath = actualDatasourcePath
+                .concat(Constants.DOCUMENTATIONS_FILE_PATH)
+                .concat(Constants.FILE_XML_EXTENSION);
+
+        String employeeProjectFilePath = actualDatasourcePath
+                .concat(Constants.EMPLOYEE_PROJECT_FILE_PATH)
+                .concat(Constants.FILE_XML_EXTENSION);
+
         String[] files = {
-          dataSourceFileUtil.projectsFilePath,
-          dataSourceFileUtil.employeeProjectFilePath,
-          dataSourceFileUtil.employeesFilePath,
-          dataSourceFileUtil.tasksFilePath,
-          dataSourceFileUtil.bugReportsFilePath,
-          dataSourceFileUtil.eventsFilePath,
-          dataSourceFileUtil.documentationsFilePath
+              projectsFilePath,
+              employeeProjectFilePath,
+              employeesFilePath,
+              tasksFilePath,
+              bugReportsFilePath,
+              eventsFilePath,
+              documentationsFilePath
         };
 
         for (String datasource : files)

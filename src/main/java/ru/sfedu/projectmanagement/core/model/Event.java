@@ -1,5 +1,7 @@
 package ru.sfedu.projectmanagement.core.model;
 
+import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvDate;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import ru.sfedu.projectmanagement.core.model.enums.EntityType;
@@ -10,10 +12,14 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class Event extends ProjectEntity {
+    @CsvBindByName(column = "start_date")
+    @CsvDate
     @XmlElement(name = "start_date")
     @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     private LocalDateTime startDate;
 
+    @CsvBindByName(column = "end_date")
+    @CsvDate
     @XmlElement(name = "end_date")
     @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     private LocalDateTime endDate;

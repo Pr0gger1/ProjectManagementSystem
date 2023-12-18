@@ -1,5 +1,8 @@
 package ru.sfedu.projectmanagement.core.model;
 
+import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvDate;
+import com.opencsv.bean.CsvIgnore;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import ru.sfedu.projectmanagement.core.model.enums.EntityType;
@@ -15,45 +18,64 @@ import java.util.UUID;
 @XmlRootElement(name = "project")
 @XmlType(name = "Project")
 public class Project implements Entity {
+    @CsvIgnore
     @XmlTransient
     private final EntityType entityType = EntityType.Project;
+
+    @CsvBindByName
+    @CsvDate
     @XmlElement(nillable = true)
     @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     private LocalDateTime deadline;
 
+    @CsvBindByName(required = true)
     @XmlElement(required = true)
     private String name;
 
+    @CsvBindByName
     @XmlElement(nillable = true)
     private String description;
 
+    @CsvBindByName(required = true)
     @XmlAttribute(required = true)
     private UUID id;
 
+    @CsvBindByName(required = true)
     @XmlElement(required = true)
     private WorkStatus status = WorkStatus.IN_PROGRESS;
 
+    @CsvBindByName
     @XmlElement(nillable = true)
     private Employee manager;
 
-    @XmlElementWrapper(name = "team")
-    @XmlElement(name = "employee", nillable = true)
+//    @XmlElementWrapper(name = "team")
+//    @XmlElement(name = "employee", nillable = true)
+    @CsvIgnore
+    @XmlTransient
     private ArrayList<Employee> team = new ArrayList<>();
 
-    @XmlElementWrapper(name = "tasks")
-    @XmlElement(name = "task", nillable = true)
+//    @XmlElementWrapper(name = "tasks")
+//    @XmlElement(name = "task", nillable = true)
+    @CsvIgnore
+    @XmlTransient
     private ArrayList<ProjectEntity> tasks = new ArrayList<>();
 
-    @XmlElementWrapper(name = "documentations")
-    @XmlElement(name = "documentation", nillable = true)
+//    @XmlElementWrapper(name = "documentations")
+//    @XmlElement(name = "documentation", nillable = true)
+    @CsvIgnore
+    @XmlTransient
     private ArrayList<ProjectEntity> documentation = new ArrayList<>();
 
-    @XmlElementWrapper(name = "bug_reports")
-    @XmlElement(name = "bug_report", nillable = true)
+//    @XmlElementWrapper(name = "bug_reports")
+//    @XmlElement(name = "bug_report", nillable = true)
+    @CsvIgnore
+    @XmlTransient
     private ArrayList<ProjectEntity> bugReports = new ArrayList<>();
 
-    @XmlElementWrapper(name = "events")
-    @XmlElement(name = "event", nillable = true)
+//    @XmlElementWrapper(name = "events")
+//    @XmlElement(name = "event", nillable = true)
+    @CsvIgnore
+    @XmlTransient
     private ArrayList<ProjectEntity> events = new ArrayList<>();
 
     public Project(String name, String description, String id) {

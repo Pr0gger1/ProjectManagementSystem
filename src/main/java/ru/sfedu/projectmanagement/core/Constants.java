@@ -17,7 +17,7 @@ public class Constants {
     // file database extensions
     public static final String FILE_XML_EXTENSION = ".xml";
     public static final String FILE_CSV_EXTENSION = ".csv";
-    public static final String CSV_DEFAULT_SEPARATOR = ";";
+    public static final char CSV_DEFAULT_SEPARATOR = ';';
 
 
     // xml and csv entity filenames

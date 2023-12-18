@@ -30,4 +30,5 @@
 *.properties
 *.xml
 *.yml
+*.csv
 

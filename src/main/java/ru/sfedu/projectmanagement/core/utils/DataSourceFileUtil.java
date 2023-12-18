@@ -7,15 +7,14 @@ import ru.sfedu.projectmanagement.core.api.Environment;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.Entity;
 import ru.sfedu.projectmanagement.core.utils.config.ConfigPropertiesUtil;
+import ru.sfedu.projectmanagement.core.utils.csv.CsvUtil;
 import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
 import ru.sfedu.projectmanagement.core.utils.xml.Wrapper;
 import ru.sfedu.projectmanagement.core.utils.xml.XmlUtil;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
 
 import static ru.sfedu.projectmanagement.core.utils.FileUtil.createFileIfNotExists;
 
@@ -30,11 +29,15 @@ public class DataSourceFileUtil {
     public final String employeeProjectFilePath;
     public final String actualDatasourcePath;
 
+    CheckRecordConsumer checkExistenceUtil;
+
 
     public DataSourceFileUtil(DataSourceType type) {
         Environment environment = Environment.valueOf(
                 ConfigPropertiesUtil.getEnvironmentVariable(Constants.ENVIRONMENT)
         );
+
+        checkExistenceUtil = type == DataSourceType.CSV ? CsvUtil::isRecordExists : XmlUtil::isRecordExists;
 
         if (environment == Environment.PRODUCTION) {
             actualDatasourcePath = (type == DataSourceType.CSV) ?
@@ -45,51 +48,67 @@ public class DataSourceFileUtil {
         }
 
         projectsFilePath = actualDatasourcePath
-                .concat(Constants.PROJECTS_FILE_PATH)
-                .concat(Constants.FILE_XML_EXTENSION);
+                .concat(Constants.PROJECTS_FILE_PATH).concat(
+                    type == DataSourceType.CSV ?
+                            Constants.FILE_CSV_EXTENSION :
+                            Constants.FILE_XML_EXTENSION);
 
         employeesFilePath = actualDatasourcePath
-                .concat(Constants.EMPLOYEES_FILE_PATH)
-                .concat(Constants.FILE_XML_EXTENSION);
+                .concat(Constants.EMPLOYEES_FILE_PATH).concat(
+                        type == DataSourceType.CSV ?
+                                Constants.FILE_CSV_EXTENSION :
+                                Constants.FILE_XML_EXTENSION);
 
         tasksFilePath = actualDatasourcePath
-                .concat(Constants.TASKS_FILE_PATH)
-                .concat(Constants.FILE_XML_EXTENSION);
+                .concat(Constants.TASKS_FILE_PATH).concat(
+                        type == DataSourceType.CSV ?
+                                Constants.FILE_CSV_EXTENSION :
+                                Constants.FILE_XML_EXTENSION);
 
         bugReportsFilePath = actualDatasourcePath
-                .concat(Constants.BUG_REPORTS_FILE_PATH)
-                .concat(Constants.FILE_XML_EXTENSION);
+                .concat(Constants.BUG_REPORTS_FILE_PATH).concat(
+                        type == DataSourceType.CSV ?
+                                Constants.FILE_CSV_EXTENSION :
+                                Constants.FILE_XML_EXTENSION);
 
         eventsFilePath = actualDatasourcePath
-                .concat(Constants.EVENTS_FILE_PATH)
-                .concat(Constants.FILE_XML_EXTENSION);
+                .concat(Constants.EVENTS_FILE_PATH).concat(
+                        type == DataSourceType.CSV ?
+                                Constants.FILE_CSV_EXTENSION :
+                                Constants.FILE_XML_EXTENSION);
 
         documentationsFilePath = actualDatasourcePath
-                .concat(Constants.DOCUMENTATIONS_FILE_PATH)
-                .concat(Constants.FILE_XML_EXTENSION);
+                .concat(Constants.DOCUMENTATIONS_FILE_PATH).concat(
+                        type == DataSourceType.CSV ?
+                                Constants.FILE_CSV_EXTENSION :
+                                Constants.FILE_XML_EXTENSION);
 
         employeeProjectFilePath = actualDatasourcePath
-                .concat(Constants.EMPLOYEE_PROJECT_FILE_PATH)
-                .concat(Constants.FILE_XML_EXTENSION);
+                .concat(Constants.EMPLOYEE_PROJECT_FILE_PATH).concat(
+                        type == DataSourceType.CSV ?
+                                Constants.FILE_CSV_EXTENSION :
+                                Constants.FILE_XML_EXTENSION);
+    }
+
+    public ArrayList<String> getDataSourceFiles() {
+        return new ArrayList<>() {{
+           add(projectsFilePath);
+           add(employeesFilePath);
+           add(employeeProjectFilePath);
+           add(tasksFilePath);
+           add(bugReportsFilePath);
+           add(eventsFilePath);
+           add(documentationsFilePath);
+        }};
     }
 
     public void createDatasourceFiles() throws IOException {
-        String[] paths = {
-            projectsFilePath,
-            employeesFilePath,
-            employeeProjectFilePath,
-            tasksFilePath,
-            bugReportsFilePath,
-            eventsFilePath,
-            documentationsFilePath
-        };
-
-        for (String path : paths) {
+        for (String path : getDataSourceFiles()) {
             createFileIfNotExists(path);
         }
     }
 
-    public <T extends Entity> Result<NoData> createValidation(T entity) {
+    public <T extends Entity> Result<NoData> checkBeforeCreate(T entity) {
         logger.debug("Entity type: " + entity.getClass().getSimpleName());
         logger.debug("Expected type: " + entity.getEntityType());
         return switch (entity.getEntityType()) {
@@ -104,7 +123,7 @@ public class DataSourceFileUtil {
     }
 
     public <T extends Entity> Result<NoData> checkProjectAndEmployeeExistence(String filePath, UUID id) {
-        Wrapper<T> entity = XmlUtil.read(filePath);
+        Wrapper<T> entity = XmlUtil.readFile(filePath);
         return entity.getList()
                 .stream()
                 .filter(e -> e.getId().equals(id))
@@ -115,11 +134,11 @@ public class DataSourceFileUtil {
     public Result<NoData> checkProjectAndEmployeeExistence(ProjectEntity entity) {
         logger.debug("checkProjectAndEmployeeExistence[1]: creating {} {}", entity.getClass().getSimpleName(), entity);
         TreeMap<String, String> errors = new TreeMap<>();
-        if (!XmlUtil.isRecordExists(employeesFilePath, entity.getEmployeeId()))
+        if (!checkExistenceUtil.accept(employeesFilePath, entity.getEmployeeId()))
             errors.put(Constants.EMPLOYEE_ERROR_KEY, String.format(Constants.EMPLOYEE_DOES_NOT_EXISTS, entity.getEmployeeId()));
-        if (!XmlUtil.isRecordExists(projectsFilePath, entity.getProjectId()))
+        if (!checkExistenceUtil.accept(projectsFilePath, entity.getProjectId()))
             errors.put(Constants.PROJECT_ERROR_KEY, String.format(Constants.PROJECT_DOES_NOT_EXISTS, entity.getProjectId()));
-        if (!XmlUtil.isRecordExists(employeeProjectFilePath, entity.getEmployeeId()))
+        if (!checkExistenceUtil.accept(employeeProjectFilePath, entity.getEmployeeId()))
             errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT);
 
         if (!errors.isEmpty()) {
@@ -155,13 +174,13 @@ public class DataSourceFileUtil {
         logger.debug("checkEntitiesBeforeBindTaskExecutor[1]: start validating");
         TreeMap<String, String> errors = new TreeMap<>();
 
-        if (!XmlUtil.isRecordExists(tasksFilePath, taskId))
+        if (!checkExistenceUtil.accept(tasksFilePath, taskId))
             errors.put(Constants.TASK_ERROR_KEY, Constants.TASK_DOES_NOT_EXISTS);
-        if (!XmlUtil.isRecordExists(employeesFilePath, executorId))
+        if (!checkExistenceUtil.accept(employeesFilePath, executorId))
             errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_DOES_NOT_EXISTS);
-        if (!XmlUtil.isRecordExists(projectsFilePath, projectId))
+        if (!checkExistenceUtil.accept(projectsFilePath, projectId))
             errors.put(Constants.PROJECT_ERROR_KEY, Constants.PROJECT_DOES_NOT_EXISTS);
-        if (!XmlUtil.isRecordExists(employeeProjectFilePath, executorId))
+        if (!checkExistenceUtil.accept(employeeProjectFilePath, executorId))
             errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_DOES_NOT_EXISTS);
 
         if (!errors.isEmpty())
@@ -203,9 +222,9 @@ public class DataSourceFileUtil {
     public Result<NoData> checkIfEmployeeBelongsToProject(Employee employee) {
         logger.debug("checkIfEmployeeBelongsToProject[1]: object {}", employee);
         TreeMap<String, String> errors = new TreeMap<>();
-        if (!XmlUtil.isRecordExists(employeesFilePath, employee.getId()))
+        if (!checkExistenceUtil.accept(employeesFilePath, employee.getId()))
             errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_DOES_NOT_EXISTS);
-        if (!XmlUtil.isRecordExists(employeeProjectFilePath, employee.getId()))
+        if (!checkExistenceUtil.accept(employeeProjectFilePath, employee.getId()))
             errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT);
 
         if (!errors.isEmpty())
@@ -214,5 +233,4 @@ public class DataSourceFileUtil {
         logger.info("checkIfEmployeeBelongsToProject[2]: is valid: {}", true);
         return new Result<>(ResultCode.SUCCESS);
     }
-
 }
