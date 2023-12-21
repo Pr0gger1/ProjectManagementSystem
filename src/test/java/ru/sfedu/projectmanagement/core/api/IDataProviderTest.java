@@ -28,7 +28,7 @@ public interface IDataProviderTest {
 
     void bindEmployeeToProject();
     void bindProjectManager();
-    void bindTaskExecutor();
+//    void bindTaskExecutor();
 
     void deleteProject();
     void deleteNonExistentProject();

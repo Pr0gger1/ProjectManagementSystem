@@ -1,5 +1,8 @@
 package ru.sfedu.projectmanagement.core.model;
 
+import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvDate;
+import com.opencsv.bean.CsvIgnore;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import ru.sfedu.projectmanagement.core.model.enums.EntityType;
@@ -9,6 +12,7 @@ import ru.sfedu.projectmanagement.core.utils.xml.adapters.XmlLocalDateTimeAdapte
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -16,23 +20,31 @@ import java.util.UUID;
 @XmlRootElement(name = "task")
 @XmlType(name = "Task")
 public class Task extends ProjectEntity {
+    @CsvBindByName(column = "deadline")
+    @CsvDate(value = "yyyy-MM-dd'T'HH:mm")
     @XmlElement(name = "deadline")
     @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     private LocalDateTime deadline;
 
+    @CsvBindByName(column = "comment")
     @XmlElement(name = "comment")
     private String comment;
 
+    @CsvBindByName(column = "priority", required = true)
     @XmlElement(name = "priority", required = true)
     private Priority priority = Priority.LOW;
 
+    @CsvIgnore
     @XmlElementWrapper(name = "tags")
     @XmlElement(name = "tag")
-    private ArrayList<String> tags = new ArrayList<>();
+    private List<String> tags = new ArrayList<>();
 
+    @CsvBindByName(column = "status", required = true)
     @XmlElement(name = "status", required = true)
     private WorkStatus status = WorkStatus.IN_PROGRESS;
 
+    @CsvBindByName(column = "completed_at")
+    @CsvDate(value = "yyyy-MM-dd HH:mm:ss")
     @XmlElement(name = "completed_at")
     @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     private LocalDateTime completedAt = null;
@@ -125,11 +137,14 @@ public class Task extends ProjectEntity {
         return completedAt;
     }
 
-    public void setTags(ArrayList<String> tags) {
+    public void setTags(List<String> tags) {
         this.tags = tags;
     }
+    public void addTag(String tag) {
+        tags.add(tag);
+    }
 
-    public ArrayList<String> getTags() {
+    public List<String> getTags() {
         return tags;
     }
 

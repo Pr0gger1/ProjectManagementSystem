@@ -67,7 +67,7 @@ public class BaseProviderTest {
             null
     );
 
-    protected static final Task task = createTask(
+    protected static Task task = createTask(
             project1.getId(),
             employee1.getId(),
             employee1.getFullName(),
@@ -256,10 +256,10 @@ public class BaseProviderTest {
             String description,
             WorkStatus status,
             LocalDateTime deadline,
-            ArrayList<ProjectEntity> tasks,
-            ArrayList<ProjectEntity> bugReports,
-            ArrayList<ProjectEntity> events,
-            ArrayList<ProjectEntity> documentations,
+            ArrayList<Task> tasks,
+            ArrayList<BugReport> bugReports,
+            ArrayList<Event> events,
+            ArrayList<Documentation> documentations,
             ArrayList<Employee> team,
             Employee manager
     ) {
@@ -274,7 +274,8 @@ public class BaseProviderTest {
         project.setTeam(team);
         project.setStatus(status);
         project.setDeadline(deadline);
-        project.setManager(manager);
+        if (manager != null)
+            project.setManagerId(manager.getId());
         
         return project;
     }
@@ -395,11 +396,11 @@ public class BaseProviderTest {
         tasks.forEach(provider::processNewTask);
 
         provider.bindEmployeeToProject(employee1.getId(), project1.getId());
-        tasks.forEach(task -> {
-            provider.bindTaskExecutor(
-                    employee1.getId(), employee1.getFullName(),
-                    task.getId(), project1.getId()
-            );
-        });
+//        tasks.forEach(task -> {
+//            provider.bindTaskExecutor(
+//                    employee1.getId(), employee1.getFullName(),
+//                    task.getId(), project1.getId()
+//            );
+//        });
     }
 }

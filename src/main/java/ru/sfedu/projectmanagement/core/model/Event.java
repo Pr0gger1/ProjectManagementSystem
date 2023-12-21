@@ -75,6 +75,21 @@ public class Event extends ProjectEntity {
     }
 
     @Override
+    public String toString() {
+        return "Event{" +
+                "startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", projectId=" + projectId +
+                ", employeeId=" + employeeId +
+                ", employeeFullName='" + employeeFullName + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
+    }
+
+    @Override
     public boolean equals(Object object) {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;

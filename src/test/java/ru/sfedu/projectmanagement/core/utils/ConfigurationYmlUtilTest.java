@@ -29,8 +29,6 @@ class ConfigurationYmlUtilTest {
     void getConfigPath() {
         assertEquals("env.yml", ConfigYmlUtil.getConfigPath());
     }
-{
-    }
 
     @Test
     void getEnvironmentVariable() {

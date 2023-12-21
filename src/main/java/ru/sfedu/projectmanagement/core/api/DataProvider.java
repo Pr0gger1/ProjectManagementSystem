@@ -35,7 +35,7 @@ public abstract class DataProvider {
                 changeType
         );
 
-        logger.debug("logEntity[1]: object {} saved to history", entity.getClass().getName());
+        logger.debug("logEntity[1]: object {} saved to history", entity);
         MongoHistoryProvider.save(historyRecord);
     }
 
@@ -103,7 +103,7 @@ public abstract class DataProvider {
      * @return the percentage of project readiness. It is calculated by number of completed tasks
      */
     protected float calculateProjectReadiness(UUID projectId) {
-        ArrayList<Task> tasks = getTasksByProjectId(projectId).getData();
+        List<Task> tasks = getTasksByProjectId(projectId).getData();
         if (!tasks.isEmpty()) {
             int countOfCompletedTasks = (int) tasks.stream()
                     .filter(task -> task.getStatus() == WorkStatus.COMPLETED).count();
@@ -120,7 +120,7 @@ public abstract class DataProvider {
      * Efficiency is calculated based on tasks completed on time
      */
     protected TrackInfo<Employee, Float> calculateLaborEfficiency(UUID projectId) {
-        ArrayList<Employee> team = getProjectTeam(projectId).getData();
+        List<Employee> team = getProjectTeam(projectId).getData();
         TrackInfo<Employee, Float> result = new TrackInfo<>();
 
         if (team.isEmpty()) return new TrackInfo<>();
@@ -144,7 +144,7 @@ public abstract class DataProvider {
      * @return TrackInfo with task and its status
      */
     protected TrackInfo<Task, String> trackTaskStatus(UUID projectId) {
-        ArrayList<Task> tasks = getTasksByProjectId(projectId).getData();
+        List<Task> tasks = getTasksByProjectId(projectId).getData();
 
         if (tasks.isEmpty())
             return new TrackInfo<>();
@@ -185,7 +185,8 @@ public abstract class DataProvider {
         for (Task task : tasks) {
             LocalDateTime taskDeadline = task.getDeadline();
 
-            if (task.getStatus() == WorkStatus.COMPLETED) {
+            if (task.getStatus() == WorkStatus.COMPLETED && task.getCompletedAt() != null) {
+
                 // difference in days between date of completion and deadline
                 long timeDifference = Math.abs(Duration.between(taskDeadline, task.getCompletedAt()).toDays());
                 if (taskDeadline.isBefore(task.getCompletedAt()))
@@ -205,20 +206,20 @@ public abstract class DataProvider {
         return (taskEffectivenessSum * 1.0f) / tasksCount;
     }
 
-    public abstract Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId);
+    protected abstract Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId);
 
     /**
      * @param managerId id of the manager who binds to the project
      * @param projectId id of the project to which the manager is attached
      */
-    public abstract Result<NoData> bindProjectManager(UUID managerId, UUID projectId);
+    protected abstract Result<NoData> bindProjectManager(UUID managerId, UUID projectId);
 
-    /**
-     * @param executorId id of the employee that binds to the task
-     * @param taskId id of the task to which the employee is attached
-     * @param projectId id of the project which have this task
-     */
-    public abstract Result<NoData> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId);
+//    /**
+//     * @param executorId id of the employee that binds to the task
+//     * @param taskId id of the task to which the employee is attached
+//     * @param projectId id of the project which have this task
+//     */
+//    public abstract Result<NoData> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId);
 
     /**
      * @param projectId id of the project you want to delete
@@ -275,7 +276,7 @@ public abstract class DataProvider {
      * @param projectId id of Project
      * @return Result with ArrayList of tasks, execution code and message if it fails
      */
-    public abstract Result<ArrayList<Task>> getTasksByProjectId(UUID projectId);
+    public abstract Result<List<Task>> getTasksByProjectId(UUID projectId);
 
     /**
      * @param employeeId id of the employee
@@ -317,7 +318,7 @@ public abstract class DataProvider {
      * @param projectId id of the project for which documentation is selected
      * @return Result with ArrayList of Documentation, execution code and message if it fails
      */
-    public abstract Result<ArrayList<Documentation>> getDocumentationsByProjectId(UUID projectId);
+    public abstract Result<List<Documentation>> getDocumentationsByProjectId(UUID projectId);
 
     /**
      * @param docId UUID of documentation
@@ -329,7 +330,7 @@ public abstract class DataProvider {
      * @param projectId id of project for which team is selected
      * @return Result with ArrayList of Employee, execution code and message if it fails
      */
-    public abstract Result<ArrayList<Employee>> getProjectTeam(UUID projectId);
+    public abstract Result<List<Employee>> getProjectTeam(UUID projectId);
 
     /**
      * @param employeeId id of the employee whose data is being extracted
@@ -346,7 +347,7 @@ public abstract class DataProvider {
             results.addAll(List.of(createEmployeeResult, bindEmployee));
 
 
-            if (project.getManager() != null && employee.getId().equals(project.getManagerId()))
+            if (project.getManagerId() != null && employee.getId().equals(project.getManagerId()))
                 bindProjectManager(employee.getId(), project.getId());
         });
 

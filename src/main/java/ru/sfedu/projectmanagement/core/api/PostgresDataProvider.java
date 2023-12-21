@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.Queries;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.enums.ChangeType;
-import ru.sfedu.projectmanagement.core.utils.PostgresUtil;
 import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
 import ru.sfedu.projectmanagement.core.Constants;
@@ -672,7 +671,7 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     @Override
-    public Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
+    protected Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
         Connection connection = getConnection();
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
         String query = generateSqlQuery(
@@ -688,11 +687,11 @@ public class PostgresDataProvider extends DataProvider {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
 
-            Result<ArrayList<Employee>> teamResult = getProjectTeam(projectId);
+            Result<List<Employee>> teamResult = getProjectTeam(projectId);
             if (teamResult.getCode() != ResultCode.SUCCESS && teamResult.getData().isEmpty())
                 return new Result<>(ResultCode.NOT_FOUND);
 
-            ArrayList<Employee> team = teamResult.getData();
+            List<Employee> team = teamResult.getData();
             if (team.stream().anyMatch(employee -> !employee.getId().equals(managerId)))
                 return new Result<>(ResultCode.ERROR, String.format("Employee with id %s doesn't belong to the project", managerId));
 
@@ -717,50 +716,7 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     @Override
-    public Result<NoData> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId) {
-        Connection connection = getConnection();
-        String query = generateSqlQuery(
-            Queries.UPDATE_TASK_EXECUTOR_QUERY,
-            executorId, executorFullName, taskId, projectId
-        );
-
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
-            int result = statement.executeUpdate();
-            if (PostgresUtil.isRecordExists(
-                    connection,
-                    Queries.EMPLOYEE_PROJECT_TABLE_NAME,
-                    "project_id",
-                    projectId
-            )) {
-
-                Result<Task> updatedTask = getTaskById(taskId);
-                if (updatedTask.getCode() == ResultCode.SUCCESS) {
-                    logEntity(
-                            updatedTask.getData(),
-                            "bindTaskExecutor",
-                            updatedTask.getCode(),
-                            ChangeType.UPDATE
-                    );
-                    if (result == 0) {
-                        return new Result<>(ResultCode.NOT_FOUND);
-                    }
-                }
-            }
-
-            logger.info("bindTaskExecutor[1]: employee[{}] was attached to task[{}] successfully", executorId, taskId);
-            return new Result<>(ResultCode.SUCCESS);
-        }
-        catch (SQLException exception) {
-            logger.error("bindTaskExecutor[2]: {}", exception.getMessage());
-            return new Result<>(null, ResultCode.ERROR);
-        }
-        finally {
-            closeConnection(connection);
-        }
-    }
-
-    @Override
-    public Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
+    protected Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
         Connection connection = getConnection();
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
         String query = generateSqlQuery(
@@ -818,13 +774,13 @@ public class PostgresDataProvider extends DataProvider {
 
 
     @Override
-    public Result<ArrayList<Task>> getTasksByProjectId(UUID projectId) {
+    public Result<List<Task>> getTasksByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.TASKS_TABLE_NAME);
         Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, projectId);
-            ArrayList<Task> tasks = new ArrayList<>();
+            List<Task> tasks = new ArrayList<>();
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) tasks.add(ResultSetUtils.extractTask(resultSet));
             return Optional.of(tasks)
@@ -881,7 +837,7 @@ public class PostgresDataProvider extends DataProvider {
 
     @Override
     public Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, UUID projectId) {
-        ArrayList<Task> tasks = getTasksByProjectId(projectId).getData();
+        List<Task> tasks = getTasksByProjectId(projectId).getData();
         ArrayList<Task> result = tasks.stream()
                 .filter(task -> task.getTags().containsAll(tags))
                 .collect(Collectors.toCollection(ArrayList::new));
@@ -1080,14 +1036,14 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     @Override
-    public Result<ArrayList<Documentation>> getDocumentationsByProjectId(UUID projectId) {
+    public Result<List<Documentation>> getDocumentationsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.DOCUMENTATIONS_TABLE_NAME);
         Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, projectId);
             ResultSet resultSet = statement.executeQuery();
-            ArrayList<Documentation> documentations = new ArrayList<>();
+            List<Documentation> documentations = new ArrayList<>();
 
             while (resultSet.next()) documentations.add(ResultSetUtils.extractDocumentation(resultSet));
 
@@ -1112,13 +1068,13 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     @Override
-    public Result<ArrayList<Employee>> getProjectTeam(UUID projectId) {
+    public Result<List<Employee>> getProjectTeam(UUID projectId) {
         Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(Queries.GET_PROJECT_TEAM_QUERY)) {
             statement.setObject(1, projectId);
             ResultSet resultSet = statement.executeQuery();
-            ArrayList<Employee> team = new ArrayList<>();
+            List<Employee> team = new ArrayList<>();
 
             while (resultSet.next()) team.add(ResultSetUtils.extractEmployee(resultSet));
             return Optional.of(team)

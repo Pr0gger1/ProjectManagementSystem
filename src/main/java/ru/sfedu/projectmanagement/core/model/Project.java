@@ -10,9 +10,8 @@ import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
 import ru.sfedu.projectmanagement.core.utils.xml.adapters.XmlLocalDateTimeAdapter;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name = "project")
@@ -22,68 +21,72 @@ public class Project implements Entity {
     @XmlTransient
     private final EntityType entityType = EntityType.Project;
 
-    @CsvBindByName
+    @CsvBindByName(column = "deadline")
     @CsvDate
     @XmlElement(nillable = true)
     @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     private LocalDateTime deadline;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "name",required = true)
     @XmlElement(required = true)
     private String name;
 
-    @CsvBindByName
+    @CsvBindByName(column = "description")
     @XmlElement(nillable = true)
     private String description;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "id", required = true)
     @XmlAttribute(required = true)
     private UUID id;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "status", required = true)
     @XmlElement(required = true)
     private WorkStatus status = WorkStatus.IN_PROGRESS;
 
-    @CsvBindByName
-    @XmlElement(nillable = true)
-    private Employee manager;
+    @CsvBindByName(column = "manager_id")
+    @XmlElement(name = "manager_id", nillable = true)
+    private UUID managerId;
 
-//    @XmlElementWrapper(name = "team")
-//    @XmlElement(name = "employee", nillable = true)
     @CsvIgnore
     @XmlTransient
-    private ArrayList<Employee> team = new ArrayList<>();
+    private List<Employee> team = new ArrayList<>();
 
-//    @XmlElementWrapper(name = "tasks")
-//    @XmlElement(name = "task", nillable = true)
     @CsvIgnore
     @XmlTransient
-    private ArrayList<ProjectEntity> tasks = new ArrayList<>();
+    private List<ProjectEntity> tasks = new ArrayList<>();
 
-//    @XmlElementWrapper(name = "documentations")
-//    @XmlElement(name = "documentation", nillable = true)
     @CsvIgnore
     @XmlTransient
-    private ArrayList<ProjectEntity> documentation = new ArrayList<>();
+    private List<ProjectEntity> documentations = new ArrayList<>();
 
-//    @XmlElementWrapper(name = "bug_reports")
-//    @XmlElement(name = "bug_report", nillable = true)
     @CsvIgnore
     @XmlTransient
-    private ArrayList<ProjectEntity> bugReports = new ArrayList<>();
+    private List<ProjectEntity> bugReports = new ArrayList<>();
 
-//    @XmlElementWrapper(name = "events")
-//    @XmlElement(name = "event", nillable = true)
     @CsvIgnore
     @XmlTransient
-    private ArrayList<ProjectEntity> events = new ArrayList<>();
+    private List<ProjectEntity> events = new ArrayList<>();
 
-    public Project(String name, String description, String id) {
+    public Project(String name, String description) {
         this.name = name;
         this.description = description;
     }
 
-    public Project() {
+    public Project() {}
+    public Project(Project project) {
+        this(
+            project.name,
+            project.description,
+            project.id,
+            project.deadline,
+            project.status,
+            project.managerId,
+            project.team,
+            project.tasks,
+            project.bugReports,
+            project.events,
+            project.documentations
+        );
     }
 
     public Project(
@@ -92,31 +95,31 @@ public class Project implements Entity {
             UUID id,
             LocalDateTime deadline,
             WorkStatus status,
-            Employee manager,
-            ArrayList<Employee> team,
-            ArrayList<ProjectEntity> tasks,
-            ArrayList<ProjectEntity> bugReports,
-            ArrayList<ProjectEntity> events,
-            ArrayList<ProjectEntity> documentation
+            UUID managerId,
+            List<Employee> team,
+            List<ProjectEntity> tasks,
+            List<ProjectEntity> bugReports,
+            List<ProjectEntity> events,
+            List<ProjectEntity> documentations
     ) {
         this.deadline = deadline;
         this.name = name;
         this.description = description;
         this.id = id;
         this.status = status;
-        this.manager = manager;
+        this.managerId = managerId;
         this.team = team;
         this.tasks = tasks;
-        this.documentation = documentation;
+        this.documentations = documentations;
         this.events = events;
         this.bugReports = bugReports;
     }
 
-    public Project(String name, String description, UUID id, Employee manager) {
+    public Project(String name, String description, UUID id, UUID managerId) {
         this.name = name;
         this.description = description;
         this.id = id;
-        this.manager = manager;
+        this.managerId = managerId;
     }
 
     public EntityType getEntityType() {
@@ -127,20 +130,15 @@ public class Project implements Entity {
         return deadline;
     }
 
-    public Employee getManager() {
-        return manager;
-    }
     public UUID getManagerId() {
-        if (manager == null)
-            return null;
-        return manager.getId();
+        return managerId;
     }
 
-    public void setManager(Employee manager) {
-        this.manager = manager;
+    public void setManagerId(UUID managerId) {
+        this.managerId = managerId;
     }
 
-    public ArrayList<ProjectEntity> getBugReports() {
+    public List<ProjectEntity> getBugReports() {
         return bugReports;
     }
 
@@ -148,44 +146,34 @@ public class Project implements Entity {
         this.deadline = deadline;
     }
 
-    public ArrayList<ProjectEntity> getDocumentations() {
-        return documentation;
+    public List<ProjectEntity> getDocumentations() {
+        return documentations;
     }
 
-    public void setDocumentations(ArrayList<ProjectEntity> documentation) {
-        if (documentation.stream().allMatch(entity -> entity instanceof Documentation))
-            this.documentation = documentation;
+    public void setDocumentations(ArrayList<Documentation> documentations) {
+        documentations.forEach(this::addDocumentation);
     }
 
-    public ArrayList<ProjectEntity> getEvents() {
+    public List<ProjectEntity> getEvents() {
         return events;
     }
 
-    public ArrayList<ProjectEntity> getTasks() {
-        return tasks;
+    public List<Task> getTasks() {
+        return tasks.stream().map(task -> (Task) task).toList();
     }
 
-    public void setTasks(ArrayList<ProjectEntity> tasks) {
-        if (tasks.stream().allMatch(entity -> entity instanceof Task))
-            this.tasks = tasks;
+    public void setTasks(List<Task> tasks) {
+        this.tasks = tasks.stream()
+                .map(task -> (ProjectEntity) task)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public void addTask(Task task) {
-        tasks.add(task);
-    }
-
-    public void deleteTask(int taskId) {}
-
-    public ArrayList<Employee> getTeam() {
+    public List<Employee> getTeam() {
         return team;
     }
 
-    public void setTeam(ArrayList<Employee> team) {
+    public void setTeam(List<Employee> team) {
         this.team = team;
-    }
-
-    public void addEmployee(Employee employee) {
-        this.team.add(employee);
     }
 
     public WorkStatus getStatus() {
@@ -204,6 +192,26 @@ public class Project implements Entity {
         this.id = id;
     }
 
+    public void addEvent(Event event) {
+        this.events.add(event);
+    }
+
+    public void addTask(Task task) {
+        this.tasks.add(task);
+    }
+
+    public void addBugReport(BugReport bugReport) {
+        this.bugReports.add(bugReport);
+    }
+
+    public void addDocumentation(Documentation documentation) {
+        this.documentations.add(documentation);
+    }
+
+    public void addEmployee(Employee employee) {
+        this.team.add(employee);
+    }
+
     public String getName() {
         return name;
     }
@@ -220,12 +228,14 @@ public class Project implements Entity {
         this.description = description;
     }
 
-    public void setBugReports(ArrayList<ProjectEntity> bugReports) {
-        this.bugReports = bugReports;
+    public void setBugReports(ArrayList<BugReport> bugReports) {
+        this.bugReports = bugReports.stream()
+                .map(bugReport -> (ProjectEntity) bugReport)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public void setEvents(ArrayList<ProjectEntity> events) {
-        this.events = events;
+    public void setEvents(ArrayList<Event> events) {
+        events.forEach(this::addEvent);
     }
 
     @Override
@@ -236,10 +246,10 @@ public class Project implements Entity {
                 ", description='" + description + '\'' +
                 ", id='" + id + '\'' +
                 ", status=" + status +
-                ", manager=" + manager +
+                ", managerId=" + managerId +
                 ", team=" + team +
                 ", tasks=" + tasks +
-                ", documentation=" + documentation +
+                ", documentation=" + documentations +
                 ", bugReports=" + bugReports +
                 ", events=" + events +
                 '}';
@@ -250,11 +260,11 @@ public class Project implements Entity {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         Project project = (Project) object;
-        return Objects.equals(deadline, project.deadline) && Objects.equals(name, project.name) && Objects.equals(description, project.description) && Objects.equals(id, project.id) && status == project.status && Objects.equals(manager, project.manager) && Objects.equals(team, project.team) && Objects.equals(tasks, project.tasks) && Objects.equals(documentation, project.documentation) && Objects.equals(bugReports, project.bugReports) && Objects.equals(events, project.events);
+        return Objects.equals(deadline, project.deadline) && Objects.equals(name, project.name) && Objects.equals(description, project.description) && Objects.equals(id, project.id) && status == project.status && Objects.equals(managerId, project.managerId) && Objects.equals(team, project.team) && Objects.equals(tasks, project.tasks) && Objects.equals(documentations, project.documentations) && Objects.equals(bugReports, project.bugReports) && Objects.equals(events, project.events);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(deadline, name, description, id, status, manager, team, tasks, documentation, bugReports, events);
+        return Objects.hash(deadline, name, description, id, status, managerId, team, tasks, documentations, bugReports, events);
     }
 }

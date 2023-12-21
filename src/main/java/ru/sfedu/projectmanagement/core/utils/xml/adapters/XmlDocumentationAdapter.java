@@ -1,7 +1,6 @@
 package ru.sfedu.projectmanagement.core.utils.xml.adapters;
 
 import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
 import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
@@ -20,7 +19,7 @@ class EntryType {
 @XmlType
 class HashMapType {
     @XmlElement(name = "article")
-    public List<EntryType> entries = new ArrayList<>();
+    public final List<EntryType> entries = new ArrayList<>();
 }
 
 public class XmlDocumentationAdapter extends XmlAdapter<HashMapType, HashMap<String, String>> {

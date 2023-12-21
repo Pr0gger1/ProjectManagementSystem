@@ -5,6 +5,8 @@ public class Constants {
     public static final String SUCCESSFUL_CREATED_ENTITY_MESSAGE = "%s %s was created successfully";
     public static final String SUCCESSFUL_DELETED_ENTITY_MESSAGE = "%s %s was deleted successfully";
     public static final String ENTITY_NOT_FOUND_MESSAGE = "%s with id %s not found";
+    public static final String READ_ERROR = "something goes wrong while reading...";
+    public static final String OBJECT_ALREADY_EXISTS_MESSAGE = "%s with id %s already exists";
 
     public static final String UUID_REGEX = "^[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}";
 
@@ -28,6 +30,8 @@ public class Constants {
     public static final String EVENTS_FILE_PATH = "events";
     public static final String DOCUMENTATIONS_FILE_PATH = "documentations";
     public static final String EMPLOYEE_PROJECT_FILE_PATH = "employee_project";
+    public static final String TASK_TAG_FILE_PATH = "task_tags";
+    public static final String DOCUMENTATION_DATA_FILE_PATH = "documentation_data";
 
 
     // mongo history collection item name constants

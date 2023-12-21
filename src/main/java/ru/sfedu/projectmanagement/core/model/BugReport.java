@@ -15,11 +15,11 @@ import java.util.UUID;
 @XmlRootElement(name = "bug_report")
 @XmlType(name = "BugReport")
 public class BugReport extends ProjectEntity {
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "priority", required = true)
     @XmlElement(required = true)
     private Priority priority = Priority.LOW;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "status", required = true)
     @XmlElement(required = true)
     private BugStatus status = BugStatus.OPENED;
 

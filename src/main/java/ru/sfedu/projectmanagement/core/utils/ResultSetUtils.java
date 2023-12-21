@@ -1,12 +1,10 @@
 package ru.sfedu.projectmanagement.core.utils;
 
-import ru.sfedu.projectmanagement.core.api.DataProvider;
 import ru.sfedu.projectmanagement.core.api.PostgresDataProvider;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.enums.BugStatus;
 import ru.sfedu.projectmanagement.core.model.enums.Priority;
 import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
-import ru.sfedu.projectmanagement.core.utils.types.Result;
 
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -223,9 +221,9 @@ public class ResultSetUtils {
         WorkStatus projectStatus = WorkStatus.valueOf(resultSet.getString("status"));
         UUID managerId = (UUID) resultSet.getObject("manager_id");
         Employee projectManager = postgresProvider.getEmployeeById(managerId).getData();
-        ArrayList<Employee> projectTeam = postgresProvider.getProjectTeam(projectId).getData();
-        ArrayList<Task> projectTasks = postgresProvider.getTasksByProjectId(projectId).getData();
-        ArrayList<ProjectEntity> projectDocumentation = new ArrayList<>(List.copyOf(
+        List<Employee> projectTeam = postgresProvider.getProjectTeam(projectId).getData();
+        List<Task> projectTasks = postgresProvider.getTasksByProjectId(projectId).getData();
+        List<ProjectEntity> projectDocumentation = new ArrayList<>(List.copyOf(
                 postgresProvider.getDocumentationsByProjectId(projectId).getData()
             )
         );
@@ -244,7 +242,7 @@ public class ResultSetUtils {
                 projectId,
                 projectDeadline,
                 projectStatus,
-                projectManager,
+                projectManager.getId(),
                 projectTeam,
                 // преобразование в список ProjectEntity
                 new ArrayList<>(){{ addAll(projectTasks); }},

@@ -7,7 +7,6 @@ import jakarta.xml.bind.Unmarshaller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.model.*;
-import ru.sfedu.projectmanagement.core.model.Entity;
 import ru.sfedu.projectmanagement.core.model.enums.EntityType;
 
 import java.io.File;

@@ -1,6 +1,7 @@
 package ru.sfedu.projectmanagement.core.model;
 
 import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvDate;
 import com.opencsv.bean.CsvIgnore;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
@@ -18,31 +19,32 @@ public abstract class ProjectEntity implements Entity {
     @XmlTransient
     private EntityType entityType;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "id", required = true)
     @XmlAttribute(required = true)
     protected UUID id;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "name", required = true)
     @XmlElement(required = true)
     protected String name;
 
-    @CsvBindByName
+    @CsvBindByName(column = "description")
     @XmlElement(nillable = true)
     protected String description;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "project_id", required = true)
     @XmlElement(required = true)
     protected UUID projectId;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "employee_id", required = true)
     @XmlElement(required = true)
     protected UUID employeeId;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "employee_full_name", required = true)
     @XmlElement(required = true)
     protected String employeeFullName;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "createdAt", required = true)
+    @CsvDate(value = "yyyy-MM-dd'T'HH:mm:ss")
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     protected LocalDateTime createdAt;
@@ -63,7 +65,7 @@ public abstract class ProjectEntity implements Entity {
             EntityType entityType
     ) {
         this.entityType = entityType;
-        createdAt = LocalDateTime.now();
+        createdAt = LocalDateTime.now().withNano(0);
         this.id = UUID.randomUUID();
         this.name = name;
         this.projectId = projectId;

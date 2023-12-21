@@ -20,41 +20,41 @@ public class Employee implements Entity {
     @XmlTransient
     private final EntityType entityType = EntityType.Employee;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "id", required = true)
     @XmlAttribute(required = true)
     private UUID id;
 
-    @CsvBindByName(required = true)
-    @XmlElement(required = true)
+    @CsvBindByName(column = "first_name", required = true)
+    @XmlElement(name = "first_name", required = true)
     private String firstName;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "last_name", required = true)
     @XmlElement(required = true)
     private String lastName;
 
-    @CsvBindByName
-    @XmlElement()
+    @CsvBindByName(column = "patronymic")
+    @XmlElement
     private String patronymic;
 
-    @CsvBindByName(required = true)
-    @XmlElement(required = true)
+    @CsvBindByName(column = "full_name", required = true)
+    @XmlElement(name = "full_name", required = true)
     private String fullName;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "birthday", required = true)
     @CsvDate("yyyy-MM-dd")
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(XmlLocalDateAdapter.class)
     private LocalDate birthday;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "email", required = true)
     @XmlElement(required = true)
     private String email;
 
-    @CsvBindByName
-    @XmlElement
+    @CsvBindByName(column = "phone_number")
+    @XmlElement(name = "phone_number")
     private String phoneNumber;
 
-    @CsvBindByName(required = true)
+    @CsvBindByName(column = "position", required = true)
     @XmlElement(required = true)
     private String position;
 

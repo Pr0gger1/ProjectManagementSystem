@@ -17,13 +17,19 @@ public class EmployeeProjectObject implements Entity {
     @XmlTransient
     private EntityType entityType = EntityType.EmployeeProject;
 
-    @CsvBindByName(column = "employee_id")
-    @XmlElement(name = "employee_id")
+    @CsvBindByName(column = "employee_id", required = true)
+    @XmlElement(name = "employee_id", required = true)
     private UUID employeeId;
 
-    @CsvBindByName(column = "project_id")
-    @XmlElement(name = "project_id")
+    @CsvBindByName(column = "project_id", required = true)
+    @XmlElement(name = "project_id", required = true)
     private UUID projectId;
+
+    public EmployeeProjectObject() {}
+
+    public void setEntityType(EntityType entityType) {
+        this.entityType = entityType;
+    }
 
     public UUID getEmployeeId() {
         return employeeId;
@@ -33,7 +39,7 @@ public class EmployeeProjectObject implements Entity {
         this.employeeId = employeeId;
     }
 
-    public UUID getId() {
+    public UUID getProjectId() {
         return projectId;
     }
 
@@ -41,7 +47,6 @@ public class EmployeeProjectObject implements Entity {
         this.projectId = projectId;
     }
 
-    private EmployeeProjectObject() {}
     public EmployeeProjectObject(UUID employeeId, UUID projectId) {
         this.employeeId = employeeId;
         this.projectId = projectId;
@@ -50,6 +55,11 @@ public class EmployeeProjectObject implements Entity {
     @Override
     public EntityType getEntityType() {
         return entityType;
+    }
+
+    @Override
+    public UUID getId() {
+        return projectId;
     }
 
     @Override
