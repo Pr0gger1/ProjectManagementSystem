@@ -4,8 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.Constants;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -21,37 +20,46 @@ public class ConfigPropertiesUtil {
         return config;
     }
 
+    /**
+     * @param path
+     */
     public static void setConfigPath(String path) {
         configPath = path;
     }
 
+    /**
+     * @return
+     */
     public static String getConfigPath() {
         return configPath;
     }
 
-    private static void loadConfiguration() throws IOException {
-        InputStream fileStream = null;
+    /**
+     */
+    private static void loadConfiguration() throws FileNotFoundException {
+        InputStream inputStream;
+        if (configPath == null || configPath.isEmpty()) {
+            inputStream = ConfigPropertiesUtil.class.getClassLoader()
+                    .getResourceAsStream(Constants.DEFAULT_CONFIG_PATH_PROPERTIES);
+        }
+        else {
+            File configFile = new File(configPath);
+            inputStream = new FileInputStream(configFile);
+        }
         try {
-            if (configPath == null || configPath.isEmpty())
-                fileStream = ConfigPropertiesUtil.class.getClassLoader()
-                        .getResourceAsStream(Constants.DEFAULT_CONFIG_PATH_PROPERTIES);
-            else {
-                fileStream = ConfigPropertiesUtil.class.getClassLoader()
-                        .getResourceAsStream(configPath);
-            }
-
-            config.load(fileStream);
+            config.load(inputStream);
+            if (inputStream != null)
+                inputStream.close();
         }
         catch (IOException error) {
             logger.error("loadConfiguration[1]: {}", error.getMessage());
         }
-        finally {
-            assert fileStream != null;
-            fileStream.close();
-        }
-
     }
 
+    /**
+     * @param key
+     * @return
+     */
     public static String getEnvironmentVariable(String key) {
         try {
             return getConfiguration().getProperty(key);
@@ -62,6 +70,10 @@ public class ConfigPropertiesUtil {
         return null;
     }
 
+    /**
+     * @param key
+     * @return
+     */
     public static String[] getEnvironmentVariableList(String key) {
         try {
             return getConfiguration().getProperty(key).split(",");
@@ -72,6 +84,10 @@ public class ConfigPropertiesUtil {
         return null;
     }
 
+    /**
+     * @param key
+     * @return
+     */
     public static HashMap<String, String> getEnvironmentMapVariable(String key) {
         HashMap<String, String> mapVariable = new HashMap<>();
         try {

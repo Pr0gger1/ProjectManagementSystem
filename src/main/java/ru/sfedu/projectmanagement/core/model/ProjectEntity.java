@@ -53,6 +53,7 @@ public abstract class ProjectEntity implements Entity {
 
     ProjectEntity(EntityType entityType) {
         id = UUID.randomUUID();
+        createdAt = LocalDateTime.now().withNano(0);
         this.entityType = entityType;
     }
 

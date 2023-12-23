@@ -206,7 +206,7 @@ public abstract class DataProvider {
         return (taskEffectivenessSum * 1.0f) / tasksCount;
     }
 
-    protected abstract Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId);
+    public abstract Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId);
 
     /**
      * @param managerId id of the manager who binds to the project

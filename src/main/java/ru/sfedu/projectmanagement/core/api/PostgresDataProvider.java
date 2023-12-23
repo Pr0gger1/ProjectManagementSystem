@@ -136,6 +136,38 @@ public class PostgresDataProvider extends DataProvider {
         return resultQuery;
     }
 
+    private Result<NoData> checkIfEmployeeBelongsToProject(UUID employeeId) {
+        String query = String.format(
+                Queries.CHECK_EMPLOYEE_LINK_EXISTENCE_QUERY,
+                Queries.EMPLOYEE_PROJECT_TABLE_NAME, employeeId
+        );
+
+        Result<NoData> result = new Result<>(ResultCode.SUCCESS);
+        Connection connection = getConnection();
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet = statement.executeQuery();
+            int rowCount = 0;
+            while (resultSet.next()) rowCount = resultSet.getInt("count");
+
+            if (rowCount == 0)
+                return new Result<>(ResultCode.NOT_FOUND, String.format(
+                        Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT, employeeId)
+                );
+            return result;
+        }
+        catch (SQLException exception) {
+            logger.error("checkIfEmployeeBelongsToProject[2]: {}", exception.getMessage());
+            result.setCode(ResultCode.ERROR);
+            result.setMessage(exception.getMessage());
+        }
+        finally {
+            closeConnection(connection);
+        }
+        return result;
+    }
+
     @Override
     public Result<NoData> processNewProject(Project project) {
         Connection connection = getConnection();
@@ -157,7 +189,7 @@ public class PostgresDataProvider extends DataProvider {
             if (initEntitiesResult.getCode() != ResultCode.SUCCESS)
                 return initEntitiesResult;
 
-            logger.info("processNewProject[1]: project {} was created successfully", project);
+            logger.debug("processNewProject[1]: project {} was created successfully", project);
             return result;
         }
         catch (SQLException exception) {
@@ -197,7 +229,7 @@ public class PostgresDataProvider extends DataProvider {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
 
-            logger.info("processNewEmployee[1]: employee {} was created successfully", employee);
+            logger.debug("processNewEmployee[1]: employee {} was created successfully", employee);
             return result;
         }
         catch (SQLException exception) {
@@ -222,6 +254,10 @@ public class PostgresDataProvider extends DataProvider {
     public Result<NoData> processNewTask(Task task) {
         Connection connection = getConnection();
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
+        Result<NoData> validationResult = checkIfEmployeeBelongsToProject(task.getEmployeeId());
+
+        if (validationResult.getCode() != ResultCode.SUCCESS)
+            return validationResult;
 
         try {
             String query = generateSqlQuery(
@@ -246,7 +282,7 @@ public class PostgresDataProvider extends DataProvider {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.executeUpdate();
 
-            logger.info("processNewTask[1]: {}", String.format(
+            logger.debug("processNewTask[1]: {}", String.format(
                     Constants.SUCCESSFUL_CREATED_ENTITY_MESSAGE,
                     "task", task
             ));
@@ -286,10 +322,14 @@ public class PostgresDataProvider extends DataProvider {
             bugReport.getCreatedAt()
         );
 
+        Result<NoData> checkConstraintResult = checkIfEmployeeBelongsToProject(bugReport.getEmployeeId());
+        if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
+            return checkConstraintResult;
+
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
 
-            logger.info("processNewBugReport[2]: {}", String.format(
+            logger.debug("processNewBugReport[2]: {}", String.format(
                     Constants.SUCCESSFUL_CREATED_ENTITY_MESSAGE,
                     "bug report", bugReport
             ));
@@ -320,6 +360,10 @@ public class PostgresDataProvider extends DataProvider {
         String query = "";
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
 
+        Result<NoData> checkConstraintResult = checkIfEmployeeBelongsToProject(documentation.getEmployeeId());
+        if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
+            return checkConstraintResult;
+
         try {
             query = generateSqlQuery(
                 Queries.CREATE_DOCUMENTATION_QUERY,
@@ -342,14 +386,14 @@ public class PostgresDataProvider extends DataProvider {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
 
-            logger.info("processNewDocumentation[2]: {}", String.format(
+            logger.debug("processNewDocumentation[2]: {}", String.format(
                     Constants.SUCCESSFUL_CREATED_ENTITY_MESSAGE,
                     "documentation", documentation
             ));
             return result;
         }
         catch (SQLException exception) {
-            logger.error("processNewDocumentation[1]: {}", exception.getMessage());
+            logger.error("processNewDocumentation[3]: {}", exception.getMessage());
             result.setCode(ResultCode.ERROR);
             result.setMessage(exception.getMessage());
         }
@@ -382,10 +426,14 @@ public class PostgresDataProvider extends DataProvider {
             event.getCreatedAt()
         );
 
+        Result<NoData> checkConstraintResult = checkIfEmployeeBelongsToProject(event.getEmployeeId());
+        if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
+            return checkConstraintResult;
+
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
 
-            logger.info("processNewEvent[1]: {}", String.format(
+            logger.debug("processNewEvent[1]: {}", String.format(
                     Constants.SUCCESSFUL_CREATED_ENTITY_MESSAGE,
                     "event", event
             ));
@@ -446,7 +494,7 @@ public class PostgresDataProvider extends DataProvider {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
 
-            logger.info("deleteProject[1]: {}", String.format(
+            logger.debug("deleteProject[1]: {}", String.format(
                     Constants.SUCCESSFUL_DELETED_ENTITY_MESSAGE,
                     "project", project.getData()
             ));
@@ -488,7 +536,7 @@ public class PostgresDataProvider extends DataProvider {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
 
-            logger.info("deleteTask[1]: {}", String.format(
+            logger.debug("deleteTask[1]: {}", String.format(
                     Constants.SUCCESSFUL_DELETED_ENTITY_MESSAGE,
                     "task", task
             ));
@@ -530,7 +578,7 @@ public class PostgresDataProvider extends DataProvider {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
 
-            logger.info("deleteBugReport[1]: {}", String.format(
+            logger.debug("deleteBugReport[1]: {}", String.format(
                     Constants.SUCCESSFUL_DELETED_ENTITY_MESSAGE,
                     "bug report", bugReportResult.getData()
             ));
@@ -569,7 +617,7 @@ public class PostgresDataProvider extends DataProvider {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
 
-            logger.info("deleteEvent[1]: {}", String.format(
+            logger.debug("deleteEvent[1]: {}", String.format(
                     Constants.SUCCESSFUL_DELETED_ENTITY_MESSAGE,
                     "event", eventResult.getData()
             ));
@@ -609,7 +657,7 @@ public class PostgresDataProvider extends DataProvider {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
 
-            logger.info("deleteDocumentation[1]: {}", String.format(
+            logger.debug("deleteDocumentation[1]: {}", String.format(
                     Constants.SUCCESSFUL_DELETED_ENTITY_MESSAGE,
                     "documentation", documentationResult.getData()
             ));
@@ -648,7 +696,7 @@ public class PostgresDataProvider extends DataProvider {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
 
-            logger.info("deleteEmployee[1]: {}", String.format(
+            logger.debug("deleteEmployee[1]: {}", String.format(
                     Constants.SUCCESSFUL_DELETED_ENTITY_MESSAGE,
                     "employee", employeeId
             ));
@@ -695,7 +743,7 @@ public class PostgresDataProvider extends DataProvider {
             if (team.stream().anyMatch(employee -> !employee.getId().equals(managerId)))
                 return new Result<>(ResultCode.ERROR, String.format("Employee with id %s doesn't belong to the project", managerId));
 
-            logger.info("bindProjectManager[1]: employee[{}] became manager of the project[{}]", managerId, projectId);
+            logger.debug("bindProjectManager[1]: employee[{}] became manager of the project[{}]", managerId, projectId);
             return result;
         }
         catch (SQLException exception) {
@@ -716,7 +764,7 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     @Override
-    protected Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
+    public Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
         Connection connection = getConnection();
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
         String query = generateSqlQuery(
@@ -727,7 +775,7 @@ public class PostgresDataProvider extends DataProvider {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
 
-            logger.info("bindEmployeeToProject[1]: employee[{}] was attached to the project[{}] successfully", employeeId, projectId);
+            logger.debug("bindEmployeeToProject[1]: employee[{}] was attached to the project[{}] successfully", employeeId, projectId);
             return result;
 
         }
@@ -751,7 +799,8 @@ public class PostgresDataProvider extends DataProvider {
             statement.setObject(1, id);
             ResultSet queryResult = statement.executeQuery();
             Project project = null;
-            while (queryResult.next()) project = ResultSetUtils.extractProject(queryResult, this);
+            while (queryResult.next())
+                project = ResultSetUtils.extractProject(queryResult, this);
 
             return Optional.ofNullable(project)
                 .map(p -> {
@@ -839,13 +888,13 @@ public class PostgresDataProvider extends DataProvider {
     public Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, UUID projectId) {
         List<Task> tasks = getTasksByProjectId(projectId).getData();
         ArrayList<Task> result = tasks.stream()
-                .filter(task -> task.getTags().containsAll(tags))
+                .filter(task -> new HashSet<>(task.getTags()).containsAll(tags))
                 .collect(Collectors.toCollection(ArrayList::new));
 
         return Optional.of(result)
                 .filter(r -> !r.isEmpty())
                 .map(r -> new Result<>(r, ResultCode.SUCCESS))
-                .orElse(new Result<>(ResultCode.NOT_FOUND));
+                .orElse(new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND));
     }
 
 

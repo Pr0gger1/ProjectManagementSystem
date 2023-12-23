@@ -94,7 +94,7 @@ public class XmlUtil {
     public static <T extends Entity> void createRecord(String filePath, T object) throws JAXBException {
         Wrapper<T> wrapper = readFile(filePath);
         List<T> list = wrapper.getList();
-        logger.debug("createRecord[0]: {}", list);
+        logger.debug("createRecord[1]: {}", list);
 
         for (T entity : list) {
             if (entity.getId().equals(object.getId()) && entity.getEntityType() != EntityType.EmployeeProject) {
@@ -104,9 +104,11 @@ public class XmlUtil {
         }
 
         wrapper.addNode(object);
+        StringWriter stringWriter = new StringWriter();
 
         marshaller.marshal(wrapper, new File(filePath));
-        marshaller.marshal(wrapper, System.out);
+        marshaller.marshal(wrapper, stringWriter);
+        logger.debug("createRecord[2]: entity was written {}", stringWriter);
     }
 
 

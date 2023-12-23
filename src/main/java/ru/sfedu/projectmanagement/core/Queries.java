@@ -61,7 +61,7 @@ public class Queries {
             description TEXT,
             author_id UUID NOT NULL REFERENCES employees(id),
             author_full_name VARCHAR(128) NOT NULL,
-            created_at DATE DEFAULT NOW()
+            created_at TIMESTAMPTZ DEFAULT NOW()
         );
     """, BUG_REPORTS_TABLE_NAME);
 
@@ -89,7 +89,7 @@ public class Queries {
             author_full_name VARCHAR(128) NOT NULL,
             article_titles text[],
             articles text[],
-            created_at DATE DEFAULT NOW()
+            created_at TIMESTAMPTZ DEFAULT NOW()
         );
     """, DOCUMENTATIONS_TABLE_NAME);
 
@@ -105,6 +105,8 @@ public class Queries {
             position VARCHAR(64) NOT NULL
         );
     """, EMPLOYEES_TABLE_NAME);
+
+    public static final String CHECK_EMPLOYEE_LINK_EXISTENCE_QUERY = "SELECT count(*) FROM %s WHERE employee_id = '%s'";
 
 
     // postgres create entity queries
@@ -152,87 +154,9 @@ public class Queries {
 
 
     // postgres update entity queries
-    public static final String UPDATE_COLUMN_ENTITY_QUERY = """
-        UPDATE %s SET %s = ? WHERE id = ?
-    """;
-
     public static final String UPDATE_ENTITY = """
         UPDATE %s SET %s WHERE id = ?
     """;
-
-    public static final String UPDATE_PROJECT_QUERY = String.format(
-            "UPDATE %s SET name = ?, description = ?, status = ?, deadline = ?, manager_id = ? WHERE id = ?;",
-            PROJECT_TABLE_NAME
-    );
-
-    public static final String UPDATE_EMPLOYEE_QUERY = String.format("""
-        UPDATE %s SET first_name = ?, last_name = ?, patronymic = ?, birthday = ?,
-         email = ?, phone_number = ?, position = ? WHERE id = ?;
-    """, EMPLOYEES_TABLE_NAME);
-
-    public static final String UPDATE_TASK_QUERY = String.format("""
-        UPDATE %s SET project_id = ?,
-                    name = ?,
-                    description = ?,
-                    executor_id = ?,
-                    executor_full_name = ?,
-                    comment = ?,
-                    priority = ?,
-                    tag = ?,
-                    status = ?,
-                    deadline = ?,
-                    created_at = ?,
-                    completed_at = ?
-                WHERE id = ?;
-    """, TASKS_TABLE_NAME);
-
-    public static final String UPDATE_EMPLOYEE_PROJECT_QUERY = String.format("""
-        UPDATE %s SET employee_id = ? WHERE project_id = ?;
-    """, EMPLOYEE_PROJECT_TABLE_NAME);
-
-    public static final String UPDATE_BUG_REPORT_QUERY = String.format("""
-        UPDATE %s
-                SET project_id = ?,
-                    status = ?,
-                    priority = ?,
-                    name = ?,
-                    description = ?,
-                    author_id = ?,
-                    author_full_name = ?,
-                    created_at = ?
-                WHERE id = ?;
-    """, BUG_REPORTS_TABLE_NAME);
-
-    public static final String UPDATE_EVENT_QUERY = String.format("""
-            UPDATE %s
-                    SET name = ?,
-                        description = ?,
-                        project_id = ?,
-                        author_id = ?,
-                        author_full_name = ?,
-                        start_date = ?,
-                        end_date = ?,
-                        created_at = ?
-                    WHERE id = ?;
-    """, EVENTS_TABLE_NAME);
-
-    public static final String UPDATE_DOCUMENTATION_QUERY = String.format("""
-            UPDATE %s
-            SET project_id = ?,
-                name = ?,
-                description = ?,
-                author_id = ?,
-                author_full_name = ?,
-                article_titles = ?,
-                articles = ?,
-                created_at = ?
-            WHERE id = ?;
-                
-    """, DOCUMENTATIONS_TABLE_NAME);
-
-    public static final String UPDATE_TASK_EXECUTOR_QUERY = String.format("""
-        UPDATE %s SET executor_id = ?, executor_full_name = ? WHERE id = ? AND project_id = ?
-    """, TASKS_TABLE_NAME);
 
     public static final String GET_ENTITY_BY_ID_QUERY = """
         SELECT * FROM %s WHERE id = ?

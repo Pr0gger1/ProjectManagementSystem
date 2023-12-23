@@ -89,9 +89,15 @@ public class XmlChecker extends FileChecker {
         logger.debug("checkIfEmployeeBelongsToProject[1]: object {}", employee);
         TreeMap<String, String> errors = new TreeMap<>();
         if (!XmlUtil.isRecordExists(employeesFilePath, employee.getId()))
-            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_DOES_NOT_EXISTS);
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, String.format(
+                    Constants.EMPLOYEE_DOES_NOT_EXISTS,
+                    employee.getId()
+            ));
         if (!XmlUtil.isRecordExists(employeeProjectFilePath, employee.getId()))
-            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT);
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, String.format(
+                    Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT,
+                    employee.getId()
+            ));
 
         if (!errors.isEmpty())
             return new Result<>(null, ResultCode.ERROR, errors);

@@ -41,12 +41,14 @@ public class CsvChecker extends FileChecker {
             errors.put(Constants.PROJECT_ERROR_KEY, String.format(Constants.PROJECT_DOES_NOT_EXISTS, entity.getProjectId()));
 
         List<EmployeeProjectObject> data = readFile(employeeProjectFilePath, EmployeeProjectObject.class);
-        boolean isEmployeeLinkExists = !Optional.ofNullable(data)
-                .map(d -> d.stream().anyMatch(e -> e.getId().equals(entity.getEmployeeId())))
+        boolean isEmployeeLinkExists = Optional.ofNullable(data)
+                .map(d -> d.stream().anyMatch(e -> e.getId().equals(entity.getProjectId())))
                 .orElse(false);
 
         if (!isEmployeeLinkExists)
-            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT);
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, String.format(
+                    Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT, entity.getEmployeeId()
+            ));
 
         if (!errors.isEmpty()) {
             return new Result<>(null, ResultCode.ERROR, errors);

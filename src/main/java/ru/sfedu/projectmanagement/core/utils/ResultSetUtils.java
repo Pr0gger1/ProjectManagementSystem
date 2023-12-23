@@ -242,7 +242,7 @@ public class ResultSetUtils {
                 projectId,
                 projectDeadline,
                 projectStatus,
-                projectManager.getId(),
+                managerId,
                 projectTeam,
                 // преобразование в список ProjectEntity
                 new ArrayList<>(){{ addAll(projectTasks); }},

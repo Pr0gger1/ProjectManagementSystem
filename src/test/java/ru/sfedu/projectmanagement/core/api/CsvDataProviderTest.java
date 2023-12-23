@@ -114,7 +114,8 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Override
     @Test
     public void processNewTask() {
-        Result<NoData> projResult = csvProvider.processNewProject(project1);
+        Result<NoData> projectResult = csvProvider.processNewProject(project1);
+        assertEquals(ResultCode.SUCCESS, projectResult.getCode());
 
         tasks.forEach(task -> {
             Result<NoData> actual = csvProvider.processNewTask(task);
@@ -124,7 +125,6 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
             assertEquals(ResultCode.SUCCESS, actual.getCode());
         });
-
     }
 
     @Override

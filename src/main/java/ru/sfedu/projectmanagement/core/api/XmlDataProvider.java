@@ -401,7 +401,7 @@ public class XmlDataProvider extends DataProvider {
     }
 
     @Override
-    protected Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
+    public Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
         try {
             if (
                 XmlUtil.isRecordExists(projectsFilePath, projectId) &&

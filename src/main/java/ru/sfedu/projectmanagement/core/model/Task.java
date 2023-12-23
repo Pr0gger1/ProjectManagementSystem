@@ -52,6 +52,7 @@ public class Task extends ProjectEntity {
 
     public Task() {
         super(EntityType.Task);
+        createdAt = LocalDateTime.now().withNano(0);
     }
 
     public Task(
@@ -130,6 +131,8 @@ public class Task extends ProjectEntity {
     }
 
     public void setCompletedAt(LocalDateTime completedAt) {
+        if (completedAt != null)
+            this.status = WorkStatus.COMPLETED;
         this.completedAt = completedAt;
     }
 

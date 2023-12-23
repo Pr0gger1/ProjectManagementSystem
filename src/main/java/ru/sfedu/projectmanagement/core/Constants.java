@@ -1,5 +1,7 @@
 package ru.sfedu.projectmanagement.core;
 
+import ru.sfedu.projectmanagement.core.model.*;
+
 public class Constants {
     // log messages
     public static final String SUCCESSFUL_CREATED_ENTITY_MESSAGE = "%s %s was created successfully";
@@ -19,7 +21,6 @@ public class Constants {
     // file database extensions
     public static final String FILE_XML_EXTENSION = ".xml";
     public static final String FILE_CSV_EXTENSION = ".csv";
-    public static final char CSV_DEFAULT_SEPARATOR = ';';
 
 
     // xml and csv entity filenames
@@ -62,7 +63,6 @@ public class Constants {
     public static final String POSTGRES_PROD_DB_NAME = "POSTGRES_PROD_DB_NAME";
     public static final String POSTGRES_TEST_DB_NAME = "POSTGRES_TEST_DB_NAME";
     public static final String ENVIRONMENT = "ENVIRONMENT";
-    public static final String DATABASE_TYPE = "DATABASE_TYPE";
 
 
     // validation keys
@@ -82,4 +82,17 @@ public class Constants {
     public static final String EMPLOYEE_IS_NULL = "employee should be defined";
     public static final String EMPLOYEE_INVALID_FULL_NAME = "invalid employee's full name";
     public static final String EMPLOYEE_IS_NOT_LINKED_TO_PROJECT = "employee with id %s doesn't belong to the project";
+
+    public static final String INVALID_PARAMETERS_MESSAGE = "Invalid count of parameters";
+
+    public static final int PROJECT_PRIMITIVE_PARAMETER_COUNT = Project.class.getDeclaredFields().length - 7;
+    public static final int TASK_PRIMITIVE_PARAMETER_COUNT = Task.class.getDeclaredFields().length
+            + Task.class.getSuperclass().getDeclaredFields().length - 4;
+    public static final int BUG_REPORT_PRIMITIVE_PARAMETER_COUNT = BugReport.class.getDeclaredFields().length
+            + BugReport.class.getSuperclass().getDeclaredFields().length - 3;
+    public static final int EMPLOYEE_PRIMITIVE_PARAMETER_COUNT = Employee.class.getDeclaredFields().length - 3;
+    public static final int EVENT_PRIMITIVE_PARAMETER_COUNT = Event.class.getDeclaredFields().length
+            + Event.class.getSuperclass().getDeclaredFields().length - 3;
+    public static final int DOCUMENTATION_PRIMITIVE_PARAMETER_COUNT = Documentation.class.getDeclaredFields().length
+            + Documentation.class.getSuperclass().getDeclaredFields().length - 4;
 }

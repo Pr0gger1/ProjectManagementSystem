@@ -119,7 +119,7 @@ public class Employee implements Entity {
         this.patronymic = null;
         this.position = position;
         this.birthday = birthday;
-        this.fullName = String.format("%s %s", this.firstName, this.lastName);
+        updateFullName();
     }
 
     @Override
@@ -155,7 +155,6 @@ public class Employee implements Entity {
         this.firstName = firstName;
         updateFullName();
     }
-
 
     public String getLastName() {
         return lastName;
@@ -232,6 +231,6 @@ public class Employee implements Entity {
 
     @Override
     public int hashCode() {
-        return Objects.hash(firstName, lastName, patronymic, fullName, birthday, email, phoneNumber, getId(), position);
+        return Objects.hash(firstName, lastName, patronymic, fullName, birthday, email, phoneNumber, id, position);
     }
 }

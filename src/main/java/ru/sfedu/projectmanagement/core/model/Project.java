@@ -72,7 +72,9 @@ public class Project implements Entity {
         this.description = description;
     }
 
-    public Project() {}
+    public Project() {
+        id = UUID.randomUUID();
+    }
     public Project(Project project) {
         this(
             project.name,
