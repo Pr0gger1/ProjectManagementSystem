@@ -69,37 +69,43 @@ public class CsvUtil {
     }
 
     public static <T extends Entity> void createRecord(String filePath, T object, Class<T> classT) throws Exception {
-        CSVWriter csvWriter = new CSVWriter(new FileWriter(filePath, true));
-        ColumnPositionMappingStrategy<T> mappingStrategy = new ColumnPositionMappingStrategy<>();
-        mappingStrategy.setType(classT);
-        String[] columns = getObjectFields(classT);
-        mappingStrategy.setColumnMapping(columns);
-
         List<T> data = readFile(filePath, classT);
         String errorMessage = "%s with id %s already exists";
-        final List<EntityType> secondaryEntities = List.of(EntityType.TaskTag, EntityType.DocumentationData);
+        List<EntityType> secondaryEntities = List.of(EntityType.TaskTag, EntityType.DocumentationData);
 
-        for (T entity : data) {
-            if (object.getEntityType() == EntityType.EmployeeProject) {
-                if (((EmployeeProjectObject) entity).getEmployeeId().equals(((EmployeeProjectObject) object).getEmployeeId()))
-                    throw new Exception(String.format(errorMessage, object.getClass().getSimpleName(), ((EmployeeProjectObject)object).getEmployeeId()));
-                else continue;
-            }
+        boolean alreadyExists = Optional.ofNullable(data)
+                .map(d -> d.stream()
+                        .anyMatch(entity -> {
+                            if (object.getEntityType() == EntityType.EmployeeProject) {
+                                return ((EmployeeProjectObject) entity).getEmployeeId().equals(((EmployeeProjectObject) object).getEmployeeId());
+                            } else {
+                                return !secondaryEntities.contains(object.getEntityType()) && entity.getId().equals(object.getId());
+                            }
+                        }))
+                .orElse(false);
 
-            else if (!secondaryEntities.contains(object.getEntityType()) && entity.getId().equals(object.getId()))
-                throw new Exception(String.format(errorMessage, object.getClass().getSimpleName(), object.getId()));
+        if (alreadyExists) {
+            throw new Exception(String.format(errorMessage, object.getClass().getSimpleName(),
+                    (object.getEntityType() == EntityType.EmployeeProject)
+                            ? ((EmployeeProjectObject) object).getEmployeeId()
+                            : object.getId()));
         }
 
+        try (CSVWriter csvWriter = new CSVWriter(new FileWriter(filePath, true))) {
+            ColumnPositionMappingStrategy<T> mappingStrategy = new ColumnPositionMappingStrategy<>();
+            mappingStrategy.setType(classT);
+            String[] columns = getObjectFields(classT);
+            mappingStrategy.setColumnMapping(columns);
 
-        StatefulBeanToCsv<T> beanToCsv = new StatefulBeanToCsvBuilder<T>(csvWriter)
-                .withSeparator(CSVWriter.DEFAULT_SEPARATOR)
-                .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
-                .withEscapechar(CSVWriter.DEFAULT_ESCAPE_CHARACTER)
-                .withMappingStrategy(mappingStrategy)
-                .build();
+            StatefulBeanToCsv<T> beanToCsv = new StatefulBeanToCsvBuilder<T>(csvWriter)
+                    .withSeparator(CSVWriter.DEFAULT_SEPARATOR)
+                    .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
+                    .withEscapechar(CSVWriter.DEFAULT_ESCAPE_CHARACTER)
+                    .withMappingStrategy(mappingStrategy)
+                    .build();
 
-        beanToCsv.write(object);
-        csvWriter.close();
+            beanToCsv.write(object);
+        }
     }
 
     public static <T extends Entity> void createRecords(String filePath, List<T> objects, Class<T> classT) throws Exception {

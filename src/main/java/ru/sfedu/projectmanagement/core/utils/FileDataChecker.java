@@ -10,8 +10,8 @@ import ru.sfedu.projectmanagement.core.utils.types.Result;
 import java.util.TreeMap;
 import java.util.UUID;
 
-abstract public class FileChecker {
-    private final Logger logger = LogManager.getLogger(FileChecker.class);
+abstract public class FileDataChecker {
+    private final Logger logger = LogManager.getLogger(FileDataChecker.class);
     protected final String projectsFilePath;
     protected final String employeesFilePath;
     protected final String tasksFilePath;
@@ -20,7 +20,7 @@ abstract public class FileChecker {
     protected final String documentationsFilePath;
     protected final String employeeProjectFilePath;
 
-    protected FileChecker(
+    protected FileDataChecker(
             String projectsFilePath,
             String employeesFilePath,
             String tasksFilePath,
@@ -77,6 +77,7 @@ abstract public class FileChecker {
     }
 
     abstract public Result<NoData> checkEntitiesBeforeBindTaskExecutor(UUID executorId, UUID taskId, UUID projectId);
+    abstract public Result<NoData> checkProjectAndEmployeeExistence(UUID employeeId, UUID projectId);
 
     abstract  protected Result<NoData> createProjectValidation(Project project);
     protected Result<NoData> createEmployeeValidation(Employee employee) {

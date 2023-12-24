@@ -1,7 +1,5 @@
 package ru.sfedu.projectmanagement.core.model.factory;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.model.Documentation;
 

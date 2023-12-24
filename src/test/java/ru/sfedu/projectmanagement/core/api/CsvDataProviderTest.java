@@ -100,7 +100,7 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
     @Override
     @Test
-    public void createExistingProject() {
+    public void processExistingProject() {
         csvProvider.processNewProject(project1);
         Result<NoData> actual = csvProvider.processNewProject(project1);
 
@@ -113,7 +113,7 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
     @Override
     @Test
-    public void processNewTask() {
+    public void processNewTasks() {
         Result<NoData> projectResult = csvProvider.processNewProject(project1);
         assertEquals(ResultCode.SUCCESS, projectResult.getCode());
 
@@ -129,7 +129,7 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
     @Override
     @Test
-    public void createExistingTasks() {
+    public void processExistingTasks() {
         Project project = new Project(project1);
         project.setTasks(tasks);
         Result<NoData> projectResult = csvProvider.processNewProject(project);
@@ -147,19 +147,21 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
     @Override
     @Test
-    public void processNewBugReport() {
-        Result<NoData> actual = csvProvider.processNewBugReport(bugReport);
+    public void processNewBugReports() {
+        bugReports.forEach(bugReport -> {
+            Result<NoData> actual = csvProvider.processNewBugReport(bugReport);
 
-        logger.debug("processNewBugReport[1]: actual result code {}", actual.getCode());
-        logger.debug("processNewBugReport[2]: expected result code {}", ResultCode.SUCCESS);
-        logger.debug("processNewBugReport[3]: result {}", actual);
+            logger.debug("processNewBugReport[1]: actual result code {}", actual.getCode());
+            logger.debug("processNewBugReport[2]: expected result code {}", ResultCode.SUCCESS);
+            logger.debug("processNewBugReport[3]: result {}", actual);
 
-        assertEquals(ResultCode.SUCCESS, actual.getCode());
+            assertEquals(ResultCode.SUCCESS, actual.getCode());
+        });
     }
 
     @Override
     @Test
-    public void createExistingBugReports() {
+    public void processExistingBugReports() {
         Result<NoData> createResult = csvProvider.processNewBugReport(bugReport);
         assertEquals(ResultCode.SUCCESS, createResult.getCode());
 
@@ -185,7 +187,7 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
     @Override
     @Test
-    public void createExistingDocumentation() {
+    public void processExistingDocumentation() {
         csvProvider.processNewDocumentation(documentation);
         Result<NoData> actual = csvProvider.processNewDocumentation(documentation);
 
@@ -211,7 +213,7 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
     @Override
     @Test
-    public void createExistingEvent() {
+    public void processExistingEvent() {
         Result<NoData> eventResult = csvProvider.processNewEvent(event);
         assertEquals(ResultCode.SUCCESS, eventResult.getCode());
 
@@ -237,7 +239,7 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
     @Override
     @Test
-    public void createExistingEmployee() {
+    public void processExistingEmployee() {
         Result<NoData> employeeResult = csvProvider.processNewEmployee(employee1);
         assertEquals(ResultCode.SUCCESS, employeeResult.getCode());
 
@@ -247,6 +249,18 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
         logger.debug("processNewEmployee[2]: expected result code {}", ResultCode.SUCCESS);
         logger.debug("processNewEmployee[3]: result {}", actual);
         assertEquals(ResultCode.ERROR, actual.getCode());
+    }
+
+    @Override
+    @Test
+    public void trackTaskStatusForNonExistentProject() {
+        TrackInfo<Task, String> trackInfoExpected = new TrackInfo<>();
+
+        TrackInfo<Task, String> trackInfoActual = csvProvider.trackTaskStatus(project1.getId());
+
+        logger.debug("trackTaskStatus[1]: actual {}", trackInfoActual);
+        logger.debug("trackTaskStatus[2]: expected {}", trackInfoExpected);
+        assertEquals(trackInfoExpected, trackInfoActual);
     }
 
     @Override
@@ -262,10 +276,27 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
         expectedData.setTaskStatus(trackTasks);
 
         ProjectStatistics actual = csvProvider.monitorProjectCharacteristics(project1.getId(), false, false);
-        assertEquals(expectedData, actual);
 
         logger.debug("monitorProjectCharacteristics[1]: actual {}", actual);
         logger.debug("monitorProjectCharacteristics[2]: actual {}", expectedData);
+        assertEquals(expectedData, actual);
+    }
+
+    @Override
+    @Test
+    public void monitorNonExistentProjectCharacteristics() {
+        float projectReadiness = csvProvider.calculateProjectReadiness(project1.getId());
+        TrackInfo<Task, String> trackTasks = csvProvider.trackTaskStatus(project1.getId());
+
+        ProjectStatistics expectedData = new ProjectStatistics();
+        expectedData.setProjectReadiness(projectReadiness);
+        expectedData.setTaskStatus(trackTasks);
+
+        ProjectStatistics actual = csvProvider.monitorProjectCharacteristics(project1.getId(), false, false);
+
+        logger.debug("monitorNonExistentProjectCharacteristics[1]: actual {}", actual);
+        logger.debug("monitorNonExistentProjectCharacteristics[2]: actual {}", expectedData);
+        assertEquals(expectedData, actual);
     }
 
     @Override
@@ -285,10 +316,54 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
         expectedData.setBugReportStatus(bugStatuses);
 
         ProjectStatistics result = csvProvider.monitorProjectCharacteristics(project1.getId(), true, true);
-        assertEquals(expectedData, result);
 
         logger.debug("monitorProjectCharacteristicsWithBugStatusAndLaborEfficiency[1]: actual {}", result);
         logger.debug("monitorProjectCharacteristicsWithBugStatusAndLaborEfficiency[2]: expected {}", expectedData);
+        assertEquals(expectedData, result);
+    }
+
+    @Override
+    @Test
+    public void monitorNonExistentProjectCharacteristicsWithBugStatusAndLaborEfficiency() {
+        ProjectStatistics expectedData = new ProjectStatistics();
+        UUID id = UUID.randomUUID();
+
+        float projectReadiness = csvProvider.calculateProjectReadiness(id);
+        TrackInfo<Task, String> trackTasks = csvProvider.trackTaskStatus(id);
+
+        TrackInfo<Employee, Float> laborEfficiency = csvProvider.calculateLaborEfficiency(id);
+
+        TrackInfo<BugReport, String> bugStatuses = csvProvider.trackBugReportStatus(id);
+        expectedData.setProjectReadiness(projectReadiness);
+        expectedData.setTaskStatus(trackTasks);
+        expectedData.setLaborEfficiency(laborEfficiency);
+        expectedData.setBugReportStatus(bugStatuses);
+
+        ProjectStatistics result = csvProvider.monitorProjectCharacteristics(id, true, true);
+
+        logger.debug("monitorNonExistentProjectCharacteristicsWithBugStatusAndLaborEfficiency[1]: actual {}", result);
+        logger.debug("monitorNonExistentProjectCharacteristicsWithBugStatusAndLaborEfficiency[2]: expected {}", expectedData);
+        assertEquals(expectedData, result);
+    }
+
+    @Override
+    @Test
+    public void monitorNonExistentProjectCharacteristicsWithLaborEfficiency() {
+        ProjectStatistics expectedData = new ProjectStatistics();
+        float projectReadiness = csvProvider.calculateProjectReadiness(project1.getId());
+        TrackInfo<Task, String> trackTasks = csvProvider.trackTaskStatus(project1.getId());
+
+        TrackInfo<Employee, Float> laborEfficiency = csvProvider.calculateLaborEfficiency(project1.getId());
+
+        expectedData.setProjectReadiness(projectReadiness);
+        expectedData.setTaskStatus(trackTasks);
+        expectedData.setLaborEfficiency(laborEfficiency);
+
+        ProjectStatistics actual = csvProvider.monitorProjectCharacteristics(project1.getId(), true, false);
+
+        logger.debug("monitorProjectCharacteristicsWithLaborEfficiency[1]: actual {}", actual);
+        logger.debug("monitorProjectCharacteristicsWithLaborEfficiency[2]: expected {}", expectedData);
+        assertEquals(expectedData, actual);
     }
 
     @Override
@@ -306,17 +381,19 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
         expectedData.setLaborEfficiency(laborEfficiency);
 
         ProjectStatistics actual = csvProvider.monitorProjectCharacteristics(project1.getId(), true, false);
-        assertEquals(expectedData, actual);
 
         logger.debug("monitorProjectCharacteristicsWithLaborEfficiency[1]: actual {}", actual);
         logger.debug("monitorProjectCharacteristicsWithLaborEfficiency[2]: expected {}", expectedData);
+        assertEquals(expectedData, actual);
     }
 
     @Override
     @Test
     public void calculateProjectReadiness() {
         project1.setTasks(new ArrayList<>());
-        Result<NoData> projectResult = csvProvider.processNewProject(project1);
+        Result<NoData> createProjectResult = csvProvider.processNewProject(project1);
+        assertEquals(ResultCode.SUCCESS, createProjectResult.getCode());
+
         ArrayList<Task> tasks1 = new ArrayList<>() {{ addAll(tasks); }};
         tasks1.forEach(task -> task.setStatus(WorkStatus.COMPLETED));
 
@@ -334,13 +411,26 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
     @Override
     @Test
+    public void calculateNonExistentProjectReadiness() {
+        UUID id = UUID.randomUUID();
+        float expectedReadiness = 0f;
+
+        float actualReadiness = csvProvider.calculateProjectReadiness(id);
+
+        logger.debug("calculateNonExistentProjectReadiness[1]: actual {}", actualReadiness);
+        logger.debug("calculateNonExistentProjectReadiness[2]: expected {}", expectedReadiness);
+        assertEquals(expectedReadiness, actualReadiness);
+    }
+
+    @Override
+    @Test
     public void calculateProjectReadinessIfHasNoTasks() {
         float actualReadiness = csvProvider.calculateProjectReadiness(project1.getId());
         float expectedReadiness = 0f;
-        assertEquals(expectedReadiness, actualReadiness);
 
         logger.debug("calculateProjectReadinessIfHasNoTasks[1]: actual project readiness: {}", actualReadiness);
         logger.debug("calculateProjectReadinessIfHasNoTasks[2]: expected project readiness {}", expectedReadiness);
+        assertEquals(expectedReadiness, actualReadiness);
     }
 
     @Override
@@ -363,10 +453,10 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
         );
 
         TrackInfo<Employee, Float> actual = csvProvider.calculateLaborEfficiency(project1.getId());
-        assertEquals(expectedData, actual);
 
         logger.debug("calculateLaborEfficiency[1]: actual {}", actual);
         logger.debug("calculateLaborEfficiency[2]: actual {}", expectedData);
+        assertEquals(expectedData, actual);
     }
 
     @Override
@@ -381,10 +471,21 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
         );
 
         TrackInfo<Employee, Float> actual = csvProvider.calculateLaborEfficiency(project1.getId());
-        assertEquals(expectedData, actual);
 
         logger.debug("calculateLaborEfficiencyIfEmployeeHasNoTasks[1]: actual {}", actual);
         logger.debug("calculateLaborEfficiencyIfEmployeeHasNoTasks[2]: actual {}", expectedData);
+        assertEquals(expectedData, actual);
+    }
+
+    @Override
+    @Test
+    public void calculateLaborEfficiencyForNonExistentProject() {
+        TrackInfo<Employee, Float> expectedData = new TrackInfo<>();
+        TrackInfo<Employee, Float> actual = csvProvider.calculateLaborEfficiency(project1.getId());
+
+        logger.debug("calculateLaborEfficiencyForNonExistentProject[1]: actual {}", actual);
+        logger.debug("calculateLaborEfficiencyForNonExistentProject[2]: actual {}", expectedData);
+        assertEquals(expectedData, actual);
     }
 
     @Override
@@ -399,10 +500,10 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
         }});
 
         TrackInfo<Task, String> trackInfoActual = csvProvider.trackTaskStatus(project1.getId());
-        assertEquals(trackInfoExpected, trackInfoActual);
 
         logger.debug("trackTaskStatus[1]: actual {}", trackInfoActual);
         logger.debug("trackTaskStatus[2]: expected {}", trackInfoExpected);
+        assertEquals(trackInfoExpected, trackInfoActual);
     }
 
     @Override
@@ -439,10 +540,43 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
     @Override
     @Test
+    public void bindNonExistentEmployeeToProject() {
+        team.forEach(employee -> {
+            Result<NoData> actual = csvProvider.bindEmployeeToProject(employee.getId(), project1.getId());
+
+            logger.debug("bindEmployeeToProject[1]: actual result code {}", actual.getCode());
+            logger.debug("bindEmployeeToProject[2]: expected result code {}", ResultCode.ERROR);
+            logger.debug("bindEmployeeToProject[3]: result {}", actual);
+            assertEquals(ResultCode.ERROR, actual.getCode());
+        });
+    }
+
+    @Override
+    @Test
+    public void trackBugReportStatusForNonExistentProject() {
+        TrackInfo<BugReport, String> trackInfoExpected = new TrackInfo<>(new HashMap<>() {{
+            bugReports.forEach(bugReport -> put(bugReport, bugReport.getStatus().name()));
+        }});
+        bugReports.forEach(bugReport ->  {
+            Result<NoData> result = csvProvider.processNewBugReport(bugReport);
+            assertEquals(ResultCode.SUCCESS, result.getCode());
+        });
+
+        TrackInfo<BugReport, String> trackInfoActual = csvProvider.trackBugReportStatus(project1.getId());
+        logger.debug("processNewProject[1]: expected {}", trackInfoExpected);
+        logger.debug("processNewProject[2]: actual {}", trackInfoActual);
+        assertEquals(trackInfoExpected, trackInfoActual);
+    }
+
+    @Override
+    @Test
     public void bindProjectManager() {
         Project project = new Project(project1);
         Result<NoData> projectResult = csvProvider.processNewProject(project);
         assertEquals(ResultCode.SUCCESS, projectResult.getCode());
+
+        Result<NoData> createEmployeeResult = csvProvider.processNewEmployee(employee2);
+        assertEquals(ResultCode.SUCCESS, createEmployeeResult.getCode());
 
         Result<NoData> actual = csvProvider.bindProjectManager(employee2.getId(), project.getId());
         logger.debug("bindProjectManager[1]: actual result code {}", actual.getCode());
@@ -450,6 +584,18 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
         logger.debug("bindProjectManager[3]: result {}", actual);
 
         assertEquals(ResultCode.SUCCESS, actual.getCode());
+    }
+
+    @Override
+    @Test
+    public void bindNonExistentProjectManager() {
+        Result<NoData> actual = csvProvider
+                .bindProjectManager(employee1.getId(), project1.getId());
+
+        logger.debug("bindNonExistentProjectManager[1]: actual result code {}", actual.getCode());
+        logger.debug("bindNonExistentProjectManager[2]: expected result code {}", ResultCode.ERROR);
+        logger.debug("bindNonExistentProjectManager[3]: result {}", actual);
+        assertEquals(ResultCode.ERROR, actual.getCode());
     }
 
     @Override
@@ -612,8 +758,8 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
         project3.addEvent(event);
         project3.addTask(task);
 
-        Result<NoData> projResult = csvProvider.processNewProject(project1);
-        assertEquals(ResultCode.SUCCESS, projResult.getCode());
+        Result<NoData> createProjectResult = csvProvider.processNewProject(project1);
+        assertEquals(ResultCode.SUCCESS, createProjectResult.getCode());
 
         Result<Project> actual = csvProvider.getProjectById(project1.getId());
 
@@ -738,7 +884,7 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
     @Override
     @Test
-    public void getTasksByNonExistentProjectId() {
+    public void getTasksFromNonExistentProject() {
         Result<List<Task>> actual = csvProvider.getTasksByProjectId(project1.getId());
 
         assertEquals(ResultCode.NOT_FOUND, actual.getCode());
@@ -776,8 +922,12 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Override
     @Test
     public void getTaskById() {
-        Result<NoData> projResult = csvProvider.processNewProject(project1);
+        Result<NoData> createProjectResult = csvProvider.processNewProject(project1);
+        assertEquals(ResultCode.SUCCESS, createProjectResult.getCode());
+
         Result<NoData> taskResult = csvProvider.processNewTask(task);
+        assertEquals(ResultCode.SUCCESS, taskResult.getCode());
+
         Result<Task> actual = csvProvider.getTaskById(task.getId());
 
         logger.debug("getTaskById[1]: actual result code {}", actual.getCode());
@@ -807,7 +957,9 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
         Project project = new Project(project1);
         project.addBugReport(bugReport);
 
-        Result<NoData> projResult = csvProvider.processNewProject(project);
+        Result<NoData> createProjectResult = csvProvider.processNewProject(project);
+        assertEquals(ResultCode.SUCCESS, createProjectResult.getCode());
+
         Result<ArrayList<BugReport>> actual = csvProvider.getBugReportsByProjectId(project.getId());
 
         logger.debug("getBugReportsByProjectId[1]: actual result code {}", actual.getCode());
@@ -837,7 +989,9 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
         Project project = new Project(project1);
         project.addBugReport(bugReport);
 
-        Result<NoData> projResult = csvProvider.processNewProject(project);
+        Result<NoData> createProjectResult = csvProvider.processNewProject(project);
+        assertEquals(ResultCode.SUCCESS, createProjectResult.getCode());
+
         Result<BugReport> actual = csvProvider.getBugReportById(bugReport.getId());
 
         logger.debug("getBugReportById[1]: actual result code {}", actual.getCode());
@@ -865,13 +1019,14 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Test
     public void getEventsByProjectId() {
         ArrayList<Event> expected = new ArrayList<>() {{add(event);}};
-        Result<NoData> projResult = csvProvider.processNewProject(project1);
-        Result<NoData> eventResult = csvProvider.processNewEvent(event);
+        Result<NoData> createProjectResult = csvProvider.processNewProject(project1);
+        assertEquals(ResultCode.SUCCESS, createProjectResult.getCode());
+
         Result<ArrayList<Event>> actual = csvProvider.getEventsByProjectId(project1.getId());
 
-        logger.debug("getEventById[1]: actual result code {}", actual.getCode());
-        logger.debug("getEventById[2]: expected result code {}", ResultCode.SUCCESS);
-        logger.debug("getEventById[3]: result {}", actual);
+        logger.debug("getEventById[2]: actual result code {}", actual.getCode());
+        logger.debug("getEventById[3]: expected result code {}", ResultCode.SUCCESS);
+        logger.debug("getEventById[4]: result {}", actual);
 
         assertEquals(ResultCode.SUCCESS, actual.getCode());
         assertEquals(expected, actual.getData());
@@ -881,7 +1036,6 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Override
     @Test
     public void getEventsByNonExistentProjectId() {
-        Result<NoData> deleteResult = csvProvider.deleteEvent(event.getId());
         Result<ArrayList<Event>> actual = csvProvider.getEventsByProjectId(project1.getId());
 
         logger.debug("getEventById[1]: actual result code {}", actual.getCode());
@@ -975,7 +1129,9 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Override
     @Test
     public void getProjectTeam() {
-        Result<NoData> projResult = csvProvider.processNewProject(project1);
+        Result<NoData> createProjectResult = csvProvider.processNewProject(project1);
+        assertEquals(ResultCode.SUCCESS, createProjectResult.getCode());
+
         Result<List<Employee>> actual = csvProvider.getProjectTeam(project1.getId());
 
         logger.debug("getProjectTeam[1]: actual result code {}", actual.getCode());

@@ -136,10 +136,10 @@ public class PostgresDataProvider extends DataProvider {
         return resultQuery;
     }
 
-    private Result<NoData> checkIfEmployeeBelongsToProject(UUID employeeId) {
+    private Result<NoData> checkIfEmployeeBelongsToProject(UUID employeeId, UUID projectId) {
         String query = String.format(
                 Queries.CHECK_EMPLOYEE_LINK_EXISTENCE_QUERY,
-                Queries.EMPLOYEE_PROJECT_TABLE_NAME, employeeId
+                Queries.EMPLOYEE_PROJECT_TABLE_NAME, employeeId, projectId
         );
 
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
@@ -152,7 +152,7 @@ public class PostgresDataProvider extends DataProvider {
             while (resultSet.next()) rowCount = resultSet.getInt("count");
 
             if (rowCount == 0)
-                return new Result<>(ResultCode.NOT_FOUND, String.format(
+                return new Result<>(ResultCode.ERROR, String.format(
                         Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT, employeeId)
                 );
             return result;
@@ -254,7 +254,7 @@ public class PostgresDataProvider extends DataProvider {
     public Result<NoData> processNewTask(Task task) {
         Connection connection = getConnection();
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
-        Result<NoData> validationResult = checkIfEmployeeBelongsToProject(task.getEmployeeId());
+        Result<NoData> validationResult = checkIfEmployeeBelongsToProject(task.getEmployeeId(), task.getProjectId());
 
         if (validationResult.getCode() != ResultCode.SUCCESS)
             return validationResult;
@@ -322,7 +322,10 @@ public class PostgresDataProvider extends DataProvider {
             bugReport.getCreatedAt()
         );
 
-        Result<NoData> checkConstraintResult = checkIfEmployeeBelongsToProject(bugReport.getEmployeeId());
+        Result<NoData> checkConstraintResult = checkIfEmployeeBelongsToProject(
+                bugReport.getEmployeeId(), bugReport.getProjectId()
+        );
+
         if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
             return checkConstraintResult;
 
@@ -360,7 +363,9 @@ public class PostgresDataProvider extends DataProvider {
         String query = "";
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
 
-        Result<NoData> checkConstraintResult = checkIfEmployeeBelongsToProject(documentation.getEmployeeId());
+        Result<NoData> checkConstraintResult = checkIfEmployeeBelongsToProject(
+                documentation.getEmployeeId(), documentation.getProjectId()
+        );
         if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
             return checkConstraintResult;
 
@@ -426,7 +431,7 @@ public class PostgresDataProvider extends DataProvider {
             event.getCreatedAt()
         );
 
-        Result<NoData> checkConstraintResult = checkIfEmployeeBelongsToProject(event.getEmployeeId());
+        Result<NoData> checkConstraintResult = checkIfEmployeeBelongsToProject(event.getEmployeeId(), event.getProjectId());
         if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
             return checkConstraintResult;
 
@@ -719,7 +724,7 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     @Override
-    protected Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
+    public Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
         Connection connection = getConnection();
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
         String query = generateSqlQuery(
@@ -731,6 +736,10 @@ public class PostgresDataProvider extends DataProvider {
                 managerId,
                 projectId
         );
+
+        Result<NoData> validationResult = checkIfEmployeeBelongsToProject(managerId, projectId);
+        if (validationResult.getCode() != ResultCode.SUCCESS)
+            return validationResult;
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();

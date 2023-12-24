@@ -2,33 +2,41 @@ package ru.sfedu.projectmanagement.core.api;
 
 public interface IDataProviderTest {
     void processNewProject();
-    void createExistingProject();
-    void processNewTask();
-    void createExistingTasks();
-    void processNewBugReport();
-    void createExistingBugReports();
+    void processExistingProject();
+    void processNewTasks();
+    void processExistingTasks();
+    void processNewBugReports();
+    void processExistingBugReports();
     void processNewDocumentation();
-    void createExistingDocumentation();
+    void processExistingDocumentation();
     void processNewEvent();
-    void createExistingEvent();
+    void processExistingEvent();
     void processNewEmployee();
-    void createExistingEmployee();
+    void processExistingEmployee();
 
 
     void monitorProjectCharacteristics();
+    void monitorNonExistentProjectCharacteristics();
     void initDataForMonitorProjectCharacteristics(DataProvider provider);
     void monitorProjectCharacteristicsWithBugStatusAndLaborEfficiency();
+    void monitorNonExistentProjectCharacteristicsWithLaborEfficiency();
+    void monitorNonExistentProjectCharacteristicsWithBugStatusAndLaborEfficiency();
     void monitorProjectCharacteristicsWithLaborEfficiency();
     void calculateProjectReadiness();
+    void calculateNonExistentProjectReadiness();
     void calculateProjectReadinessIfHasNoTasks();
     void calculateLaborEfficiency();
+    void calculateLaborEfficiencyForNonExistentProject();
     void calculateLaborEfficiencyIfEmployeeHasNoTasks();
     void trackTaskStatus();
+    void trackTaskStatusForNonExistentProject();
+    void trackBugReportStatusForNonExistentProject();
     void trackBugReportStatus();
 
     void bindEmployeeToProject();
+    void bindNonExistentEmployeeToProject();
+    void bindNonExistentProjectManager();
     void bindProjectManager();
-//    void bindTaskExecutor();
 
     void deleteProject();
     void deleteNonExistentProject();
@@ -50,7 +58,7 @@ public interface IDataProviderTest {
     void getTasksByNonExistentTags();
     void getTasksByProjectId();
     void getTasksFromProjectWithNoTasks();
-    void getTasksByNonExistentProjectId();
+    void getTasksFromNonExistentProject();
     void getTasksByEmployeeId();
     void getTasksByNonExistentEmployeeId();
     void getTaskById();

@@ -7,7 +7,7 @@ import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.enums.ChangeType;
 import ru.sfedu.projectmanagement.core.utils.ResultCode;
 import ru.sfedu.projectmanagement.core.utils.config.ConfigPropertiesUtil;
-import ru.sfedu.projectmanagement.core.utils.csv.CsvChecker;
+import ru.sfedu.projectmanagement.core.utils.csv.CsvDataChecker;
 import ru.sfedu.projectmanagement.core.utils.csv.CsvUtil;
 import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
@@ -22,7 +22,7 @@ import static ru.sfedu.projectmanagement.core.utils.FileUtil.createFolderIfNotEx
 
 public class CsvDataProvider extends DataProvider {
     private final Logger logger = LogManager.getLogger(CsvDataProvider.class);
-    private final CsvChecker csvChecker;
+    private final CsvDataChecker csvChecker;
     private final String projectsFilePath;
     private final String employeesFilePath;
     private final String tasksFilePath;
@@ -70,7 +70,7 @@ public class CsvDataProvider extends DataProvider {
                 .concat(Constants.DOCUMENTATION_DATA_FILE_PATH)
                 .concat(Constants.FILE_CSV_EXTENSION);
 
-        csvChecker = new CsvChecker(
+        csvChecker = new CsvDataChecker(
                 projectsFilePath,
                 employeesFilePath,
                 tasksFilePath,
@@ -360,17 +360,9 @@ public class CsvDataProvider extends DataProvider {
     @Override
     public Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
         try {
-            if (CsvUtil.isRecordNotExists(employeesFilePath, employeeId, Employee.class))
-                return new Result<>(ResultCode.NOT_FOUND, String.format(
-                        Constants.ENTITY_NOT_FOUND_MESSAGE,
-                        "employee", employeeId
-                ));
-
-            if (CsvUtil.isRecordNotExists(projectsFilePath, projectId, Project.class))
-                return new Result<>(ResultCode.NOT_FOUND, String.format(
-                        Constants.ENTITY_NOT_FOUND_MESSAGE,
-                        "project", projectId
-                ));
+            Result<NoData> validationResult = csvChecker.checkProjectAndEmployeeExistence(employeeId, projectId);
+            if (validationResult.getCode() != ResultCode.SUCCESS)
+                return validationResult;
 
             EmployeeProjectObject obj = new EmployeeProjectObject(employeeId, projectId);
             CsvUtil.createRecord(employeeProjectFilePath, obj, EmployeeProjectObject.class);
@@ -384,6 +376,12 @@ public class CsvDataProvider extends DataProvider {
 
     @Override
     public Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
+        Result<NoData> result = new Result<>(ResultCode.SUCCESS);
+        Result<NoData> validationResult = csvChecker.checkProjectAndEmployeeExistence(managerId, projectId);
+
+        if (validationResult.getCode() != ResultCode.SUCCESS)
+            return validationResult;
+
         try {
             List<Project> projectList = CsvUtil.readFile(projectsFilePath, Project.class);
             projectList = Optional.ofNullable(projectList)
@@ -395,7 +393,7 @@ public class CsvDataProvider extends DataProvider {
                     .orElse(new ArrayList<>());
 
             CsvUtil.createRecords(projectsFilePath, projectList, Project.class);
-            return new Result<>(ResultCode.SUCCESS);
+            return result;
         }
         catch (Exception exception) {
             logger.error("bindProjectManager[]: {}", exception.getMessage());

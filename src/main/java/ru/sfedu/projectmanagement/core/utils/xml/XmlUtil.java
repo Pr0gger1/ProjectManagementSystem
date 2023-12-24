@@ -41,10 +41,10 @@ public class XmlUtil {
     }
 
     /**
-     * @param filePath
-     * @param id
-     * @param <T>
-     * @return
+     * @param filePath path of the xml file
+     * @param id id of the project whose existence need to check
+     * @param <T> T type of Entity implemented object
+     * @return true if object with such id exists else false
      */
     public static <T extends Entity> boolean isRecordExists(String filePath, UUID id) {
         Wrapper<T> wrapper = XmlUtil.readFile(filePath);
@@ -66,9 +66,9 @@ public class XmlUtil {
     }
 
     /**
-     * @param entityFilePath 
-     * @param <T>
-     * @return
+     * @param entityFilePath path of the xml file
+     * @param <T> T type of entities implemented by Entity
+     * @return Wrapper with list of entities
      */
     public static <T extends Entity> Wrapper<T> readFile(String entityFilePath) {
         File file = new File(entityFilePath);
@@ -86,10 +86,10 @@ public class XmlUtil {
     }
 
     /**
-     * @param filePath
-     * @param object
-     * @param <T>
-     * @throws JAXBException
+     * @param filePath path of the xml file
+     * @param object object implemented by Entity you want to save
+     * @param <T> T type of entity implemented by Entity
+     * @throws JAXBException throws if something goes wrong when saving an entity to xml
      */
     public static <T extends Entity> void createRecord(String filePath, T object) throws JAXBException {
         Wrapper<T> wrapper = readFile(filePath);
@@ -113,10 +113,10 @@ public class XmlUtil {
 
 
     /**
-     * @param filePath
-     * @param object
-     * @param <T>
-     * @throws JAXBException
+     * @param filePath path of the xml file
+     * @param object object implemented by Entity you want to save or update
+     * @param <T> T type of entity implemented by Entity
+     * @throws JAXBException throws if something goes wrong when saving an entity to xml
      */
     public static <T extends Entity> void createOrUpdateRecord(String filePath, T object) throws JAXBException {
         Wrapper<T> wrapper = new Wrapper<>();
@@ -147,10 +147,10 @@ public class XmlUtil {
     }
 
     /**
-     * @param filePath
-     * @param wrapper
-     * @param <T>
-     * @throws JAXBException
+     * @param filePath path of the xml file
+     * @param wrapper Wrapper with entities implemented by Entity. The specified file is overwritten by this wrapper
+     * @param <T> T type of entity implemented by Entity
+     * @throws JAXBException throws if something goes wrong when saving an entity to xml
      */
     public static <T> void setContainer(String filePath, Wrapper<T> wrapper) throws JAXBException {
         marshaller.marshal(wrapper, new File(filePath));

@@ -394,13 +394,7 @@ public class BaseProviderTest {
 
     public void initDataForMonitorProjectCharacteristics(DataProvider provider) {
         tasks.forEach(provider::processNewTask);
-
         provider.bindEmployeeToProject(employee1.getId(), project1.getId());
-//        tasks.forEach(task -> {
-//            provider.bindTaskExecutor(
-//                    employee1.getId(), employee1.getFullName(),
-//                    task.getId(), project1.getId()
-//            );
-//        });
+
     }
 }

@@ -13,7 +13,6 @@ import ru.sfedu.projectmanagement.core.api.DataProvider;
 import ru.sfedu.projectmanagement.core.api.PostgresDataProvider;
 import ru.sfedu.projectmanagement.core.api.XmlDataProvider;
 import ru.sfedu.projectmanagement.core.model.*;
-import ru.sfedu.projectmanagement.core.model.Event;
 import ru.sfedu.projectmanagement.core.model.factory.*;
 import ru.sfedu.projectmanagement.core.utils.CliUtils;
 import ru.sfedu.projectmanagement.core.utils.config.ConfigPropertiesUtil;

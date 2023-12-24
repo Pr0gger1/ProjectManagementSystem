@@ -169,7 +169,7 @@ public abstract class DataProvider {
                     bg.forEach(el -> trackInfo.put(el, el.getStatus().name()));
                     return new TrackInfo<>(trackInfo);
                 })
-                .orElse(null);
+                .orElse(new TrackInfo<>());
     }
 
     /**
@@ -212,14 +212,7 @@ public abstract class DataProvider {
      * @param managerId id of the manager who binds to the project
      * @param projectId id of the project to which the manager is attached
      */
-    protected abstract Result<NoData> bindProjectManager(UUID managerId, UUID projectId);
-
-//    /**
-//     * @param executorId id of the employee that binds to the task
-//     * @param taskId id of the task to which the employee is attached
-//     * @param projectId id of the project which have this task
-//     */
-//    public abstract Result<NoData> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId);
+    public abstract Result<NoData> bindProjectManager(UUID managerId, UUID projectId);
 
     /**
      * @param projectId id of the project you want to delete
@@ -365,7 +358,7 @@ public abstract class DataProvider {
                 .toList());
 
         results.addAll(project.getTasks().stream()
-                .map(task -> processNewTask((Task) task))
+                .map(this::processNewTask)
                 .toList());
 
         return results.stream()

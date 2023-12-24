@@ -70,6 +70,11 @@ public class ResultSetUtils {
         );
     }
 
+    /**
+     * @param resultSet ResultSet of the executed query
+     * @return Documentation instance
+     * @throws SQLException throws if something goes wrong when building an entity
+     */
     public static Documentation extractDocumentation(ResultSet resultSet) throws SQLException {
         HashMap<String, Object> entityFields = extractProjectEntity(resultSet);
         UUID documentationAuthorId = (UUID) resultSet.getObject("author_id");
@@ -99,9 +104,9 @@ public class ResultSetUtils {
 
     /**
      *
-     * @param resultSet
-     * @return
-     * @throws SQLException
+     * @param resultSet ResultSet of the executed query
+     * @return Employee instance
+     * @throws SQLException throws if something goes wrong when building an entity
      */
     public static Employee extractEmployee(ResultSet resultSet) throws SQLException {
         LocalDate employeeBirthday = null;
@@ -132,9 +137,9 @@ public class ResultSetUtils {
 
     /**
      *
-     * @param resultSet
-     * @return
-     * @throws SQLException
+     * @param resultSet ResultSet of the executed query
+     * @return BugReport instance
+     * @throws SQLException throws if something goes wrong when building an entity
      */
     public static BugReport extractBugReport(ResultSet resultSet) throws SQLException {
         HashMap<String, Object> entityFields = extractProjectEntity(resultSet);
@@ -164,9 +169,9 @@ public class ResultSetUtils {
 
     /**
      *
-     * @param resultSet
-     * @return
-     * @throws SQLException
+     * @param resultSet ResultSet of the executed query
+     * @return Task instance
+     * @throws SQLException throws if something goes wrong when building an entity
      */
     public static Task extractTask(ResultSet resultSet) throws SQLException {
         HashMap<String, Object> entityFields = extractProjectEntity(resultSet);
@@ -212,15 +217,18 @@ public class ResultSetUtils {
         );
     }
 
+    /**
+     * @param resultSet ResultSet of the executed query
+     * @param postgresProvider instance of the postgres provider for doing extra queries
+     * @return Project instance
+     * @throws SQLException throws if something goes wrong when building an entity
+     */
     public static Project extractProject(ResultSet resultSet, PostgresDataProvider postgresProvider) throws SQLException {
-//        DataProvider postgresProvider = new PostgresDataProvider();
-
         UUID projectId = (UUID) resultSet.getObject("id");
         String projectName = resultSet.getString("name");
         String projectDescription = resultSet.getString("description");
         WorkStatus projectStatus = WorkStatus.valueOf(resultSet.getString("status"));
         UUID managerId = (UUID) resultSet.getObject("manager_id");
-        Employee projectManager = postgresProvider.getEmployeeById(managerId).getData();
         List<Employee> projectTeam = postgresProvider.getProjectTeam(projectId).getData();
         List<Task> projectTasks = postgresProvider.getTasksByProjectId(projectId).getData();
         List<ProjectEntity> projectDocumentation = new ArrayList<>(List.copyOf(
@@ -252,6 +260,12 @@ public class ResultSetUtils {
         );
     }
 
+    /**
+     * @param articleTitles array of article identificators such as titles or short explanation of the article
+     * @param articles array of articles
+     * @return Map with article titles and articles
+     * @throws IllegalArgumentException throws if articleTitles length is not equals to articles array length
+     */
     private static HashMap<String, String> convertDocumentationBodyToHashMap(String[] articleTitles, String[] articles) throws IllegalArgumentException {
         HashMap<String, String> body = new HashMap<>();
         if (articleTitles.length != articles.length)

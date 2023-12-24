@@ -9,22 +9,20 @@ public class XmlLocalDateAdapter extends XmlAdapter<String, LocalDate> {
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     /**
-     * @param s
-     * @return
-     * @throws Exception
+     * @param s input value from xml
+     * @return parsed LocalDate instance
      */
     @Override
-    public LocalDate unmarshal(String s) throws Exception {
+    public LocalDate unmarshal(String s)  {
         return LocalDate.parse(s, formatter);
     }
 
     /**
-     * @param localDate
-     * @return
-     * @throws Exception
+     * @param localDate input value of LocalDate from java object
+     * @return formatted string
      */
     @Override
-    public String marshal(LocalDate localDate) throws Exception {
+    public String marshal(LocalDate localDate) {
         return localDate.format(formatter);
     }
 }

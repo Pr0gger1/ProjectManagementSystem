@@ -8,43 +8,40 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-class EntryType {
-    @XmlElement(name = "title")
-    public String key;
+public class XmlDocumentationAdapter extends XmlAdapter<XmlDocumentationAdapter.HashMapType, HashMap<String, String>> {
+    public static class EntryType {
+        @XmlElement(name = "title")
+        public String key;
 
-    @XmlElement(name = "content")
-    public String value;
-}
+        @XmlElement(name = "content")
+        public String value;
+    }
 
-@XmlType
-class HashMapType {
-    @XmlElement(name = "article")
-    public final List<EntryType> entries = new ArrayList<>();
-}
+    @XmlType
+    public static class HashMapType {
+        @XmlElement(name = "article")
+        public final List<EntryType> entries = new ArrayList<>();
+    }
 
-public class XmlDocumentationAdapter extends XmlAdapter<HashMapType, HashMap<String, String>> {
+
     /**
-     * @param hashMapType 
-     * @return
-     * @throws Exception
+     * @param hashMapType HashMapType instance
+     * @return Map with article titles and articles
      */
     @Override
-    public HashMap<String, String> unmarshal(HashMapType hashMapType) throws Exception {
+    public HashMap<String, String> unmarshal(HashMapType hashMapType) {
         HashMap<String, String> output = new HashMap<>();
-        hashMapType.entries.forEach(hashmap -> {
-            output.put(hashmap.key, hashmap.value);
-        });
+        hashMapType.entries.forEach(hashmap -> output.put(hashmap.key, hashmap.value));
 
         return output;
     }
 
     /**
-     * @param map
-     * @return
-     * @throws Exception
+     * @param map Map of article titles and articles
+     * @return HashMapType instance
      */
     @Override
-    public HashMapType marshal(HashMap<String, String> map) throws Exception {
+    public HashMapType marshal(HashMap<String, String> map) {
         HashMapType input = new HashMapType();
         map.forEach((k, v) -> {
             EntryType entryType = new EntryType();

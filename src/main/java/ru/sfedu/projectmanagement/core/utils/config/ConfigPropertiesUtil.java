@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.Constants;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -21,20 +22,21 @@ public class ConfigPropertiesUtil {
     }
 
     /**
-     * @param path
+     * @param path path of the properties file
      */
     public static void setConfigPath(String path) {
         configPath = path;
     }
 
     /**
-     * @return
+     * @return string value of properties file path
      */
     public static String getConfigPath() {
         return configPath;
     }
 
     /**
+     * initializes the properties file. If file is not specified, the default file path is taken
      */
     private static void loadConfiguration() throws FileNotFoundException {
         InputStream inputStream;
@@ -57,8 +59,8 @@ public class ConfigPropertiesUtil {
     }
 
     /**
-     * @param key
-     * @return
+     * @param key key of the properties file
+     * @return value of properties key if it exists else null
      */
     public static String getEnvironmentVariable(String key) {
         try {
@@ -71,12 +73,14 @@ public class ConfigPropertiesUtil {
     }
 
     /**
-     * @param key
-     * @return
+     * @param key key of the properties file
+     * @return array of values of properties key if it exists else null
      */
     public static String[] getEnvironmentVariableList(String key) {
         try {
-            return getConfiguration().getProperty(key).split(",");
+            return getConfiguration()
+                    .getProperty(key)
+                    .split(",");
         }
         catch (IOException error) {
             logger.error("getEnvironmentVariableList[1]: {}", error.getMessage());
@@ -85,8 +89,8 @@ public class ConfigPropertiesUtil {
     }
 
     /**
-     * @param key
-     * @return
+     * @param key key of the properties file
+     * @return Map of values which represents in the properties file as key:value with comma separator
      */
     public static HashMap<String, String> getEnvironmentMapVariable(String key) {
         HashMap<String, String> mapVariable = new HashMap<>();
@@ -94,10 +98,10 @@ public class ConfigPropertiesUtil {
             String keyValue = getConfiguration().getProperty(key);
             String[] pairs = keyValue.split(",");
 
-            for (String el : pairs) {
-                String[] keyValueStr = el.split(":");
+            Arrays.stream(pairs).forEach(pair -> {
+                String[] keyValueStr = pair.split(":");
                 mapVariable.put(keyValueStr[0], keyValueStr[1]);
-            }
+            });
 
             return mapVariable;
         }

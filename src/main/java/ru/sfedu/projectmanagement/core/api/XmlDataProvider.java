@@ -10,7 +10,7 @@ import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
 import ru.sfedu.projectmanagement.core.utils.xml.Wrapper;
 import ru.sfedu.projectmanagement.core.utils.ResultCode;
-import ru.sfedu.projectmanagement.core.utils.xml.XmlChecker;
+import ru.sfedu.projectmanagement.core.utils.xml.XmlDataChecker;
 import ru.sfedu.projectmanagement.core.utils.xml.XmlUtil;
 
 import static ru.sfedu.projectmanagement.core.utils.FileUtil.createFileIfNotExists;
@@ -18,13 +18,14 @@ import static ru.sfedu.projectmanagement.core.utils.FileUtil.createFolderIfNotEx
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class XmlDataProvider extends DataProvider {
     private final Logger logger = LogManager.getLogger(XmlDataProvider.class);
-    private final XmlChecker xmlChecker;
+    private final XmlDataChecker xmlChecker;
     private final String projectsFilePath;
     private final String employeesFilePath;
     private final String tasksFilePath;
@@ -65,7 +66,7 @@ public class XmlDataProvider extends DataProvider {
                 .concat(Constants.EMPLOYEE_PROJECT_FILE_PATH)
                 .concat(Constants.FILE_XML_EXTENSION);
 
-        xmlChecker = new XmlChecker(
+        xmlChecker = new XmlDataChecker(
                 projectsFilePath,
                 employeesFilePath,
                 tasksFilePath,
@@ -303,7 +304,7 @@ public class XmlDataProvider extends DataProvider {
             .findFirst()
             .orElseGet(() -> {
                 logger.debug("getEmployeeById[2]: employee with id {} was not found", employeeId);
-                return new Result<>(ResultCode.NOT_FOUND);
+                return new Result<>(ResultCode.NOT_FOUND, String.format(Constants.ENTITY_NOT_FOUND_MESSAGE, Employee.class.getSimpleName(), employeeId));
             });
     }
 
@@ -312,7 +313,7 @@ public class XmlDataProvider extends DataProvider {
         Wrapper<Task> taskWrapper = XmlUtil.readFile(tasksFilePath);
         ArrayList<Task> tasks = taskWrapper.getList()
                 .stream()
-                .filter(task -> task.getTags().containsAll(tags))
+                .filter(task -> new HashSet<>(task.getTags()).containsAll(tags))
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
         if (tasks.isEmpty())
@@ -403,15 +404,13 @@ public class XmlDataProvider extends DataProvider {
     @Override
     public Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
         try {
-            if (
-                XmlUtil.isRecordExists(projectsFilePath, projectId) &&
-                XmlUtil.isRecordExists(employeesFilePath, employeeId)
-            ) {
-                EmployeeProjectObject linkObject = new EmployeeProjectObject(employeeId, projectId);
-                XmlUtil.createRecord(employeeProjectFilePath, linkObject);
-                return new Result<>(ResultCode.SUCCESS);
-            }
-            return new Result<>(ResultCode.NOT_FOUND);
+            Result<NoData> validationResult = xmlChecker.checkProjectAndEmployeeExistence(employeeId, projectId);
+            if (validationResult.getCode() != ResultCode.SUCCESS)
+                return validationResult;
+
+            EmployeeProjectObject linkObject = new EmployeeProjectObject(employeeId, projectId);
+            XmlUtil.createRecord(employeeProjectFilePath, linkObject);
+            return new Result<>(ResultCode.SUCCESS);
         }
         catch (JAXBException exception) {
             logger.error("bindEmployeeToProject[]: {}", exception.getMessage());
@@ -420,7 +419,7 @@ public class XmlDataProvider extends DataProvider {
     }
 
     @Override
-    protected Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
+    public Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
         Result<Employee> employeeResult = getEmployeeById(managerId);
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
 
@@ -449,43 +448,6 @@ public class XmlDataProvider extends DataProvider {
 
         return result;
     }
-
-
-//    @Override
-//    public Result<NoData> bindTaskExecutor(UUID executorId, String executorFullName, UUID taskId, UUID projectId) {
-//        Result<NoData> validationResult = xmlChecker.checkEntitiesBeforeBindTaskExecutor(
-//                executorId, taskId, projectId
-//        );
-//
-//        if (validationResult.getCode() != ResultCode.SUCCESS)
-//            return validationResult;
-//
-//        Result<Employee> employeeResult = getEmployeeById(executorId);
-//        Result<NoData> result = new Result<>(null, ResultCode.SUCCESS);
-//        if (employeeResult.getCode() != ResultCode.SUCCESS)
-//            return new Result<>(null, ResultCode.ERROR, employeeResult.getMessage());
-//
-//        Wrapper<Task> taskWrapper = XmlUtil.readFile(tasksFilePath);
-//        taskWrapper.getList()
-//                .stream()
-//                .filter(task -> task.getId().equals(taskId))
-//                .findFirst()
-//                .ifPresent(task -> {
-//                    task.setEmployeeId(employeeResult.getData().getId());
-//                    task.setEmployeeFullName(employeeResult.getData().getFullName());
-//                    try {
-//                        XmlUtil.createOrUpdateRecord(tasksFilePath, task);
-//                        result.setCode(ResultCode.SUCCESS);
-////                        result.setData(task);
-//                    }
-//                    catch (JAXBException e) {
-//                        result.setCode(ResultCode.ERROR);
-//                        result.setMessage(e.getMessage());
-//                    }
-//                });
-//
-//        return result;
-//    }
 
     @Override
     public Result<NoData> deleteProject(UUID projectId) {

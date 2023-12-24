@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.model.*;
-import ru.sfedu.projectmanagement.core.utils.FileChecker;
+import ru.sfedu.projectmanagement.core.utils.FileDataChecker;
 import ru.sfedu.projectmanagement.core.utils.ResultCode;
 import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
@@ -16,10 +16,10 @@ import java.util.UUID;
 
 import static ru.sfedu.projectmanagement.core.utils.csv.CsvUtil.readFile;
 
-public class CsvChecker extends FileChecker {
-    private final Logger logger = LogManager.getLogger(CsvChecker.class);
+public class CsvDataChecker extends FileDataChecker {
+    private final Logger logger = LogManager.getLogger(CsvDataChecker.class);
 
-    public CsvChecker(
+    public CsvDataChecker(
             String projectsFilePath,
             String employeesFilePath,
             String tasksFilePath,
@@ -49,6 +49,22 @@ public class CsvChecker extends FileChecker {
             errors.put(Constants.EMPLOYEE_ERROR_KEY, String.format(
                     Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT, entity.getEmployeeId()
             ));
+
+        if (!errors.isEmpty()) {
+            return new Result<>(null, ResultCode.ERROR, errors);
+        }
+
+        logger.info("checkProjectAndEmployeeExistence[2]: is valid: {}", true);
+        return new Result<>(ResultCode.SUCCESS);
+    }
+
+    @Override
+    public Result<NoData> checkProjectAndEmployeeExistence(UUID employeeId, UUID projectId) {
+        TreeMap<String, String> errors = new TreeMap<>();
+        if (CsvUtil.isRecordNotExists(employeesFilePath, employeeId, Employee.class))
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, String.format(Constants.EMPLOYEE_DOES_NOT_EXISTS, employeeId));
+        if (CsvUtil.isRecordNotExists(projectsFilePath, projectId, Project.class))
+            errors.put(Constants.PROJECT_ERROR_KEY, String.format(Constants.PROJECT_DOES_NOT_EXISTS, projectId));
 
         if (!errors.isEmpty()) {
             return new Result<>(null, ResultCode.ERROR, errors);

@@ -6,7 +6,7 @@ import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.model.Employee;
 import ru.sfedu.projectmanagement.core.model.Project;
 import ru.sfedu.projectmanagement.core.model.ProjectEntity;
-import ru.sfedu.projectmanagement.core.utils.FileChecker;
+import ru.sfedu.projectmanagement.core.utils.FileDataChecker;
 import ru.sfedu.projectmanagement.core.utils.ResultCode;
 import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
@@ -14,10 +14,10 @@ import ru.sfedu.projectmanagement.core.utils.types.Result;
 import java.util.TreeMap;
 import java.util.UUID;
 
-public class XmlChecker extends FileChecker {
-    private final Logger logger = LogManager.getLogger(XmlChecker.class);
+public class XmlDataChecker extends FileDataChecker {
+    private final Logger logger = LogManager.getLogger(XmlDataChecker.class);
 
-    public XmlChecker(
+    public XmlDataChecker(
             String projectsFilePath,
             String employeesFilePath,
             String tasksFilePath,
@@ -39,6 +39,21 @@ public class XmlChecker extends FileChecker {
             errors.put(Constants.PROJECT_ERROR_KEY, String.format(Constants.PROJECT_DOES_NOT_EXISTS, entity.getProjectId()));
         if (!XmlUtil.isRecordExists(employeeProjectFilePath, entity.getEmployeeId()))
             errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT);
+
+        if (!errors.isEmpty()) {
+            return new Result<>(null, ResultCode.ERROR, errors);
+        }
+
+        logger.info("checkProjectAndEmployeeExistence[2]: is valid: {}", true);
+        return new Result<>(ResultCode.SUCCESS);
+    }
+
+    public Result<NoData> checkProjectAndEmployeeExistence(UUID employeeId, UUID projectId) {
+        TreeMap<String, String> errors = new TreeMap<>();
+        if (!XmlUtil.isRecordExists(employeesFilePath, employeeId))
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, String.format(Constants.EMPLOYEE_DOES_NOT_EXISTS, employeeId));
+        if (!XmlUtil.isRecordExists(projectsFilePath, projectId))
+            errors.put(Constants.PROJECT_ERROR_KEY, String.format(Constants.PROJECT_DOES_NOT_EXISTS, projectId));
 
         if (!errors.isEmpty()) {
             return new Result<>(null, ResultCode.ERROR, errors);

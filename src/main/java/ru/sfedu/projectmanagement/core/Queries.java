@@ -106,7 +106,7 @@ public class Queries {
         );
     """, EMPLOYEES_TABLE_NAME);
 
-    public static final String CHECK_EMPLOYEE_LINK_EXISTENCE_QUERY = "SELECT count(*) FROM %s WHERE employee_id = '%s'";
+    public static final String CHECK_EMPLOYEE_LINK_EXISTENCE_QUERY = "SELECT count(*) FROM %s WHERE employee_id = '%s' AND project_id = '%s'";
 
 
     // postgres create entity queries
