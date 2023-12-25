@@ -1,17 +1,12 @@
 package ru.sfedu.projectmanagement.core.model;
 
-import com.opencsv.bean.CsvBindByName;
-import com.opencsv.bean.CsvCustomBindByName;
-import com.opencsv.bean.CsvDate;
-import com.opencsv.bean.CsvIgnore;
+import com.opencsv.bean.*;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import ru.sfedu.projectmanagement.core.model.enums.EntityType;
 import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
-import ru.sfedu.projectmanagement.core.utils.csv.CsvProjectManagerConverter;
 import ru.sfedu.projectmanagement.core.utils.xml.adapters.XmlLocalDateTimeAdapter;
 
-import javax.print.Doc;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -46,7 +41,6 @@ public class Project implements Entity {
     @XmlElement(required = true)
     private WorkStatus status = WorkStatus.IN_PROGRESS;
 
-//    @CsvBindByName(column = "manager_id")
     @CsvIgnore
     @XmlElement(name = "manager", nillable = true)
     private Employee manager;

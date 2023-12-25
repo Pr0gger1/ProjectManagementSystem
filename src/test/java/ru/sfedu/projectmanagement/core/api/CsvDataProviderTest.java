@@ -72,20 +72,27 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
                 .concat(Constants.FILE_CSV_EXTENSION);
 
 
-        HashMap<String, Class<? extends Entity>> list = new HashMap<>() {{
-            put(projectsFilePath, Project.class);
-            put(employeesFilePath, Employee.class);
-            put(employeeProjectFilePath, EmployeeProjectObject.class);
-            put(tasksFilePath, Task.class);
-            put(bugReportsFilePath, BugReport.class);
-            put(eventsFilePath, Event.class);
-            put(documentationsFilePath, Documentation.class);
-            put(taskTagsFilePath, TaskTag.class);
-            put(documentationDataFilePath, DocumentationData.class);
-            put(managerProjectFilePath, ManagerProjectObject.class);
-        }};
+//        HashMap<String, Class<? extends Entity>> list = new HashMap<>() {{
+//            put(projectsFilePath, Project.class);
+//            put(employeesFilePath, Employee.class);
+//            put(employeeProjectFilePath, EmployeeProjectObject.class);
+//            put(tasksFilePath, Task.class);
+//            put(bugReportsFilePath, BugReport.class);
+//            put(eventsFilePath, Event.class);
+//            put(documentationsFilePath, Documentation.class);
+//            put(taskTagsFilePath, TaskTag.class);
+//            put(documentationDataFilePath, DocumentationData.class);
+//            put(managerProjectFilePath, ManagerProjectObject.class);
+//        }};
 
-        list.forEach(CsvUtil::truncateFile);
+        List<String> files = List.of(
+                projectsFilePath, employeesFilePath, employeeProjectFilePath,
+                tasksFilePath, bugReportsFilePath, eventsFilePath,
+                documentationsFilePath, documentationDataFilePath,
+                taskTagsFilePath, managerProjectFilePath
+        );
+
+        files.forEach(CsvUtil::truncateFile);
         project1.setTasks(new ArrayList<>());
         project1.setBugReports(new ArrayList<>());
         project1.setEvents(new ArrayList<>());
@@ -223,6 +230,8 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
     @Test
     public void processNewEvent() {
         Result<NoData> createProjectResult = csvProvider.processNewProject(project1);
+        assertEquals(ResultCode.SUCCESS, createProjectResult.getCode());
+
         Result<NoData> actual = csvProvider.processNewEvent(event);
 
         logger.debug("processNewEvent[1]: actual result code {}", actual.getCode());

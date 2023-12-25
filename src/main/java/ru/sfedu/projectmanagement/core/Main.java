@@ -96,23 +96,6 @@ public class Main {
         }
     }
 
-    private static void printHelp(Options options) {
-        String commandLineSyntax = "java [-Dlog4j.configurationFile='file_path'] -jar project-management-core.jar";
-        PrintWriter printWriter = new PrintWriter(System.out);
-        HelpFormatter helpFormatter = new HelpFormatter();
-        helpFormatter.printHelp(
-                printWriter,
-                150,
-                commandLineSyntax,
-                "Options",
-                options,
-                5, 5,
-                "Дата задается в формате yyyy.MM.dd и yyyy.MM.dd HH:mm",
-                true
-        );
-        printWriter.flush();
-    }
-
     private static void chooseDatasourceOption(CommandLine cmd) {
         if (cmd.hasOption(CliConstants.CLI_DATASOURCE_TYPE_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_DATASOURCE_TYPE_OPTION);
@@ -137,7 +120,20 @@ public class Main {
 
     private static void helpOption(CommandLine cmd) {
         if (cmd.hasOption(CliConstants.CLI_HELP_OPTION)) {
-            printHelp(CliUtils.getAllOptions());
+            String commandLineSyntax = "java [-Dlog4j.configurationFile='file_path'] -jar project-management-core.jar";
+            PrintWriter printWriter = new PrintWriter(System.out);
+            HelpFormatter helpFormatter = new HelpFormatter();
+            helpFormatter.printHelp(
+                    printWriter,
+                    150,
+                    commandLineSyntax,
+                    "Options",
+                    CliUtils.getAllOptions(),
+                    5, 5,
+                    "Дата задается в формате yyyy.MM.dd и yyyy.MM.dd HH:mm",
+                    true
+            );
+            printWriter.flush();
         }
     }
 
@@ -206,8 +202,15 @@ public class Main {
     private static void createTaskOption(CommandLine cmd) {
         if (cmd.hasOption(CliConstants.CLI_CREATE_TASK_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_CREATE_TASK_OPTION);
+            String[] tagArguments = new String[0];
 
-            Task task = new TaskBuilder().build(arguments);
+            if (cmd.hasOption(CliConstants.CLI_INCLUDE_TASK_TAGS_OPTION)) {
+                tagArguments = cmd.getOptionValues(CliConstants.CLI_INCLUDE_TASK_TAGS_OPTION);
+            }
+
+            Task task = new TaskBuilder()
+                    .setTags(tagArguments)
+                    .build(arguments);
             Result<NoData> result = provider.processNewTask(task);
             logger.info("Main[9]: статус создания задачи {}", result);
         }
@@ -309,11 +312,12 @@ public class Main {
     private static void getTasksByTagsOption(CommandLine cmd) {
         if (cmd.hasOption(CliConstants.CLI_GET_TASKS_BY_TAGS_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_GET_TASKS_BY_TAGS_OPTION);
-            arguments = arguments[0].split(String.valueOf(CliConstants.VALUE_SEPARATOR));
 
             UUID projectId = UUID.fromString(arguments[0]);
-            ArrayList<String> tags =Arrays.stream(arguments, 1, arguments.length)
+            ArrayList<String> tags = Arrays.stream(arguments, 1, arguments.length)
                     .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+
+            logger.info(Arrays.toString(arguments));
 
             Result<ArrayList<Task>> result = provider.getTasksByTags(tags, projectId);
             logger.info("getTasksByTagsOption[1]: статус выполнения {}", result.getCode());

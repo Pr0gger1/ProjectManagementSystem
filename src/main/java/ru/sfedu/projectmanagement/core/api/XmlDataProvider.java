@@ -18,10 +18,7 @@ import static ru.sfedu.projectmanagement.core.utils.FileUtil.createFileIfNotExis
 import static ru.sfedu.projectmanagement.core.utils.FileUtil.createFolderIfNotExists;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class XmlDataProvider extends DataProvider {
@@ -380,7 +377,7 @@ public class XmlDataProvider extends DataProvider {
         Wrapper<Task> taskWrapper = XmlUtil.readFile(tasksFilePath);
         ArrayList<Task> tasks = taskWrapper.getList()
                 .stream()
-                .filter(task -> new HashSet<>(task.getTags()).containsAll(tags))
+                .filter(task -> !Collections.disjoint(task.getTags(), tags))
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
         if (tasks.isEmpty())

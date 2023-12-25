@@ -1,11 +1,9 @@
 package ru.sfedu.projectmanagement.core;
 
 public class CliConstants {
-    public static final char VALUE_SEPARATOR = ',';
+    public static final String SYSTEM_VAR_LOG4J_CONFIG_PATH = "log4j.configurationFile";
 
     // set properties file option
-//    public static final String SYSTEM_VAR_PROPERTIES_FILE = "config.propertiesFile";
-    public static final String SYSTEM_VAR_LOG4J_CONFIG_PATH = "log4j.configurationFile";
     public static final String CLI_ENVIRONMENT_PROPERTIES = "config";
     public static final String CLI_ENVIRONMENT_PROPERTIES_ARGNAME = "filePath";
     public static final String CLI_ENVIRONMENT_PROPERTIES_DESCRIPTION = "Путь до файла с конфигурацией properties";
@@ -17,32 +15,32 @@ public class CliConstants {
 
     // create project option
     public static final String CLI_CREATE_PROJECT_OPTION = "cp";
-    public static final String CLI_CREATE_PROJECT_OPTION_ARGNAME = "name,description,manager_id,status,deadline";
+    public static final String CLI_CREATE_PROJECT_OPTION_ARGNAME = "name description manager_id status deadline";
     public static final String CLI_CREATE_PROJECT_OPTION_DESCRIPTION = "создание нового проекта. Где status=<in_progress,completed,frozen> в любом регистре";
 
     // create employee option
     public static final String CLI_CREATE_EMPLOYEE_OPTION = "cee";
-    public static final String CLI_CREATE_EMPLOYEE_OPTION_ARGNAME = "firstName,lastName,patronymic,email,birthday,phoneNumber,position";
+    public static final String CLI_CREATE_EMPLOYEE_OPTION_ARGNAME = "firstName lastName patronymic email birthday phoneNumber position";
     public static final String CLI_CREATE_EMPLOYEE_OPTION_DESCRIPTION = "создание сотрудника";
 
     // create event option
     public static final String CLI_CREATE_EVENT_OPTION = "ce";
-    public static final String CLI_CREATE_EVENT_OPTION_ARGNAME = "name,description,projectId,employeeId,employeeFullName,startDate,endDate";
+    public static final String CLI_CREATE_EVENT_OPTION_ARGNAME = "name description projectId employeeId employeeFullName startDate endDate";
     public static final String CLI_CREATE_EVENT_OPTION_DESCRIPTION = "создание события проекта";
 
     // create task option
     public static final String CLI_CREATE_TASK_OPTION = "ct";
-    public static final String CLI_CREATE_TASK_OPTION_ARGNAME = "name,description,status,comment,projectId,completedAt,deadline,priority,employeeId,employeeFullName";
+    public static final String CLI_CREATE_TASK_OPTION_ARGNAME = "name description status comment projectId completedAt deadline priority employeeId employeeFullName [--tags]";
     public static final String CLI_CREATE_TASK_DESCRIPTION = "создание задачи проекта. Где priority=<low,medium,high> в любом регистре";
 
     // create bug report option
     public static final String CLI_CREATE_BUG_REPORT_OPTION = "cbr";
-    public static final String CLI_CREATE_BUG_REPORT_OPTION_ARGNAME = "name,description,status,priority,projectId,employeeId,employeeFullName";
+    public static final String CLI_CREATE_BUG_REPORT_OPTION_ARGNAME = "name description status priority projectId employeeId employeeFullName";
     public static final String CLI_CREATE_BUG_REPORT_OPTION_DESCRIPTION = "создание баг репорта проекта. Где status=<opened,closed,in_progress>, priority=<low,medium,high> в любом регистре";
 
     // create documentation option
     public static final String CLI_CREATE_DOCUMENTATION_OPTION = "cd";
-    public static final String CLI_CREATE_DOCUMENTATION_OPTION_ARGNAME = "name,description,projectId,employeeId,employeeFullName [-doc]";
+    public static final String CLI_CREATE_DOCUMENTATION_OPTION_ARGNAME = "name description projectId employeeId employeeFullName [-doc]";
     public static final String CLI_CREATE_DOCUMENTATION_OPTION_DESCRIPTION = "создание документации проекта";
 
     public static final String CLI_DOC_DATA_OPTION = "doc";
@@ -152,4 +150,8 @@ public class CliConstants {
     public static final String CLI_INCLUDE_BUG_REPORT_TRACKING_DESCRIPTION = "Выводит сводку по баг репортам проекта";
     public static final String CLI_INCLUDE_EMPLOYEE_EFFICIENCY_OPTION = "empeff";
     public static final String CLI_INCLUDE_EMPLOYEE_EFFICIENCY_OPTION_DESCRIPTION = "Выводит сводку эффективности труда сотрудников";
+
+    public static final String CLI_INCLUDE_TASK_TAGS_OPTION = "tags";
+    public static final String CLI_INCLUDE_TASK_TAGS_OPTION_ARGNAME = "tag1 tag2 ...";
+    public static final String CLI_INCLUDE_TASK_TAGS_OPTION_DESCRIPTION = "Задает теги при создании задачи. Используется вместе с командой -ct";
 }

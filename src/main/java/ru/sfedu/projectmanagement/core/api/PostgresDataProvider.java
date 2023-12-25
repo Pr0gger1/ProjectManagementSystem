@@ -895,7 +895,7 @@ public class PostgresDataProvider extends DataProvider {
     public Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, UUID projectId) {
         List<Task> tasks = getTasksByProjectId(projectId).getData();
         ArrayList<Task> result = tasks.stream()
-                .filter(task -> new HashSet<>(task.getTags()).containsAll(tags))
+                .filter(task -> !Collections.disjoint(task.getTags(), tags))
                 .collect(Collectors.toCollection(ArrayList::new));
 
         return Optional.of(result)

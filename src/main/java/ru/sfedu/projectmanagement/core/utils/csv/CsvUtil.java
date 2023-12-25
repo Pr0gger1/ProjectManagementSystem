@@ -44,7 +44,7 @@ public class CsvUtil {
         return null;
     }
 
-    public static <T extends Entity> void truncateFile(String filePath, Class<T> tClass) {
+    public static <T extends Entity> void truncateFile(String filePath) {
         try (FileWriter fileWriter = new FileWriter(filePath, false)) {
             CSVWriter csvWriter = new CSVWriter(fileWriter);
             StatefulBeanToCsv<T> beanToCsv = new StatefulBeanToCsvBuilder<T>(csvWriter)

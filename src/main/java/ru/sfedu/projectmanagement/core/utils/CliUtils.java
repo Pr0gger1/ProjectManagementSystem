@@ -47,6 +47,14 @@ public class CliUtils {
                 .hasArgs()
                 .build();
 
+        Option includeTaskTagsOption = Option.builder()
+                .longOpt(CliConstants.CLI_INCLUDE_TASK_TAGS_OPTION)
+                .argName(CliConstants.CLI_INCLUDE_TASK_TAGS_OPTION_ARGNAME)
+                .desc(CliConstants.CLI_INCLUDE_TASK_TAGS_OPTION_DESCRIPTION)
+                .optionalArg(true)
+                .hasArgs()
+                .build();
+
         Option createBugReportOption = Option.builder(CliConstants.CLI_CREATE_BUG_REPORT_OPTION)
                 .desc(CliConstants.CLI_CREATE_BUG_REPORT_OPTION_DESCRIPTION)
                 .argName(CliConstants.CLI_CREATE_BUG_REPORT_OPTION_ARGNAME)
@@ -152,26 +160,23 @@ public class CliUtils {
         Option getTasksByEmployeeIdOption = Option.builder(CliConstants.CLI_GET_TASKS_BY_EMPLOYEE_ID_OPTION)
                 .argName(CliConstants.CLI_GET_TASKS_BY_EMPLOYEE_ID_OPTION_ARGNAME)
                 .desc(CliConstants.CLI_GET_TASKS_BY_EMPLOYEE_ID_OPTION_DESCRIPTION)
-                .hasArg()
                 .optionalArg(true)
+                .hasArg()
                 .build();
 
         Option getTasksByTagsOption = Option.builder(CliConstants.CLI_GET_TASKS_BY_TAGS_OPTION)
                 .argName(CliConstants.CLI_GET_TASKS_BY_TAGS_OPTION_ARGNAME)
                 .desc(CliConstants.CLI_GET_TASKS_BY_TAGS_OPTION_DESCRIPTION)
-                .valueSeparator(CliConstants.VALUE_SEPARATOR)
-                .hasArg()
                 .optionalArg(true)
+                .hasArgs()
                 .build();
 
-        // Опции для операции "get" баг-репорта
         Option getBugReportOption = Option.builder(CliConstants.CLI_GET_BUG_REPORT_OPTION)
                 .argName(CliConstants.CLI_GET_BUG_REPORT_OPTION_ARGNAME)
                 .desc(CliConstants.CLI_GET_BUG_REPORT_OPTION_DESCRIPTION)
                 .hasArg()
                 .optionalArg(true)
                 .build();
-
 
         Option getBugReportsByProjectIdOption = Option.builder(CliConstants.CLI_GET_BUG_REPORTS_BY_PROJECT_ID_OPTION)
                 .argName(CliConstants.CLI_GET_BUG_REPORTS_BY_PROJECT_ID_OPTION_ARGNAME)
@@ -288,7 +293,8 @@ public class CliUtils {
                 .addOption(helpOption)
                 .addOption(trackBugReportOption)
                 .addOption(employeeEfficiencyOption)
-                .addOption(projectStatsOption);
+                .addOption(projectStatsOption)
+                .addOption(includeTaskTagsOption);
 
         return options;
     }
