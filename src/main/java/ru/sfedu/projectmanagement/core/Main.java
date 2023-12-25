@@ -13,7 +13,7 @@ import ru.sfedu.projectmanagement.core.api.DataProvider;
 import ru.sfedu.projectmanagement.core.api.PostgresDataProvider;
 import ru.sfedu.projectmanagement.core.api.XmlDataProvider;
 import ru.sfedu.projectmanagement.core.model.*;
-import ru.sfedu.projectmanagement.core.model.factory.*;
+import ru.sfedu.projectmanagement.core.model.builders.*;
 import ru.sfedu.projectmanagement.core.utils.CliUtils;
 import ru.sfedu.projectmanagement.core.utils.config.ConfigPropertiesUtil;
 import ru.sfedu.projectmanagement.core.utils.types.NoData;
@@ -58,6 +58,7 @@ public class Main {
             deleteTaskOption(cmd);
 
             getTaskOption(cmd);
+            getProjectOption(cmd);
             getTasksByProjectIdOption(cmd);
             getTasksByEmployeeIdOption(cmd);
             getTasksByTagsOption(cmd);
@@ -77,7 +78,7 @@ public class Main {
             projectStatsOption(cmd);
         }
         catch (ParseException | NullPointerException | IllegalArgumentException | DateTimeParseException e) {
-            logger.error("Main[5]: {}", e.getMessage());
+            logger.error("Ошибка: {}", e.getMessage());
         }
     }
 
@@ -143,9 +144,9 @@ public class Main {
     private static void createProjectOption(CommandLine cmd) {
         if (cmd.hasOption(CliConstants.CLI_CREATE_PROJECT_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_CREATE_PROJECT_OPTION);
-            arguments = arguments[0].split(String.valueOf(CliConstants.VALUE_SEPARATOR));
 
-            Project project = new ProjectBuilder().build(arguments);
+            Employee manager = arguments[2].equals("null") ? null : provider.getEmployeeById(UUID.fromString(arguments[2])).getData();
+            Project project = new ProjectBuilder().build(arguments, manager);
             Result<NoData> result = provider.processNewProject(project);
 
             logger.info("Main[4]: статус создания проекта {}", result);
@@ -175,7 +176,6 @@ public class Main {
     private static void createBugReportOption(CommandLine cmd) {
         if (cmd.hasOption(CliConstants.CLI_CREATE_BUG_REPORT_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_CREATE_BUG_REPORT_OPTION);
-            arguments = arguments[0].split(String.valueOf(CliConstants.VALUE_SEPARATOR));
 
             BugReport bugReport = new BugReportBuilder().build(arguments);
             Result<NoData> result = provider.processNewBugReport(bugReport);
@@ -191,6 +191,9 @@ public class Main {
                 docArguments = cmd.getOptionValues(CliConstants.CLI_DOC_DATA_OPTION);
             }
 
+            Arrays.stream(arguments).forEach(logger::info);
+            logger.info("docArguments {}", Arrays.toString(docArguments));
+
             Documentation documentation = new DocumentationBuilder()
                     .parseDocBody(docArguments)
                     .build(arguments);
@@ -203,9 +206,6 @@ public class Main {
     private static void createTaskOption(CommandLine cmd) {
         if (cmd.hasOption(CliConstants.CLI_CREATE_TASK_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_CREATE_TASK_OPTION);
-            arguments = arguments[0].split(String.valueOf(CliConstants.VALUE_SEPARATOR));
-
-            // TODO: разобраться с вводом параметров
 
             Task task = new TaskBuilder().build(arguments);
             Result<NoData> result = provider.processNewTask(task);
@@ -267,6 +267,14 @@ public class Main {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_DELETE_TASK_OPTION);
             Result<NoData> result = provider.deleteTask(UUID.fromString(arguments[0]));
             logger.info("Main[16]: статус удаления задачи {}", result);
+        }
+    }
+
+    private static void getProjectOption(CommandLine cmd) {
+        if (cmd.hasOption(CliConstants.CLI_GET_PROJECT_OPTION)) {
+            String[] arguments = cmd.getOptionValues(CliConstants.CLI_GET_PROJECT_OPTION);
+            Result<Project> result = provider.getProjectById(UUID.fromString(arguments[0]));
+            printResultData(result.getData());
         }
     }
 

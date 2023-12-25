@@ -229,6 +229,8 @@ public class ResultSetUtils {
         String projectDescription = resultSet.getString("description");
         WorkStatus projectStatus = WorkStatus.valueOf(resultSet.getString("status"));
         UUID managerId = (UUID) resultSet.getObject("manager_id");
+        Employee projectManager = postgresProvider.getEmployeeById(managerId).getData();
+
         List<Employee> projectTeam = postgresProvider.getProjectTeam(projectId).getData();
         List<Task> projectTasks = postgresProvider.getTasksByProjectId(projectId).getData();
         List<ProjectEntity> projectDocumentation = new ArrayList<>(List.copyOf(
@@ -250,7 +252,7 @@ public class ResultSetUtils {
                 projectId,
                 projectDeadline,
                 projectStatus,
-                managerId,
+                projectManager,
                 projectTeam,
                 // преобразование в список ProjectEntity
                 new ArrayList<>(){{ addAll(projectTasks); }},

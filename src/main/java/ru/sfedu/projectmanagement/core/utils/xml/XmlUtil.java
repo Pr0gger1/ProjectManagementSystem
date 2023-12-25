@@ -72,15 +72,16 @@ public class XmlUtil {
      */
     public static <T extends Entity> Wrapper<T> readFile(String entityFilePath) {
         File file = new File(entityFilePath);
-
+        logger.debug("readFile[1]: file path {}", file.getAbsolutePath());
         try {
             Unmarshaller unmarshaller = context.createUnmarshaller();
             Wrapper<T> wrapper = (Wrapper<T>) unmarshaller.unmarshal(file);
-            logger.debug("readRecord[1]: read record {}", wrapper.toString());
+            logger.debug("readRecord[2]: read record {}", wrapper.toString());
 
             return wrapper;
         }
         catch (JAXBException exception) {
+            logger.error("readRecord[3]: {}", exception.getMessage());
             return new Wrapper<>();
         }
     }

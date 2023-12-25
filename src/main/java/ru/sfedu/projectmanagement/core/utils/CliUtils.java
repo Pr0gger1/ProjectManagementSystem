@@ -40,9 +40,9 @@ public class CliUtils {
                 .build();
 
         Option createTaskOption = Option.builder(CliConstants.CLI_CREATE_TASK_OPTION)
+                .desc(CliConstants.CLI_CREATE_TASK_DESCRIPTION)
                 .argName(CliConstants.CLI_CREATE_TASK_OPTION_ARGNAME)
                 .numberOfArgs(Constants.TASK_PRIMITIVE_PARAMETER_COUNT)
-                .desc(CliConstants.CLI_CREATE_TASK_DESCRIPTION)
                 .optionalArg(true)
                 .hasArgs()
                 .build();

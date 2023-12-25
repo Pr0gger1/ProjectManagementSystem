@@ -4,5 +4,6 @@ public enum EntityType {
     BugReport, Documentation,
     Employee, Event, Project,
     Task, EmployeeProject,
-    DocumentationData, TaskTag
+    DocumentationData, TaskTag,
+    ManagerProject
 }

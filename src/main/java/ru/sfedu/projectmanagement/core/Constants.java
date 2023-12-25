@@ -30,9 +30,12 @@ public class Constants {
     public static final String BUG_REPORTS_FILE_PATH = "bug_reports";
     public static final String EVENTS_FILE_PATH = "events";
     public static final String DOCUMENTATIONS_FILE_PATH = "documentations";
+
+    // filenames for supportive entities
     public static final String EMPLOYEE_PROJECT_FILE_PATH = "employee_project";
     public static final String TASK_TAG_FILE_PATH = "task_tags";
     public static final String DOCUMENTATION_DATA_FILE_PATH = "documentation_data";
+    public static final String MANAGER_PROJECT_FILE_PATH = "manager_employee";
 
 
     // mongo history collection item name constants

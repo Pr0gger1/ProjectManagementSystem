@@ -1,14 +1,17 @@
 package ru.sfedu.projectmanagement.core.model;
 
 import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvDate;
 import com.opencsv.bean.CsvIgnore;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import ru.sfedu.projectmanagement.core.model.enums.EntityType;
 import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
+import ru.sfedu.projectmanagement.core.utils.csv.CsvProjectManagerConverter;
 import ru.sfedu.projectmanagement.core.utils.xml.adapters.XmlLocalDateTimeAdapter;
 
+import javax.print.Doc;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,9 +46,10 @@ public class Project implements Entity {
     @XmlElement(required = true)
     private WorkStatus status = WorkStatus.IN_PROGRESS;
 
-    @CsvBindByName(column = "manager_id")
-    @XmlElement(name = "manager_id", nillable = true)
-    private UUID managerId;
+//    @CsvBindByName(column = "manager_id")
+    @CsvIgnore
+    @XmlElement(name = "manager", nillable = true)
+    private Employee manager;
 
     @CsvIgnore
     @XmlTransient
@@ -82,12 +86,12 @@ public class Project implements Entity {
             project.id,
             project.deadline,
             project.status,
-            project.managerId,
-            project.team,
-            project.tasks,
-            project.bugReports,
-            project.events,
-            project.documentations
+            project.manager,
+            new ArrayList<>(project.team),
+            new ArrayList<>(project.tasks),
+            new ArrayList<>(project.bugReports),
+            new ArrayList<>(project.events),
+            new ArrayList<>(project.documentations)
         );
     }
 
@@ -97,7 +101,7 @@ public class Project implements Entity {
             UUID id,
             LocalDateTime deadline,
             WorkStatus status,
-            UUID managerId,
+            Employee manager,
             List<Employee> team,
             List<ProjectEntity> tasks,
             List<ProjectEntity> bugReports,
@@ -109,7 +113,7 @@ public class Project implements Entity {
         this.description = description;
         this.id = id;
         this.status = status;
-        this.managerId = managerId;
+        this.manager = manager;
         this.team = team;
         this.tasks = tasks;
         this.documentations = documentations;
@@ -117,11 +121,11 @@ public class Project implements Entity {
         this.bugReports = bugReports;
     }
 
-    public Project(String name, String description, UUID id, UUID managerId) {
+    public Project(String name, String description, UUID id, Employee manager) {
         this.name = name;
         this.description = description;
         this.id = id;
-        this.managerId = managerId;
+        this.manager = manager;
     }
 
     public EntityType getEntityType() {
@@ -132,36 +136,40 @@ public class Project implements Entity {
         return deadline;
     }
 
-    public UUID getManagerId() {
-        return managerId;
+    public Employee getManager() {
+        return manager;
     }
 
-    public void setManagerId(UUID managerId) {
-        this.managerId = managerId;
+    public void setManager(Employee manager) {
+        this.manager = manager;
     }
 
-    public List<ProjectEntity> getBugReports() {
-        return bugReports;
+    public List<BugReport> getBugReports() {
+        return bugReports.stream().map(bugReport -> (BugReport) bugReport)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public void setDeadline(LocalDateTime deadline) {
         this.deadline = deadline;
     }
 
-    public List<ProjectEntity> getDocumentations() {
-        return documentations;
+    public List<Documentation> getDocumentations() {
+        return documentations.stream().map(doc -> (Documentation) doc)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public void setDocumentations(ArrayList<Documentation> documentations) {
+    public void setDocumentations(List<Documentation> documentations) {
         documentations.forEach(this::addDocumentation);
     }
 
-    public List<ProjectEntity> getEvents() {
-        return events;
+    public List<Event> getEvents() {
+        return events.stream().map(event -> (Event) event)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public List<Task> getTasks() {
-        return tasks.stream().map(task -> (Task) task).toList();
+        return tasks.stream().map(task -> (Task) task)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public void setTasks(List<Task> tasks) {
@@ -230,13 +238,13 @@ public class Project implements Entity {
         this.description = description;
     }
 
-    public void setBugReports(ArrayList<BugReport> bugReports) {
+    public void setBugReports(List<BugReport> bugReports) {
         this.bugReports = bugReports.stream()
                 .map(bugReport -> (ProjectEntity) bugReport)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public void setEvents(ArrayList<Event> events) {
+    public void setEvents(List<Event> events) {
         events.forEach(this::addEvent);
     }
 
@@ -248,7 +256,7 @@ public class Project implements Entity {
                 ", description='" + description + '\'' +
                 ", id='" + id + '\'' +
                 ", status=" + status +
-                ", managerId=" + managerId +
+                ", managerId=" + manager +
                 ", team=" + team +
                 ", tasks=" + tasks +
                 ", documentation=" + documentations +
@@ -262,11 +270,11 @@ public class Project implements Entity {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         Project project = (Project) object;
-        return Objects.equals(deadline, project.deadline) && Objects.equals(name, project.name) && Objects.equals(description, project.description) && Objects.equals(id, project.id) && status == project.status && Objects.equals(managerId, project.managerId) && Objects.equals(team, project.team) && Objects.equals(tasks, project.tasks) && Objects.equals(documentations, project.documentations) && Objects.equals(bugReports, project.bugReports) && Objects.equals(events, project.events);
+        return Objects.equals(deadline, project.deadline) && Objects.equals(name, project.name) && Objects.equals(description, project.description) && Objects.equals(id, project.id) && status == project.status && Objects.equals(manager, project.manager) && Objects.equals(team, project.team) && Objects.equals(tasks, project.tasks) && Objects.equals(documentations, project.documentations) && Objects.equals(bugReports, project.bugReports) && Objects.equals(events, project.events);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(deadline, name, description, id, status, managerId, team, tasks, documentations, bugReports, events);
+        return Objects.hash(deadline, name, description, id, status, manager, team, tasks, documentations, bugReports, events);
     }
 }

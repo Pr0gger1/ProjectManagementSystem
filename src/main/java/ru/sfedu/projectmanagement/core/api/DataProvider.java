@@ -339,22 +339,23 @@ public abstract class DataProvider {
             Result<NoData> bindEmployee = bindEmployeeToProject(employee.getId(), project.getId());
             results.addAll(List.of(createEmployeeResult, bindEmployee));
 
-
-            if (project.getManagerId() != null && employee.getId().equals(project.getManagerId()))
-                bindProjectManager(employee.getId(), project.getId());
+            if (project.getManager() != null && employee.getId().equals(project.getManager().getId())) {
+                Result<NoData> bindProjectManagerResult = bindProjectManager(employee.getId(), project.getId());
+                results.add(bindProjectManagerResult);
+            }
         });
 
 
         results.addAll(project.getBugReports().stream()
-                .map(bugReport -> processNewBugReport((BugReport) bugReport))
+                .map(this::processNewBugReport)
                 .toList());
 
         results.addAll(project.getDocumentations().stream()
-                .map(doc -> processNewDocumentation((Documentation) doc))
+                .map(this::processNewDocumentation)
                 .toList());
 
         results.addAll(project.getEvents().stream()
-                .map(event -> processNewEvent((Event) event))
+                .map(this::processNewEvent)
                 .toList());
 
         results.addAll(project.getTasks().stream()

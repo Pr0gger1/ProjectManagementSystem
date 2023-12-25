@@ -1,4 +1,4 @@
-package ru.sfedu.projectmanagement.core.model.factory;
+package ru.sfedu.projectmanagement.core.model.builders;
 
 import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.model.Task;
@@ -18,7 +18,7 @@ public class TaskBuilder extends EntityBuilder {
         task.setName(args[0]);
         task.setDescription(args[1]);
         task.setStatus(WorkStatus.valueOf(args[2].toUpperCase()));
-        task.setComment(args[3]);
+        task.setComment(args[3].equals("null") ? null : args[3]);
         task.setProjectId(UUID.fromString(args[4]));
         task.setCompletedAt(args[5].equals("null") ? null : LocalDateTime.parse(args[5], dateTimeFormatter));
         task.setDeadline(LocalDateTime.parse(args[6], dateTimeFormatter));

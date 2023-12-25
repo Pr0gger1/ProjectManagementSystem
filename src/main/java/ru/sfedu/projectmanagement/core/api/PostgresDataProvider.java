@@ -785,8 +785,6 @@ public class PostgresDataProvider extends DataProvider {
             statement.executeUpdate();
 
             logger.debug("bindEmployeeToProject[1]: employee[{}] was attached to the project[{}] successfully", employeeId, projectId);
-            return result;
-
         }
         catch (SQLException exception) {
             logger.error("bindEmployeeToProject[1]: {}", exception.getMessage());

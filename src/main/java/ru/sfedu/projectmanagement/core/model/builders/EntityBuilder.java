@@ -1,4 +1,4 @@
-package ru.sfedu.projectmanagement.core.model.factory;
+package ru.sfedu.projectmanagement.core.model.builders;
 import ru.sfedu.projectmanagement.core.model.Entity;
 
 import java.time.format.DateTimeFormatter;

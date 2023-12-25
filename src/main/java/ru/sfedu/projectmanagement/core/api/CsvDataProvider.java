@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.enums.ChangeType;
+import ru.sfedu.projectmanagement.core.model.enums.EntityType;
 import ru.sfedu.projectmanagement.core.utils.ResultCode;
 import ru.sfedu.projectmanagement.core.utils.config.ConfigPropertiesUtil;
 import ru.sfedu.projectmanagement.core.utils.csv.CsvDataChecker;
@@ -32,6 +33,7 @@ public class CsvDataProvider extends DataProvider {
     private final String employeeProjectFilePath;
     private final String taskTagsFilePath;
     private final String documentationDataFilePath;
+    private final String managerProjectFilePath;
 
     public CsvDataProvider() {
         this(Environment.valueOf(
@@ -69,6 +71,9 @@ public class CsvDataProvider extends DataProvider {
         documentationDataFilePath = datasourcePath
                 .concat(Constants.DOCUMENTATION_DATA_FILE_PATH)
                 .concat(Constants.FILE_CSV_EXTENSION);
+        managerProjectFilePath = datasourcePath
+                .concat(Constants.MANAGER_PROJECT_FILE_PATH)
+                .concat(Constants.FILE_CSV_EXTENSION);
 
         csvChecker = new CsvDataChecker(
                 projectsFilePath,
@@ -100,11 +105,14 @@ public class CsvDataProvider extends DataProvider {
         return new ArrayList<>() {{
             add(projectsFilePath);
             add(employeesFilePath);
-            add(employeeProjectFilePath);
             add(tasksFilePath);
             add(bugReportsFilePath);
             add(eventsFilePath);
             add(documentationsFilePath);
+            add(employeeProjectFilePath);
+            add(taskTagsFilePath);
+            add(documentationDataFilePath);
+            add(managerProjectFilePath);
         }};
     }
 
@@ -113,6 +121,10 @@ public class CsvDataProvider extends DataProvider {
     public Result<NoData> processNewProject(Project project) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
         try {
+            if (project.getManager() != null) {
+                ManagerProjectObject managerLink = new ManagerProjectObject(project.getManager().getId(), project.getId());
+                CsvUtil.createRecord(managerProjectFilePath, managerLink, EmployeeProjectObject.class);
+            }
             CsvUtil.createRecord(projectsFilePath, project, Project.class);
             result = initProjectEntities(project);
 
@@ -190,9 +202,9 @@ public class CsvDataProvider extends DataProvider {
     public Result<NoData> processNewTask(Task task) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
         try {
-            Result<NoData> validationResult = csvChecker.checkBeforeCreate(task);
-            if (validationResult.getCode() != ResultCode.SUCCESS)
-                return validationResult;
+            Result<NoData> checkConstraintResult = csvChecker.checkBeforeCreate(task);
+            if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
+                return checkConstraintResult;
 
             result = processNewTaskTags(task);
             CsvUtil.createRecord(tasksFilePath, task, Task.class);
@@ -224,6 +236,10 @@ public class CsvDataProvider extends DataProvider {
     public Result<NoData> processNewBugReport(BugReport bugReport) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
         try {
+            Result<NoData> checkConstraintResult = csvChecker.checkBeforeCreate(bugReport);
+            if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
+                return checkConstraintResult;
+
             CsvUtil.createRecord(bugReportsFilePath, bugReport, BugReport.class);
 
             logger.info("processNewBugReport[1]: {}", String.format(
@@ -252,8 +268,11 @@ public class CsvDataProvider extends DataProvider {
     @Override
     public Result<NoData> processNewDocumentation(Documentation documentation) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
-
         try {
+            Result<NoData> checkConstraintResult = csvChecker.checkBeforeCreate(documentation);
+            if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
+                return checkConstraintResult;
+
             HashMap<String, String> body = documentation.getBody();
 
             List<DocumentationData> data = new ArrayList<>();
@@ -296,14 +315,9 @@ public class CsvDataProvider extends DataProvider {
     public Result<NoData> processNewEvent(Event event) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
         try {
-            if (CsvUtil.isRecordExists(eventsFilePath, event.getId(), Event.class)) {
-                result.setCode(ResultCode.ERROR);
-                result.setMessage(String.format(
-                        Constants.OBJECT_ALREADY_EXISTS_MESSAGE,
-                        Event.class.getSimpleName(), event.getId()
-                ));
-                return result;
-            }
+           Result<NoData> checkConstraintResult = csvChecker.checkBeforeCreate(event);
+           if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
+               return checkConstraintResult;
 
             CsvUtil.createRecord(eventsFilePath, event, Event.class);
 
@@ -360,9 +374,9 @@ public class CsvDataProvider extends DataProvider {
     @Override
     public Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
         try {
-            Result<NoData> validationResult = csvChecker.checkProjectAndEmployeeExistence(employeeId, projectId);
-            if (validationResult.getCode() != ResultCode.SUCCESS)
-                return validationResult;
+            Result<NoData> checkConstraintResult = csvChecker.checkProjectAndEmployeeExistence(employeeId, projectId);
+            if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
+                return checkConstraintResult;
 
             EmployeeProjectObject obj = new EmployeeProjectObject(employeeId, projectId);
             CsvUtil.createRecord(employeeProjectFilePath, obj, EmployeeProjectObject.class);
@@ -377,10 +391,16 @@ public class CsvDataProvider extends DataProvider {
     @Override
     public Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
-        Result<NoData> validationResult = csvChecker.checkProjectAndEmployeeExistence(managerId, projectId);
+        Result<NoData> checkConstraintResult = csvChecker.checkProjectAndEmployeeExistence(managerId, projectId);
 
-        if (validationResult.getCode() != ResultCode.SUCCESS)
-            return validationResult;
+        if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
+            return checkConstraintResult;
+
+        Employee manager = Optional.ofNullable(CsvUtil.readFile(employeesFilePath, Employee.class))
+                .flatMap(employees -> employees.stream()
+                        .filter(employee -> employee.getId().equals(managerId))
+                        .findFirst())
+                .orElse(null);
 
         try {
             List<Project> projectList = CsvUtil.readFile(projectsFilePath, Project.class);
@@ -388,7 +408,7 @@ public class CsvDataProvider extends DataProvider {
                     .map(projects -> projects
                             .stream()
                             .peek(project -> {
-                                if (project.getId().equals(projectId)) project.setManagerId(managerId);
+                                if (project.getId().equals(projectId)) project.setManager(manager);
                             }).toList())
                     .orElse(new ArrayList<>());
 
@@ -658,26 +678,40 @@ public class CsvDataProvider extends DataProvider {
     @Override
     public Result<Project> getProjectById(UUID projectId) {
         try {
-            List<Project> data = CsvUtil.readFile(projectsFilePath, Project.class);
-            List<EmployeeProjectObject> employeesAndProjects = CsvUtil.readFile(employeeProjectFilePath, EmployeeProjectObject.class);
+            List<Project> projectList = CsvUtil.readFile(projectsFilePath, Project.class);
 
-            // getting intermediate info about employee and his project with filter by project id
-            List<UUID> employeeIds = Optional.ofNullable(employeesAndProjects)
+            // getting list of employees who belong to the project
+            List<UUID> employeeIds = Optional.ofNullable(CsvUtil.readFile(employeeProjectFilePath, EmployeeProjectObject.class))
                     .map(ep -> ep.stream()
-                            .filter(employee -> employee.getProjectId().equals(projectId))
-                            .map(EmployeeProjectObject::getEmployeeId).toList())
+                    .filter(employee -> employee.getProjectId().equals(projectId))
+                    .map(EmployeeProjectObject::getEmployeeId).toList())
                     .orElse(new ArrayList<>());
+
+            // getting manager id
+            UUID managerId = Optional.ofNullable(CsvUtil.readFile(managerProjectFilePath, ManagerProjectObject.class))
+                    .flatMap(links -> links.stream()
+                            .filter(link -> link.getProjectId().equals(projectId))
+                            .findFirst()
+                            .map(EmployeeProjectObject::getEmployeeId))
+                    .orElse(null);
 
             List<Employee> employees = Optional.ofNullable(CsvUtil.readFile(employeesFilePath, Employee.class))
-                    .map(e -> e.stream().filter(employee -> employeeIds.contains(employee.getId())).toList())
+                    .map(e -> e.stream()
+                            .filter(employee -> employeeIds.contains(employee.getId())).toList())
                     .orElse(new ArrayList<>());
 
+            Employee manager = employees.stream()
+                    .filter(employee -> employee.getId().equals(managerId))
+                    .findFirst()
+                    .orElse(null);
+
+
             List<Task> tasks = getTasksByProjectId(projectId).getData();
-            ArrayList<BugReport> bugReports = getBugReportsByProjectId(projectId).getData();
-            ArrayList<Event> events = getEventsByProjectId(projectId).getData();
+            List<BugReport> bugReports = getBugReportsByProjectId(projectId).getData();
+            List<Event> events = getEventsByProjectId(projectId).getData();
+            List<Documentation> documentations = getDocumentationsByProjectId(projectId).getData();
 
-
-            return Optional.ofNullable(data)
+            return Optional.ofNullable(projectList)
                     .map(projects -> projects.stream()
                             .filter(project -> project.getId().equals(projectId))
                             .findFirst()
@@ -686,6 +720,8 @@ public class CsvDataProvider extends DataProvider {
                                 project.setTasks(tasks);
                                 project.setEvents(events);
                                 project.setBugReports(bugReports);
+                                project.setDocumentations(documentations);
+                                project.setManager(manager);
 
                                 logger.debug("getProjectById[1]: received project {}", project);
                                 return new Result<>(project, ResultCode.SUCCESS);

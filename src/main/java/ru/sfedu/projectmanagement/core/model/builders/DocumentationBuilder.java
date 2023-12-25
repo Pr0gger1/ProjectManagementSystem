@@ -1,4 +1,4 @@
-package ru.sfedu.projectmanagement.core.model.factory;
+package ru.sfedu.projectmanagement.core.model.builders;
 
 import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.model.Documentation;
@@ -30,8 +30,10 @@ public class DocumentationBuilder extends EntityBuilder {
     }
 
     public DocumentationBuilder parseDocBody(String[] args) {
-        String regex = "\\{([^{}]+),([^{}]+)}";
+        String regex = "([^{}]+),([^{}]+)";
         Pattern pattern = Pattern.compile(regex);
+        args = Arrays.stream(args).map(arg -> arg.substring(1, arg.length() - 1))
+                .toArray(String[]::new)[0].split(";");
 
         Arrays.stream(args).forEach(
                 entry -> {

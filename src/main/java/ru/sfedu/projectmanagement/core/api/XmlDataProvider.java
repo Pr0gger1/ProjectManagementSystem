@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.model.*;
+import ru.sfedu.projectmanagement.core.model.enums.ChangeType;
 import ru.sfedu.projectmanagement.core.utils.config.ConfigPropertiesUtil;
 import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
@@ -102,24 +103,32 @@ public class XmlDataProvider extends DataProvider {
 
     @Override
     public Result<NoData> processNewProject(Project project) {
+        Result<NoData> result = new Result<>(ResultCode.SUCCESS);
         try {
             XmlUtil.createRecord(projectsFilePath, project);
-            Result<NoData> initResult = initProjectEntities(project);
-
-            if (initResult.getCode() != ResultCode.SUCCESS)
-                return initResult;
+            result = initProjectEntities(project);
 
             logger.debug("processNewProject[1]: project was written in xml {}", project);
-            return new Result<>(ResultCode.SUCCESS);
         }
         catch (JAXBException exception) {
             logger.error("processNewProject[2]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
+            result.setCode(ResultCode.ERROR);
+            result.setMessage(exception.getMessage());
         }
+        finally {
+            logEntity(
+                project,
+               "processNewProject",
+               result.getCode(),
+               ChangeType.CREATE
+            );
+        }
+        return result;
     }
 
     @Override
     public Result<NoData> processNewTask(Task task) {
+        Result<NoData> result = new Result<>(ResultCode.SUCCESS);
         try {
             Result<NoData> validateResult = xmlChecker.checkBeforeCreate(task);
             if (validateResult.getCode() != ResultCode.SUCCESS)
@@ -127,17 +136,26 @@ public class XmlDataProvider extends DataProvider {
             
             XmlUtil.createRecord(tasksFilePath, task);
             logger.debug("processNewTask[1]: task was written in xml {}", task);
-            return new Result<>(ResultCode.SUCCESS);
-            
         }
         catch (JAXBException exception) {
             logger.error("processNewTask[2]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
+            result.setCode(ResultCode.ERROR);
+            result.setMessage(exception.getMessage());
         }
+        finally {
+            logEntity(
+                task,
+                "processNewTask",
+                result.getCode(),
+                ChangeType.CREATE
+            );
+        }
+        return result;
     }
 
     @Override
     public Result<NoData> processNewBugReport(BugReport bugReport) {
+        Result<NoData> result = new Result<>(ResultCode.SUCCESS);
         try {
             Result<NoData> validateResult = xmlChecker.checkBeforeCreate(bugReport);
             if (validateResult.getCode() != ResultCode.SUCCESS)
@@ -145,16 +163,26 @@ public class XmlDataProvider extends DataProvider {
             
             XmlUtil.createRecord(bugReportsFilePath, bugReport);
             logger.debug("processBugReport[1]: bug report was written in xml {}", bugReport);
-            return new Result<>(ResultCode.SUCCESS);
         }
         catch (JAXBException exception) {
             logger.error("processBugReport[2]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
+            result.setCode(ResultCode.ERROR);
+            result.setMessage(exception.getMessage());
         }
+        finally {
+            logEntity(
+                bugReport,
+                "processNewBugReport",
+                result.getCode(),
+                ChangeType.CREATE
+            );
+        }
+        return result;
     }
 
     @Override
     public Result<NoData> processNewDocumentation(Documentation documentation) {
+        Result<NoData> result = new Result<>(ResultCode.SUCCESS);
         try {
             Result<NoData> validateResult = xmlChecker.checkBeforeCreate(documentation);
             if (validateResult.getCode() != ResultCode.SUCCESS)
@@ -162,16 +190,26 @@ public class XmlDataProvider extends DataProvider {
             
             XmlUtil.createRecord(documentationsFilePath, documentation);
             logger.debug("processNewDocumentation[1]: documentation was written in xml {}", documentation);
-            return new Result<>(ResultCode.SUCCESS);
         }
         catch (JAXBException exception) {
             logger.error("processNewDocumentation[2]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
+            result.setCode(ResultCode.ERROR);
+            result.setMessage(exception.getMessage());
         }
+        finally {
+            logEntity(
+                documentation,
+                "processNewDocumentation",
+                result.getCode(),
+                ChangeType.CREATE
+            );
+        }
+        return result;
     }
 
     @Override
     public Result<NoData> processNewEmployee(Employee employee) {
+        Result<NoData> result = new Result<>(ResultCode.SUCCESS);
         try {
             Result<NoData> validateResult = xmlChecker.checkBeforeCreate(employee);
             if (validateResult.getCode() != ResultCode.SUCCESS)
@@ -179,16 +217,26 @@ public class XmlDataProvider extends DataProvider {
             
             XmlUtil.createRecord(employeesFilePath, employee);
             logger.debug("processNewEmployee[1]: employee was written in xml {}", employee);
-            return new Result<>(ResultCode.SUCCESS);
         }
         catch (JAXBException exception) {
             logger.error("processNewEmployee[2]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
+            result.setCode(ResultCode.ERROR);
+            result.setMessage(exception.getMessage());
         }
+        finally {
+            logEntity(
+                employee,
+                "processNewEmployee",
+                result.getCode(),
+                ChangeType.CREATE
+            );
+        }
+        return result;
     }
 
     @Override
     public Result<NoData> processNewEvent(Event event) {
+        Result<NoData> result = new Result<>(ResultCode.SUCCESS);
         try {
             Result<NoData> validateResult = xmlChecker.checkBeforeCreate(event);
             if (validateResult.getCode() != ResultCode.SUCCESS)
@@ -196,23 +244,42 @@ public class XmlDataProvider extends DataProvider {
                 
             XmlUtil.createRecord(eventsFilePath, event);
             logger.debug("processNewEvent[1]: task was written in xml {}", event);
-            return new Result<>(ResultCode.SUCCESS);
         }
         catch (JAXBException exception) {
             logger.error("processNewEvent[2]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
+            result.setCode(ResultCode.ERROR);
+            result.setMessage(exception.getMessage());
         }
+        finally {
+            logEntity(
+                event,
+                "processNewEvent",
+                result.getCode(),
+                ChangeType.CREATE
+            );
+        }
+        return result;
     }
 
     @Override
     public Result<Project> getProjectById(UUID projectId) {
         Wrapper<Project> projectWrapper = XmlUtil.readFile(projectsFilePath);
-       return projectWrapper.getList()
+
+        return projectWrapper.getList()
             .stream()
             .filter(p -> p.getId().equals(projectId))
             .map(p -> {
                 List<Employee> team = getProjectTeam(projectId).getData();
+                List<Task> tasks = getTasksByProjectId(projectId).getData();
+                List<BugReport> bugReports = getBugReportsByProjectId(projectId).getData();
+                List<Event> events = getEventsByProjectId(projectId).getData();
+                List<Documentation> documentations = getDocumentationsByProjectId(projectId).getData();
+
                 p.setTeam(team);
+                p.setEvents(events);
+                p.setDocumentations(documentations);
+                p.setTasks(tasks);
+                p.setBugReports(bugReports);
                 logger.debug("getProjectById[1]: received project {}", p);
                 return new Result<>(p, ResultCode.SUCCESS);
             })
@@ -436,7 +503,7 @@ public class XmlDataProvider extends DataProvider {
                 .filter(project -> project.getId().equals(projectId))
                 .findFirst()
                 .ifPresent(project -> {
-                    project.setManagerId(employeeResult.getData().getId());
+                    project.setManager(employeeResult.getData());
                     try {
                         XmlUtil.createOrUpdateRecord(projectsFilePath, project);
                         result.setCode(ResultCode.SUCCESS);

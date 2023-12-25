@@ -78,7 +78,8 @@ public class CsvUtil {
                         .anyMatch(entity -> {
                             if (object.getEntityType() == EntityType.EmployeeProject) {
                                 return ((EmployeeProjectObject) entity).getEmployeeId().equals(((EmployeeProjectObject) object).getEmployeeId());
-                            } else {
+                            }
+                            else {
                                 return !secondaryEntities.contains(object.getEntityType()) && entity.getId().equals(object.getId());
                             }
                         }))

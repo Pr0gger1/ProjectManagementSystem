@@ -1,6 +1,7 @@
-package ru.sfedu.projectmanagement.core.model.factory;
+package ru.sfedu.projectmanagement.core.model.builders;
 
 import ru.sfedu.projectmanagement.core.Constants;
+import ru.sfedu.projectmanagement.core.model.Employee;
 import ru.sfedu.projectmanagement.core.model.Project;
 import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
 
@@ -19,7 +20,8 @@ public class ProjectBuilder extends EntityBuilder {
      * @throws IllegalArgumentException throws an exception if manager id is not valid
      * @throws DateTimeParseException throws an exception if datetime format is not valid
      */
-    public Project build(String[] args) throws IllegalArgumentException, DateTimeParseException {
+    @Override
+    public Project build(String[] args) {
         if (args.length != Constants.PROJECT_PRIMITIVE_PARAMETER_COUNT)
             throw new IllegalArgumentException(Constants.INVALID_PARAMETERS_MESSAGE);
 
@@ -27,7 +29,22 @@ public class ProjectBuilder extends EntityBuilder {
 
         project.setName(args[0]);
         project.setDescription(args[1]);
-        project.setManagerId(args[2].equals("null") ? null : UUID.fromString(args[2]));
+        project.setStatus(WorkStatus.valueOf(args[3].toUpperCase()));
+        project.setDeadline(LocalDateTime.parse(args[4], dateFormatter));
+
+        return project;
+    }
+
+
+    public Project build(String[] args, Employee employee) throws IllegalArgumentException, DateTimeParseException {
+        if (args.length != Constants.PROJECT_PRIMITIVE_PARAMETER_COUNT)
+            throw new IllegalArgumentException(Constants.INVALID_PARAMETERS_MESSAGE);
+
+        Project project = new Project();
+
+        project.setName(args[0]);
+        project.setDescription(args[1]);
+        project.setManager(employee);
         project.setStatus(WorkStatus.valueOf(args[3].toUpperCase()));
         project.setDeadline(LocalDateTime.parse(args[4], dateFormatter));
 

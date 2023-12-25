@@ -275,7 +275,7 @@ public class BaseProviderTest {
         project.setStatus(status);
         project.setDeadline(deadline);
         if (manager != null)
-            project.setManagerId(manager.getId());
+            project.setManager(manager);
         
         return project;
     }

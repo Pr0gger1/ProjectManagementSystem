@@ -90,8 +90,8 @@ public class XmlDataChecker extends FileDataChecker {
         logger.debug("createProjectValidation[1]: creating project {}", project);
         TreeMap<String, String> errors = new TreeMap<>();
 
-        if (project.getManagerId() != null && !XmlUtil.isRecordExists(employeesFilePath, project.getManagerId())) {
-            errors.put(Constants.EMPLOYEE_ERROR_KEY, String.format(Constants.EMPLOYEE_DOES_NOT_EXISTS, project.getManagerId()));
+        if (project.getManager() != null && !XmlUtil.isRecordExists(employeesFilePath, project.getManager().getId())) {
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, String.format(Constants.EMPLOYEE_DOES_NOT_EXISTS, project.getManager()));
             return new Result<>(null, ResultCode.ERROR, errors);
         }
 
