@@ -237,8 +237,8 @@ public class ResultSetUtils {
                 postgresProvider.getDocumentationsByProjectId(projectId).getData()
             )
         );
-        ArrayList<Event> projectEvents = postgresProvider.getEventsByProjectId(projectId).getData();
-        ArrayList<BugReport> projectBugReports = postgresProvider.getBugReportsByProjectId(projectId).getData();
+        List<Event> projectEvents = postgresProvider.getEventsByProjectId(projectId).getData();
+        List<BugReport> projectBugReports = postgresProvider.getBugReportsByProjectId(projectId).getData();
 
         LocalDateTime projectDeadline = null;
         Timestamp gotTimestamp = resultSet.getTimestamp("deadline");

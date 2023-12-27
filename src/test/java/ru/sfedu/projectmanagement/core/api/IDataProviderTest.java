@@ -76,7 +76,7 @@ public interface IDataProviderTest {
     void getDocumentationById();
     void getNonExistentDocumentation();
     void getProjectTeam();
-    void getProjectTeamOfNonExistentProject();
+    void getTeamOfNonExistentProject();
     void getEmptyProjectTeam();
     void getEmployeeById();
     void getNonExistentEmployee();

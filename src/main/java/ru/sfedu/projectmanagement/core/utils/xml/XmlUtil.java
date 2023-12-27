@@ -46,16 +46,16 @@ public class XmlUtil {
      * @param <T> T type of Entity implemented object
      * @return true if object with such id exists else false
      */
-    public static <T extends Entity> boolean isRecordExists(String filePath, UUID id) {
+    public static <T extends Entity> boolean isRecordNotExists(String filePath, UUID id) {
         Wrapper<T> wrapper = XmlUtil.readFile(filePath);
-        if (wrapper.getList().stream().allMatch(entity -> entity.getEntityType() == EntityType.EmployeeProject)) {
+        if (!wrapper.getList().isEmpty() && wrapper.getList().stream().allMatch(entity -> entity.getEntityType() == EntityType.EmployeeProject)) {
             return wrapper.getList()
                     .stream()
-                    .anyMatch(entity -> ((EmployeeProjectObject) entity).getEmployeeId().equals(id));
+                    .noneMatch(entity -> ((EmployeeProjectObject) entity).getEmployeeId().equals(id));
         }
         return wrapper.getList()
                 .stream()
-                .anyMatch(entity -> entity.getId().equals(id));
+                .noneMatch(entity -> entity.getId().equals(id));
     }
 
     public static void truncateFile(String entityFilePath) throws JAXBException {
@@ -96,20 +96,14 @@ public class XmlUtil {
         Wrapper<T> wrapper = readFile(filePath);
         List<T> list = wrapper.getList();
         logger.debug("createRecord[1]: {}", list);
+        String errorMessage = "record with id = %s already exists";
 
-        for (T entity : list) {
-            if (entity.getId().equals(object.getId()) && entity.getEntityType() != EntityType.EmployeeProject) {
-                String errorMessage = String.format("record with id = %s already exists", entity.getId());
-                throw new JAXBException(errorMessage);
-            }
-        }
+        if (list.stream().anyMatch(el -> el.getId().equals(object.getId()) && el.getEntityType() != EntityType.EmployeeProject))
+            throw new JAXBException(String.format(errorMessage, object.getId()));
 
         wrapper.addNode(object);
-        StringWriter stringWriter = new StringWriter();
 
         marshaller.marshal(wrapper, new File(filePath));
-        marshaller.marshal(wrapper, stringWriter);
-        logger.debug("createRecord[2]: entity was written {}", stringWriter);
     }
 
 

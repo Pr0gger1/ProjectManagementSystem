@@ -126,13 +126,13 @@ public abstract class DataProvider {
         if (team.isEmpty()) return new TrackInfo<>();
 
         team.forEach(employee -> {
-            ArrayList<Task> employeeTasks = getTasksByEmployeeId(employee.getId()).getData();
+            List<Task> employeeTasks = getTasksByEmployeeId(employee.getId()).getData();
             if (employeeTasks.isEmpty()) {
                 result.addData(employee, 0f);
                 return;
             }
 
-            float averageEffectiveness = checkEmployeeEfficiency(employeeTasks);
+            float averageEffectiveness = calculateEmployeeEfficiency(employeeTasks);
             result.addData(employee, averageEffectiveness);
         });
 
@@ -145,14 +145,14 @@ public abstract class DataProvider {
      */
     protected TrackInfo<Task, String> trackTaskStatus(UUID projectId) {
         List<Task> tasks = getTasksByProjectId(projectId).getData();
-
-        if (tasks.isEmpty())
-            return new TrackInfo<>();
-
-        HashMap<Task, String> trackInfo = new HashMap<>();
-        tasks.forEach(task -> trackInfo.put(task, task.getStatus().name()));
-
-        return new TrackInfo<>(trackInfo);
+        return Optional.of(tasks)
+                .filter(t -> !t.isEmpty())
+                .map(t -> {
+                    TrackInfo<Task, String> result = new TrackInfo<>();
+                    t.forEach(task -> result.addData(task, task.getStatus().name()));
+                    return result;
+                })
+                .orElse(new TrackInfo<>());
     }
 
 
@@ -161,13 +161,14 @@ public abstract class DataProvider {
      * @return TrackInfo with bug report and its status
      */
     protected TrackInfo<BugReport, String> trackBugReportStatus(UUID projectId) {
-        ArrayList<BugReport> bugReports = getBugReportsByProjectId(projectId).getData();
+//        Result<List<BugReport>> bgResult = getBugReportById(projectId);
+        List<BugReport> bugReports = getBugReportsByProjectId(projectId).getData();
         return Optional.of(bugReports)
                 .filter(bg -> !bg.isEmpty())
                 .map(bg -> {
-                    HashMap<BugReport, String> trackInfo = new HashMap<>();
-                    bg.forEach(el -> trackInfo.put(el, el.getStatus().name()));
-                    return new TrackInfo<>(trackInfo);
+                    TrackInfo<BugReport, String> result = new TrackInfo<>();
+                    bg.forEach(el -> result.addData(el, el.getStatus().name()));
+                    return result;
                 })
                 .orElse(new TrackInfo<>());
     }
@@ -177,7 +178,7 @@ public abstract class DataProvider {
      * @param tasks list with tasks
      * @return the percentage of efficiency of a particular employee
      */
-    protected float checkEmployeeEfficiency(ArrayList<Task> tasks) {
+    protected float calculateEmployeeEfficiency(List<Task> tasks) {
         int tasksCount = tasks.size();
         // percentage of execution tasks efficiency
         int taskEffectivenessSum = 0;
@@ -263,7 +264,7 @@ public abstract class DataProvider {
      * @param projectId id of the project
      * @return Result with ArrayList of tasks, execution code and message if it fails
      */
-    public abstract Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, UUID projectId);
+    public abstract Result<List<Task>> getTasksByTags(List<String> tags, UUID projectId);
 
     /**
      * @param projectId id of Project
@@ -275,7 +276,7 @@ public abstract class DataProvider {
      * @param employeeId id of the employee
      * @return Result with ArrayList of tasks, execution code and message if it fails
      */
-    public abstract Result<ArrayList<Task>> getTasksByEmployeeId(UUID employeeId);
+    public abstract Result<List<Task>> getTasksByEmployeeId(UUID employeeId);
 
     /**
      * @param taskId id of task you want to get by id
@@ -287,7 +288,7 @@ public abstract class DataProvider {
      * @param projectId id of project where bug reports are loaded from
      * @return Result with ArrayList of BugReport, execution code and message if it fails
      */
-    public abstract Result<ArrayList<BugReport>> getBugReportsByProjectId(UUID projectId);
+    public abstract Result<List<BugReport>> getBugReportsByProjectId(UUID projectId);
 
     /**
      * @param bugReportId id of BugReport you want to get
@@ -299,7 +300,7 @@ public abstract class DataProvider {
      * @param projectId id of the project for which events are selected
      * @return Result with ArrayList of Event, execution code and message if it fails
      */
-    public abstract Result<ArrayList<Event>> getEventsByProjectId(UUID projectId);
+    public abstract Result<List<Event>> getEventsByProjectId(UUID projectId);
 
     /**
      * @param eventId id of the event
@@ -364,7 +365,7 @@ public abstract class DataProvider {
 
         return results.stream()
                 .filter(result -> result.getCode() != ResultCode.SUCCESS)
-                .findFirst()
+                .findAny()
                 .orElse(new Result<>(ResultCode.SUCCESS));
     }
 }

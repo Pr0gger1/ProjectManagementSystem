@@ -5,6 +5,7 @@ import com.opencsv.bean.CsvDate;
 import com.opencsv.bean.CsvIgnore;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.model.enums.EntityType;
 import ru.sfedu.projectmanagement.core.model.enums.Priority;
 import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
@@ -21,7 +22,7 @@ import java.util.UUID;
 @XmlType(name = "Task")
 public class Task extends ProjectEntity {
     @CsvBindByName(column = "deadline")
-    @CsvDate(value = "yyyy-MM-dd'T'HH:mm")
+    @CsvDate(value = Constants.LOCAL_DATETIME_FORMAT)
     @XmlElement(name = "deadline")
     @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     private LocalDateTime deadline;
@@ -44,7 +45,7 @@ public class Task extends ProjectEntity {
     private WorkStatus status = WorkStatus.IN_PROGRESS;
 
     @CsvBindByName(column = "completed_at")
-    @CsvDate(value = "yyyy-MM-dd HH:mm:ss")
+    @CsvDate(value = Constants.LOCAL_DATETIME_FORMAT)
     @XmlElement(name = "completed_at")
     @XmlJavaTypeAdapter(XmlLocalDateTimeAdapter.class)
     private LocalDateTime completedAt = null;
@@ -131,8 +132,7 @@ public class Task extends ProjectEntity {
     }
 
     public void setCompletedAt(LocalDateTime completedAt) {
-        if (completedAt != null)
-            this.status = WorkStatus.COMPLETED;
+        if (completedAt != null) this.status = WorkStatus.COMPLETED;
         this.completedAt = completedAt;
     }
 

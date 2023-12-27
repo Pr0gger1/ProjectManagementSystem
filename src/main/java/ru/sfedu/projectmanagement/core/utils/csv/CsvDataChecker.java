@@ -75,6 +75,17 @@ public class CsvDataChecker extends FileDataChecker {
     }
 
     @Override
+    public Result<NoData> checkProjectExistence(UUID projectId) {
+        if (CsvUtil.isRecordNotExists(projectsFilePath, projectId, Project.class))
+            return new Result<>(ResultCode.ERROR, String.format(
+                    Constants.ENTITY_NOT_FOUND_MESSAGE,
+                    Project.class.getSimpleName(),
+                    projectId
+            ));
+        return new Result<>(ResultCode.SUCCESS);
+    }
+
+    @Override
     public Result<NoData> checkEntitiesBeforeBindTaskExecutor(
             UUID executorId, UUID taskId, UUID projectId
     ) {
@@ -98,7 +109,7 @@ public class CsvDataChecker extends FileDataChecker {
     }
 
     @Override
-    public Result<NoData> createProjectValidation(Project project) {
+    public Result<NoData> createProjectConstraint(Project project) {
         logger.debug("createProjectValidation[1]: creating project {}", project);
         TreeMap<String, String> errors = new TreeMap<>();
 
@@ -109,11 +120,6 @@ public class CsvDataChecker extends FileDataChecker {
 
         logger.info("createProjectValidation[2]: is valid: true");
         return new Result<>(ResultCode.SUCCESS);
-    }
-
-    @Override
-    public Result<NoData> checkIfEmployeeBelongsToProject(Employee employee) {
-        return null;
     }
 
     @Override

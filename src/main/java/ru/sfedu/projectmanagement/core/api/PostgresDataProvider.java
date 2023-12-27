@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.Queries;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.enums.ChangeType;
+import ru.sfedu.projectmanagement.core.utils.PostgresUtil;
 import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
 import ru.sfedu.projectmanagement.core.Constants;
@@ -744,22 +745,12 @@ public class PostgresDataProvider extends DataProvider {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
 
-            Result<List<Employee>> teamResult = getProjectTeam(projectId);
-            if (teamResult.getCode() != ResultCode.SUCCESS && teamResult.getData().isEmpty())
-                return new Result<>(ResultCode.NOT_FOUND);
-
-            List<Employee> team = teamResult.getData();
-            if (team.stream().anyMatch(employee -> !employee.getId().equals(managerId)))
-                return new Result<>(ResultCode.ERROR, String.format("Employee with id %s doesn't belong to the project", managerId));
-
             logger.debug("bindProjectManager[1]: employee[{}] became manager of the project[{}]", managerId, projectId);
-            return result;
         }
         catch (SQLException exception) {
             logger.error("bindProjectManager[2]: {}", exception.getMessage());
             result.setCode(ResultCode.ERROR);
             result.setMessage(exception.getMessage());
-            return result;
         }
         finally {
             closeConnection(connection);
@@ -770,6 +761,7 @@ public class PostgresDataProvider extends DataProvider {
                     ChangeType.UPDATE
             );
         }
+        return result;
     }
 
     @Override
@@ -821,7 +813,7 @@ public class PostgresDataProvider extends DataProvider {
         }
         catch (SQLException exception) {
             logger.error("getProjectById[3]: {}", exception.getMessage());
-            return new Result<>(null, ResultCode.ERROR, exception.getMessage());
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
         finally {
             closeConnection(connection);
@@ -839,6 +831,7 @@ public class PostgresDataProvider extends DataProvider {
             List<Task> tasks = new ArrayList<>();
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) tasks.add(ResultSetUtils.extractTask(resultSet));
+
             return Optional.of(tasks)
                 .filter(t -> !t.isEmpty())
                 .map(t -> {
@@ -852,7 +845,7 @@ public class PostgresDataProvider extends DataProvider {
         }
         catch (SQLException exception) {
             logger.error("getTasksByProjectId[3]: {}", exception.getMessage());
-            return new Result<>(null, ResultCode.ERROR, exception.getMessage());
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
         finally {
             closeConnection(connection);
@@ -861,12 +854,12 @@ public class PostgresDataProvider extends DataProvider {
 
 
     @Override
-    public Result<ArrayList<Task>> getTasksByEmployeeId(UUID employeeId) {
+    public Result<List<Task>> getTasksByEmployeeId(UUID employeeId) {
         Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(Queries.GET_TASKS_BY_EMPLOYEE_ID_QUERY)) {
             statement.setObject(1, employeeId);
-            ArrayList<Task> tasks = new ArrayList<>();
+            List<Task> tasks = new ArrayList<>();
             ResultSet resultSet = statement.executeQuery();
 
             while (resultSet.next()) tasks.add(ResultSetUtils.extractTask(resultSet));
@@ -892,9 +885,9 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     @Override
-    public Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, UUID projectId) {
+    public Result<List<Task>> getTasksByTags(List<String> tags, UUID projectId) {
         List<Task> tasks = getTasksByProjectId(projectId).getData();
-        ArrayList<Task> result = tasks.stream()
+        List<Task> result = tasks.stream()
                 .filter(task -> !Collections.disjoint(task.getTags(), tags))
                 .collect(Collectors.toCollection(ArrayList::new));
 
@@ -932,14 +925,14 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     @Override
-    public Result<ArrayList<BugReport>> getBugReportsByProjectId(UUID projectId) {
+    public Result<List<BugReport>> getBugReportsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.BUG_REPORTS_TABLE_NAME);
         Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, projectId);
             ResultSet resultSet = statement.executeQuery();
-            ArrayList<BugReport> bugReports = new ArrayList<>();
+            List<BugReport> bugReports = new ArrayList<>();
 
             while (resultSet.next())
                 bugReports.add(ResultSetUtils.extractBugReport(resultSet));
@@ -957,7 +950,7 @@ public class PostgresDataProvider extends DataProvider {
         }
         catch (SQLException exception) {
             logger.error("getBugReportsByProjectId[3]: {}", exception.getMessage());
-            return new Result<>(null, ResultCode.ERROR);
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
         finally {
             closeConnection(connection);
@@ -988,7 +981,7 @@ public class PostgresDataProvider extends DataProvider {
         }
         catch (SQLException exception) {
             logger.error("getBugReportById[3]: {}", exception.getMessage());
-            return new Result<>(null, ResultCode.ERROR);
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
         finally {
             closeConnection(connection);
@@ -996,14 +989,14 @@ public class PostgresDataProvider extends DataProvider {
     }
 
     @Override
-    public Result<ArrayList<Event>> getEventsByProjectId(UUID projectId) {
+    public Result<List<Event>> getEventsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.EVENTS_TABLE_NAME);
         Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setObject(1, projectId);
             ResultSet resultSet = statement.executeQuery();
-            ArrayList<Event> events = new ArrayList<>();
+            List<Event> events = new ArrayList<>();
 
             while (resultSet.next()) events.add(ResultSetUtils.extractEvent(resultSet));
 
@@ -1022,7 +1015,7 @@ public class PostgresDataProvider extends DataProvider {
         }
         catch (SQLException exception) {
             logger.error("getEventsByProjectId[3]: {}", exception.getMessage());
-            return new Result<>(null, ResultCode.ERROR);
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
         finally {
             closeConnection(connection);
@@ -1053,7 +1046,7 @@ public class PostgresDataProvider extends DataProvider {
         }
         catch (SQLException exception) {
             logger.error("getEventById[3]: {}", exception.getMessage());
-            return new Result<>(null, ResultCode.ERROR);
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
         finally {
             closeConnection(connection);
@@ -1084,7 +1077,7 @@ public class PostgresDataProvider extends DataProvider {
         }
         catch (SQLException | IllegalArgumentException exception) {
             logger.error("getDocumentationById[3]: {}", exception.getMessage());
-            return new Result<>(null, ResultCode.ERROR, exception.getMessage());
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
         finally {
             closeConnection(connection);
@@ -1116,7 +1109,7 @@ public class PostgresDataProvider extends DataProvider {
         }
         catch (SQLException | IllegalArgumentException exception) {
             logger.error("getDocumentationByProjectId[3]: {}", exception.getMessage());
-            return new Result<>(null, ResultCode.ERROR);
+            return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
         finally {
             closeConnection(connection);
@@ -1128,25 +1121,28 @@ public class PostgresDataProvider extends DataProvider {
         Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(Queries.GET_PROJECT_TEAM_QUERY)) {
+            if (!PostgresUtil.isRecordExists(connection, Queries.PROJECT_TABLE_NAME, projectId))
+                return new Result<>(
+                        new ArrayList<>(),
+                        ResultCode.NOT_FOUND,
+                        String.format(
+                                Constants.ENTITY_NOT_FOUND_MESSAGE,
+                                Project.class.getSimpleName(), projectId
+                        )
+                );
+
             statement.setObject(1, projectId);
             ResultSet resultSet = statement.executeQuery();
             List<Employee> team = new ArrayList<>();
 
             while (resultSet.next()) team.add(ResultSetUtils.extractEmployee(resultSet));
-            return Optional.of(team)
-                .filter(t -> !t.isEmpty())
-                .map(t -> {
-                    logger.debug("getProjectTeam[1]: received team {}", team);
-                    return new Result<>(team, ResultCode.SUCCESS);
-                })
-                .orElseGet(() -> {
-                    logger.debug("getProjectTeam[2]: team was not found");
-                    return new Result<>(team, ResultCode.NOT_FOUND);
-                });
+
+            logger.debug("getProjectTeam[1]: received team {}", team);
+            return new Result<>(team, ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("getProjectTeam[3]: {}", exception.getMessage());
-            return new Result<>(null, ResultCode.ERROR, exception.getMessage());
+            return new Result<>(new ArrayList<>(), ResultCode.ERROR, exception.getMessage());
         }
         finally {
             closeConnection(connection);

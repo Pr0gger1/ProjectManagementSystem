@@ -64,10 +64,6 @@ public class CsvUtil {
                 .orElse(false);
     }
 
-    public static <T extends Entity> boolean isRecordExists(String filePath, UUID id, Class<T> tClass) {
-        return !isRecordNotExists(filePath, id, tClass);
-    }
-
     public static <T extends Entity> void createRecord(String filePath, T object, Class<T> classT) throws Exception {
         List<T> data = readFile(filePath, classT);
         String errorMessage = "%s with id %s already exists";

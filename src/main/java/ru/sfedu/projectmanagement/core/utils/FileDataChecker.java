@@ -43,19 +43,19 @@ abstract public class FileDataChecker {
         logger.debug("Entity type: " + entity.getClass().getSimpleName());
         logger.debug("Expected type: " + entity.getEntityType());
         return switch (entity.getEntityType()) {
-            case BugReport -> createProjectEntityValidation((BugReport) entity);
-            case Documentation -> createProjectEntityValidation((Documentation) entity);
-            case Employee -> createEmployeeValidation((Employee) entity);
-            case Event -> createProjectEntityValidation((Event) entity);
-            case Project -> createProjectValidation((Project) entity);
-            case Task -> createProjectEntityValidation((Task) entity);
+            case BugReport -> createProjectEntityConstraint((BugReport) entity);
+            case Documentation -> createProjectEntityConstraint((Documentation) entity);
+            case Employee -> createEmployeeConstraint((Employee) entity);
+            case Event -> createProjectEntityConstraint((Event) entity);
+            case Project -> createProjectConstraint((Project) entity);
+            case Task -> createProjectEntityConstraint((Task) entity);
             default -> throw new IllegalArgumentException("Unsupported entity type: " + entity.getEntityType());
         };
     }
 
     abstract public Result<NoData> checkProjectAndEmployeeExistence(ProjectEntity entity);
 
-    protected Result<NoData> createProjectEntityValidation(ProjectEntity entity) {
+    protected Result<NoData> createProjectEntityConstraint(ProjectEntity entity) {
         logger.debug("createProjectEntityValidation[1]: creating {} {}", entity.getClass().getSimpleName(), entity);
         TreeMap<String, String> errors = new TreeMap<>();
         Result<NoData> result = checkProjectAndEmployeeExistence(entity);
@@ -79,8 +79,8 @@ abstract public class FileDataChecker {
     abstract public Result<NoData> checkEntitiesBeforeBindTaskExecutor(UUID executorId, UUID taskId, UUID projectId);
     abstract public Result<NoData> checkProjectAndEmployeeExistence(UUID employeeId, UUID projectId);
 
-    abstract  protected Result<NoData> createProjectValidation(Project project);
-    protected Result<NoData> createEmployeeValidation(Employee employee) {
+    abstract  protected Result<NoData> createProjectConstraint(Project project);
+    protected Result<NoData> createEmployeeConstraint(Employee employee) {
         logger.debug("createEmployeeValidation[1]: creating employee {}", employee);
         TreeMap<String, String> errors = new TreeMap<>();
         if (employee.getFirstName().isEmpty())
@@ -96,6 +96,6 @@ abstract public class FileDataChecker {
         return new Result<>(ResultCode.SUCCESS);
     }
 
-    abstract public Result<NoData> checkIfEmployeeBelongsToProject(Employee employee);
     abstract public Result<NoData> checkIfEmployeeBelongsToProject(UUID employeeId, UUID projectId);
+    abstract public Result<NoData> checkProjectExistence(UUID projectId);
 }

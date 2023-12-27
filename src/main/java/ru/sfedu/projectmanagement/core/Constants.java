@@ -8,9 +8,11 @@ public class Constants {
     public static final String SUCCESSFUL_DELETED_ENTITY_MESSAGE = "%s %s was deleted successfully";
     public static final String ENTITY_NOT_FOUND_MESSAGE = "%s with id %s not found";
     public static final String READ_ERROR = "something goes wrong while reading...";
-    public static final String OBJECT_ALREADY_EXISTS_MESSAGE = "%s with id %s already exists";
+    public static final String TASKS_WITH_TAGS_WERE_NOT_FOUND = "tasks with such tags were not found";
 
     public static final String UUID_REGEX = "^[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}";
+    public static final String LOCAL_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+    public static final String LOCAL_DATE_FORMAT = "yyyy-MM-dd";
 
     // property file formats
     public static final String DEFAULT_CONFIG_PATH_PROPERTIES = "env.properties";

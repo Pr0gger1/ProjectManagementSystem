@@ -303,7 +303,7 @@ public class Main {
         if (cmd.hasOption(CliConstants.CLI_GET_TASKS_BY_EMPLOYEE_ID_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_GET_TASKS_BY_EMPLOYEE_ID_OPTION);
 
-            Result<ArrayList<Task>> result = provider.getTasksByEmployeeId(UUID.fromString(arguments[0]));
+            Result<List<Task>> result = provider.getTasksByEmployeeId(UUID.fromString(arguments[0]));
             logger.info("getTasksByEmployeeId[1]: статус выполнения {}", result.getCode());
             result.getData().forEach(Main::printResultData);
         }
@@ -319,7 +319,7 @@ public class Main {
 
             logger.info(Arrays.toString(arguments));
 
-            Result<ArrayList<Task>> result = provider.getTasksByTags(tags, projectId);
+            Result<List<Task>> result = provider.getTasksByTags(tags, projectId);
             logger.info("getTasksByTagsOption[1]: статус выполнения {}", result.getCode());
             if (!result.getData().isEmpty())
                 result.getData().forEach(Main::printResultData);
@@ -340,7 +340,7 @@ public class Main {
         if (cmd.hasOption(CliConstants.CLI_GET_EVENTS_BY_PROJECT_ID_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_GET_EVENTS_BY_PROJECT_ID_OPTION);
 
-            Result<ArrayList<Event>> result = provider.getEventsByProjectId(UUID.fromString(arguments[0]));
+            Result<List<Event>> result = provider.getEventsByProjectId(UUID.fromString(arguments[0]));
             logger.info("getEventsByProjectIdOption[1]: статус выполнения {}", result.getCode());
             result.getData().forEach(Main::printResultData);
         }
@@ -360,7 +360,7 @@ public class Main {
         if (cmd.hasOption(CliConstants.CLI_GET_BUG_REPORTS_BY_PROJECT_ID_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_GET_BUG_REPORTS_BY_PROJECT_ID_OPTION);
 
-            Result<ArrayList<BugReport>> result = provider.getBugReportsByProjectId(UUID.fromString(arguments[0]));
+            Result<List<BugReport>> result = provider.getBugReportsByProjectId(UUID.fromString(arguments[0]));
             logger.info("getBugReportsByProjectIdOption[1]: статус выполнения {}", result.getCode());
             result.getData().forEach(Main::printResultData);
         }
@@ -373,7 +373,6 @@ public class Main {
             Result<Documentation> result = provider.getDocumentationById(UUID.fromString(arguments[0]));
             logger.info("getDocumentationOption[1]: статус выполнения {}", result.getCode());
             printResultData(result.getData());
-            // TODO: не добавляются данные документации
         }
     }
 

@@ -367,101 +367,133 @@ public class XmlDataProvider extends DataProvider {
             })
             .findFirst()
             .orElseGet(() -> {
-                logger.debug("getEmployeeById[2]: employee with id {} was not found", employeeId);
-                return new Result<>(ResultCode.NOT_FOUND, String.format(Constants.ENTITY_NOT_FOUND_MESSAGE, Employee.class.getSimpleName(), employeeId));
+                String message = String.format(
+                        Constants.ENTITY_NOT_FOUND_MESSAGE,
+                        Entity.class.getSimpleName(),
+                        employeeId
+                );
+                logger.debug("getEmployeeById[2]: {}", message);
+                return new Result<>(ResultCode.NOT_FOUND, message);
             });
     }
 
     @Override
-    public Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, UUID projectId) {
-        Wrapper<Task> taskWrapper = XmlUtil.readFile(tasksFilePath);
-        ArrayList<Task> tasks = taskWrapper.getList()
-                .stream()
-                .filter(task -> !Collections.disjoint(task.getTags(), tags))
-                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+    public Result<List<Task>> getTasksByTags(List<String> tags, UUID projectId) {
+        Result<NoData> checkProjectResult = xmlChecker.checkProjectExistence(projectId);
+        if (checkProjectResult.getCode() != ResultCode.SUCCESS)
+            return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, checkProjectResult.getMessage());
 
-        if (tasks.isEmpty())
-            return new Result<>(tasks, ResultCode.NOT_FOUND);
-        return new Result<>(tasks, ResultCode.SUCCESS);
+        Wrapper<Task> taskWrapper = XmlUtil.readFile(tasksFilePath);
+        List<Task> taskList = taskWrapper.getList();
+
+        return Optional.of(taskList)
+                .map(tasks -> tasks.stream()
+                        .filter(task -> !Collections.disjoint(task.getTags(), tags))
+                        .collect(Collectors.toList()))
+                .filter(tasks -> !tasks.isEmpty())
+                .map(tasks -> {
+                    logger.debug("getTasksByTags[1]: received tasks {}", tasks);
+                    return new Result<>(tasks, ResultCode.SUCCESS);
+                })
+                .orElseGet(() -> {
+                    String message = Constants.TASKS_WITH_TAGS_WERE_NOT_FOUND;
+                    logger.debug("getTasksByTags[1]: {}", message);
+                    return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, message);
+                });
     }
 
     @Override
     public Result<List<Task>> getTasksByProjectId(UUID projectId) {
+        Result<NoData> checkProjectResult = xmlChecker.checkProjectExistence(projectId);
+        if (checkProjectResult.getCode() != ResultCode.SUCCESS)
+            return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, checkProjectResult.getMessage());
+
         Wrapper<Task> taskWrapper = XmlUtil.readFile(tasksFilePath);
         ArrayList<Task> tasks = taskWrapper.getList()
                 .stream()
                 .filter(task -> task.getProjectId().equals(projectId))
-                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+                .collect(Collectors.toCollection(ArrayList::new));
 
-        if (tasks.isEmpty())
-            return new Result<>(tasks, ResultCode.NOT_FOUND);
         return new Result<>(tasks, ResultCode.SUCCESS);
     }
 
     @Override
-    public Result<ArrayList<Task>> getTasksByEmployeeId(UUID employeeId) {
+    public Result<List<Task>> getTasksByEmployeeId(UUID employeeId) {
+        if (XmlUtil.isRecordNotExists(employeesFilePath, employeeId))
+            return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, String.format(
+                    Constants.ENTITY_NOT_FOUND_MESSAGE,
+                    Employee.class.getSimpleName(),
+                    employeeId
+            ));
+
         Wrapper<Task> taskWrapper = XmlUtil.readFile(tasksFilePath);
         ArrayList<Task> tasks = taskWrapper.getList()
                 .stream()
                 .filter(task -> task.getEmployeeId().equals(employeeId))
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
-        if (tasks.isEmpty())
-            return new Result<>(tasks, ResultCode.NOT_FOUND);
+
         return new Result<>(tasks, ResultCode.SUCCESS);
     }
 
     @Override
-    public Result<ArrayList<BugReport>> getBugReportsByProjectId(UUID projectId) {
+    public Result<List<BugReport>> getBugReportsByProjectId(UUID projectId) {
+        Result<NoData> checkProjectResult = xmlChecker.checkProjectExistence(projectId);
+        if (checkProjectResult.getCode() != ResultCode.SUCCESS)
+            return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, checkProjectResult.getMessage());
+
         Wrapper<BugReport> bugReportWrapper = XmlUtil.readFile(bugReportsFilePath);
         ArrayList<BugReport> bugReports = bugReportWrapper.getList()
                 .stream()
                 .filter(bugReport -> bugReport.getProjectId().equals(projectId))
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
-        if (bugReports.isEmpty())
-            return new Result<>(bugReports, ResultCode.NOT_FOUND);
         return new Result<>(bugReports, ResultCode.SUCCESS);
     }
 
     @Override
-    public Result<ArrayList<Event>> getEventsByProjectId(UUID projectId) {
+    public Result<List<Event>> getEventsByProjectId(UUID projectId) {
+        Result<NoData> checkProjectResult = xmlChecker.checkProjectExistence(projectId);
+        if (checkProjectResult.getCode() != ResultCode.SUCCESS)
+            return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, checkProjectResult.getMessage());
+
         Wrapper<Event> eventWrapper = XmlUtil.readFile(eventsFilePath);
         ArrayList<Event> events = eventWrapper.getList()
                 .stream()
                 .filter(event -> event.getProjectId().equals(projectId))
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
-        if (events.isEmpty())
-            return new Result<>(events, ResultCode.NOT_FOUND);
         return new Result<>(events, ResultCode.SUCCESS);
     }
 
     @Override
     public Result<List<Documentation>> getDocumentationsByProjectId(UUID projectId) {
+        Result<NoData> checkProjectResult = xmlChecker.checkProjectExistence(projectId);
+        if (checkProjectResult.getCode() != ResultCode.SUCCESS)
+            return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, checkProjectResult.getMessage());
+
         Wrapper<Documentation> documentationWrapper = XmlUtil.readFile(documentationsFilePath);
         ArrayList<Documentation> documentations = documentationWrapper.getList()
                 .stream()
                 .filter(doc -> doc.getProjectId().equals(projectId))
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
-        if (documentations.isEmpty())
-            return new Result<>(documentations, ResultCode.NOT_FOUND);
         return new Result<>(documentations, ResultCode.SUCCESS);
     }
 
     @Override
     public Result<List<Employee>> getProjectTeam(UUID projectId) {
+        Result<NoData> checkProjectResult = xmlChecker.checkProjectExistence(projectId);
+        if (checkProjectResult.getCode() != ResultCode.SUCCESS)
+            return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, checkProjectResult.getMessage());
+
         Wrapper<EmployeeProjectObject> employeeWrapper = XmlUtil.readFile(employeeProjectFilePath);
         ArrayList<Employee> employees = employeeWrapper.getList()
             .stream()
             .filter(record -> record.getId().equals(projectId))
             .map(record -> getEmployeeById(record.getEmployeeId()))
-            .filter(result -> result.getCode() == ResultCode.SUCCESS)
             .map(Result::getData)
             .collect(Collectors.toCollection(ArrayList::new));
 
-        if (employees.isEmpty())
-            return new Result<>(employees, ResultCode.NOT_FOUND, "employees were not found for the project");
         return new Result<>(employees, ResultCode.SUCCESS);
     }
 
@@ -490,9 +522,11 @@ public class XmlDataProvider extends DataProvider {
         if (employeeResult.getCode() != ResultCode.SUCCESS)
             return new Result<>(ResultCode.ERROR, employeeResult.getMessage());
 
-        Result<NoData> validateResult = xmlChecker.checkIfEmployeeBelongsToProject(employeeResult.getData());
-        if (validateResult.getCode() != ResultCode.SUCCESS)
-            return validateResult;
+        Result<NoData> checkConstraintResult = xmlChecker
+                .checkIfEmployeeBelongsToProject(employeeResult.getData().getId(), projectId);
+
+        if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
+            return checkConstraintResult;
 
         Wrapper<Project> projectWrapper = XmlUtil.readFile(projectsFilePath);
         projectWrapper.getList()
@@ -516,7 +550,7 @@ public class XmlDataProvider extends DataProvider {
     @Override
     public Result<NoData> deleteProject(UUID projectId) {
         Wrapper<Project> projectWrapper = XmlUtil.readFile(projectsFilePath);
-        if (!XmlUtil.isRecordExists(projectsFilePath, projectId))
+        if (XmlUtil.isRecordNotExists(projectsFilePath, projectId))
             return new Result<>(ResultCode.NOT_FOUND);
 
         projectWrapper.setList(projectWrapper.getList()
@@ -538,7 +572,7 @@ public class XmlDataProvider extends DataProvider {
 
     @Override
     public Result<NoData> deleteTask(UUID taskId) {
-        if (!XmlUtil.isRecordExists(tasksFilePath, taskId))
+        if (XmlUtil.isRecordNotExists(tasksFilePath, taskId))
             return new Result<>(ResultCode.NOT_FOUND, String.format("Task with id %s doesn't exist", taskId
         ));
 
@@ -563,7 +597,7 @@ public class XmlDataProvider extends DataProvider {
 
     @Override
     public Result<NoData> deleteBugReport(UUID bugReportId) {
-        if (!XmlUtil.isRecordExists(bugReportsFilePath, bugReportId))
+        if (XmlUtil.isRecordNotExists(bugReportsFilePath, bugReportId))
             return new Result<>(ResultCode.NOT_FOUND, String.format("bug report with id %s doesn't exist", bugReportId));
 
         Wrapper<BugReport> bugReportWrapper = XmlUtil.readFile(bugReportsFilePath);
@@ -587,7 +621,7 @@ public class XmlDataProvider extends DataProvider {
 
     @Override
     public Result<NoData> deleteEvent(UUID eventId) {
-        if (!XmlUtil.isRecordExists(eventsFilePath, eventId))
+        if (XmlUtil.isRecordNotExists(eventsFilePath, eventId))
             return new Result<>(ResultCode.NOT_FOUND);
 
         Wrapper<Event> eventWrapper = XmlUtil.readFile(eventsFilePath);
@@ -611,7 +645,7 @@ public class XmlDataProvider extends DataProvider {
 
     @Override
     public Result<NoData> deleteDocumentation(UUID docId) {
-        if (!XmlUtil.isRecordExists(documentationsFilePath, docId))
+        if (XmlUtil.isRecordNotExists(documentationsFilePath, docId))
             return new Result<>(ResultCode.NOT_FOUND, String.format("documentation with id %s doesn't exist", docId));
 
         Wrapper<Documentation> documentationWrapper = XmlUtil.readFile(documentationsFilePath);
@@ -635,7 +669,7 @@ public class XmlDataProvider extends DataProvider {
 
     @Override
     public Result<NoData> deleteEmployee(UUID employeeId) {
-        if (!XmlUtil.isRecordExists(employeesFilePath, employeeId))
+        if (XmlUtil.isRecordNotExists(employeesFilePath, employeeId))
             return new Result<>(ResultCode.NOT_FOUND);
 
         Wrapper<Employee> taskWrapper = XmlUtil.readFile(employeesFilePath);

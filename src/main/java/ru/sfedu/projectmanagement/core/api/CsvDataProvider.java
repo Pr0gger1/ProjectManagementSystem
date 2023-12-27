@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.enums.ChangeType;
-import ru.sfedu.projectmanagement.core.model.enums.EntityType;
 import ru.sfedu.projectmanagement.core.utils.ResultCode;
 import ru.sfedu.projectmanagement.core.utils.config.ConfigPropertiesUtil;
 import ru.sfedu.projectmanagement.core.utils.csv.CsvDataChecker;
@@ -705,7 +704,6 @@ public class CsvDataProvider extends DataProvider {
                     .findFirst()
                     .orElse(null);
 
-
             List<Task> tasks = getTasksByProjectId(projectId).getData();
             List<BugReport> bugReports = getBugReportsByProjectId(projectId).getData();
             List<Event> events = getEventsByProjectId(projectId).getData();
@@ -747,6 +745,10 @@ public class CsvDataProvider extends DataProvider {
 
     @Override
     public Result<List<Task>> getTasksByProjectId(UUID projectId) {
+        Result<NoData> checkProjectResult = csvChecker.checkProjectExistence(projectId);
+        if (checkProjectResult.getCode() != ResultCode.SUCCESS)
+            return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, checkProjectResult.getMessage());
+
         try {
             List<Task> taskList = Optional.ofNullable(CsvUtil.readFile(tasksFilePath, Task.class))
                     .orElse(new ArrayList<>());
@@ -757,35 +759,31 @@ public class CsvDataProvider extends DataProvider {
                     .map(tasks -> tasks.stream()
                             .filter(task -> task.getProjectId().equals(projectId))
                             .collect(Collectors.toList()))
-                    .map(filteredTasks -> {
-                        if (filteredTasks.isEmpty())
-                            return new Result<>(filteredTasks, ResultCode.NOT_FOUND, String.format(
-                                    "project with id %s has no tasks", projectId
-                            ));
-                        List<Task> result = new ArrayList<>(filteredTasks);
-                        logger.debug("getTasksByProjectId[1]: received tasks {}", result);
-                        return new Result<>(result, ResultCode.SUCCESS);
+                    .map(tasks -> {
+                        logger.debug("getTasksByProjectId[1]: received tasks {}", tasks);
+                        return new Result<>(tasks, ResultCode.SUCCESS);
                     })
-                    .orElse(new Result<>(ResultCode.ERROR, String.format(
-                            Constants.READ_ERROR
-                    )));
+                    .orElseGet(() -> {
+                        String message = String.format("project with id %s has no tasks", projectId);
+                        logger.debug("getTasksByProjectId[2]: {}", message);
+                        return new Result<>(new ArrayList<>(), ResultCode.SUCCESS, message);
+                    });
         }
         catch (Exception exception) {
-            logger.error("getTasksByProjectId[2]: {}", exception.getMessage());
+            logger.error("getTasksByProjectId[3]: {}", exception.getMessage());
             return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
     }
 
     @Override
-    public Result<ArrayList<Task>> getTasksByEmployeeId(UUID employeeId) {
+    public Result<List<Task>> getTasksByEmployeeId(UUID employeeId) {
+        if (CsvUtil.isRecordNotExists(employeesFilePath, employeeId, Employee.class))
+            return new Result<>(new ArrayList<>(), ResultCode.ERROR, String.format(
+                    Constants.ENTITY_NOT_FOUND_MESSAGE,
+                    Employee.class.getSimpleName(), employeeId
+            ));
+
         try {
-            if (CsvUtil.isRecordNotExists(employeesFilePath, employeeId, Employee.class))
-                return new Result<>(new ArrayList<>(), ResultCode.ERROR, String.format(
-                        Constants.ENTITY_NOT_FOUND_MESSAGE,
-                        Employee.class.getSimpleName(), employeeId
-                ));
-
-
             List<Task> taskList = Optional.ofNullable(CsvUtil.readFile(tasksFilePath, Task.class))
                     .map(tasks -> tasks.stream().filter(task -> task.getEmployeeId().equals(employeeId)).toList())
                     .orElse(new ArrayList<>());
@@ -797,13 +795,18 @@ public class CsvDataProvider extends DataProvider {
                             .filter(task -> task.getEmployeeId().equals(employeeId))
                             .toList())
                     .map(tasks -> {
-                        ArrayList<Task> resultTasks = new ArrayList<>(tasks);
-                        logger.debug("getTasksByEmployeeId[1]: received tasks {}", resultTasks);
-                        return new Result<>(resultTasks, ResultCode.SUCCESS);
+                        logger.debug("getTasksByEmployeeId[1]: received tasks {}", tasks);
+                        return new Result<>(tasks, ResultCode.SUCCESS);
                     })
                     .orElseGet(() -> {
-                        logger.debug("getTasksByEmployeeId[2]: {}", Constants.READ_ERROR);
-                        return new Result<>(ResultCode.ERROR);
+                        String message = String.format(
+                                Constants.ENTITY_NOT_FOUND_MESSAGE,
+                                Employee.class.getSimpleName(),
+                                employeeId
+                        );
+
+                        logger.debug("getTasksByEmployeeId[2]: {}", message);
+                        return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, message);
                     });
         }
         catch (Exception exception) {
@@ -845,7 +848,11 @@ public class CsvDataProvider extends DataProvider {
     }
 
     @Override
-    public Result<ArrayList<Task>> getTasksByTags(ArrayList<String> tags, UUID projectId) {
+    public Result<List<Task>> getTasksByTags(List<String> tags, UUID projectId) {
+        Result<NoData> checkProjectResult = csvChecker.checkProjectExistence(projectId);
+        if (checkProjectResult.getCode() != ResultCode.SUCCESS)
+            return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, checkProjectResult.getMessage());
+
         try {
             List<Task> taskList = Optional.ofNullable(CsvUtil.readFile(tasksFilePath, Task.class))
                     .map(tasks -> tasks.stream()
@@ -857,49 +864,49 @@ public class CsvDataProvider extends DataProvider {
             return Optional.of(taskList)
                     .map(tasks -> tasks.stream()
                             .filter(task -> !Collections.disjoint(task.getTags(), tags))
-                            .toList())
+                            .collect(Collectors.toList()))
+                    .filter(tasks -> !tasks.isEmpty())
                     .map(tasks -> {
-                        if (tasks.isEmpty())
-                            return new Result<>(new ArrayList<Task>(), ResultCode.NOT_FOUND, String.format(
-                                "tasks with tags %s were not found", tags
-                            ));
-
-                        ArrayList<Task> result = new ArrayList<>(tasks);
-                        logger.debug("getTasksByTags[1]: received tasks {}", result);
-                        return new Result<>(result, ResultCode.SUCCESS);
+                        logger.debug("getTasksByTags[1]: received tasks {}", tasks);
+                        return new Result<>(tasks, ResultCode.SUCCESS);
                     })
                     .orElseGet(() -> {
-                        logger.debug("getTasksByTags[1]: {}", Constants.READ_ERROR);
-                        return new Result<>(ResultCode.ERROR);
+                        String message = Constants.TASKS_WITH_TAGS_WERE_NOT_FOUND;
+                        logger.debug("getTasksByTags[1]: {}", message);
+                        return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, message);
                     });
         }
         catch (Exception exception) {
             logger.error("getTaskByTags[3]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
+            return new Result<>(new ArrayList<>(), ResultCode.ERROR, exception.getMessage());
         }
     }
 
     @Override
-    public Result<ArrayList<BugReport>> getBugReportsByProjectId(UUID projectId) {
+    public Result<List<BugReport>> getBugReportsByProjectId(UUID projectId) {
+        Result<NoData> checkProjectResult = csvChecker.checkProjectExistence(projectId);
+        if (checkProjectResult.getCode() != ResultCode.SUCCESS)
+            return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, checkProjectResult.getMessage());
+
         try {
             List<BugReport> taskList = CsvUtil.readFile(bugReportsFilePath, BugReport.class);
             return Optional.ofNullable(taskList)
                     .map(bugreports -> bugreports.stream()
                             .filter(bugreport -> bugreport.getProjectId().equals(projectId))
                             .toList())
-                    .map(bugreport -> {
-                        ArrayList<BugReport> result = new ArrayList<>(bugreport);
-                        logger.debug("getBugReportsByProjectId[1]: received tasks {}", result);
-                        return new Result<>(result, ResultCode.SUCCESS);
+                    .map(bugreports -> {
+                        logger.debug("getBugReportsByProjectId[1]: received tasks {}", bugreports);
+                        return new Result<>(bugreports, ResultCode.SUCCESS);
                     })
                     .orElseGet(() -> {
-                        logger.debug("getBugReportsByProjectId[1]: {}", Constants.READ_ERROR);
-                        return new Result<>(ResultCode.ERROR, Constants.READ_ERROR);
+                        String message = String.format("project with id %s has no bug reports", projectId);
+                        logger.debug("getBugReportsByProjectId[1]: {}", message);
+                        return new Result<>(new ArrayList<>(), ResultCode.SUCCESS, message);
                     });
         }
         catch (Exception exception) {
             logger.error("getBugReportsByProjectId[3]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
+            return new Result<>(new ArrayList<>(), ResultCode.ERROR, exception.getMessage());
         }
     }
 
@@ -935,31 +942,33 @@ public class CsvDataProvider extends DataProvider {
     }
 
     @Override
-    public Result<ArrayList<Event>> getEventsByProjectId(UUID projectId) {
-        try {
-            List<Event> eventList = CsvUtil.readFile(eventsFilePath, Event.class);
-            return Optional.ofNullable(eventList)
-                    .map(events -> events.stream()
-                            .filter(event -> event.getProjectId().equals(projectId)).toList())
-                    .map(events -> {
-                        if (events.isEmpty())
-                            return new Result<>(new ArrayList<Event>(), ResultCode.NOT_FOUND, String.format(
-                                    Constants.ENTITY_NOT_FOUND_MESSAGE,
-                                    "project", projectId
-                            ));
+    public Result<List<Event>> getEventsByProjectId(UUID projectId) {
+        Result<NoData> checkProjectResult = csvChecker.checkProjectExistence(projectId);
+        if (checkProjectResult.getCode() != ResultCode.SUCCESS)
+            return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, checkProjectResult.getMessage());
 
-                        ArrayList<Event> result = new ArrayList<>(events);
+        try {
+            List<Event> eventList = Optional.ofNullable(CsvUtil.readFile(eventsFilePath, Event.class))
+                    .orElse(new ArrayList<>());
+
+            return Optional.of(eventList)
+                    .map(events -> events.stream()
+                            .filter(event -> event.getProjectId().equals(projectId))
+                            .toList())
+                    .map(events -> {
+                        List<Event> result = new ArrayList<>(events);
                         logger.debug("getEventsByProjectId[1]: received events {}", result);
                         return new Result<>(result, ResultCode.SUCCESS);
                     })
                     .orElseGet(() -> {
-                        logger.error("getEventsByProjectId[]: {}", Constants.READ_ERROR);
-                        return new Result<>(ResultCode.ERROR, Constants.READ_ERROR);
+                        String message = String.format("project with id %s has no events", projectId);
+                        logger.error("getEventsByProjectId[]: {}", message);
+                        return new Result<>(new ArrayList<>(), ResultCode.SUCCESS, message);
                     });
         }
         catch (Exception exception) {
             logger.error("getEventsByProjectId[]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
+            return new Result<>(new ArrayList<>(), ResultCode.ERROR, exception.getMessage());
         }
     }
 
@@ -1036,6 +1045,10 @@ public class CsvDataProvider extends DataProvider {
 
     @Override
     public Result<List<Documentation>> getDocumentationsByProjectId(UUID projectId) {
+        Result<NoData> checkProjectResult = csvChecker.checkProjectExistence(projectId);
+        if (checkProjectResult.getCode() != ResultCode.SUCCESS)
+            return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, checkProjectResult.getMessage());
+
         try {
             List<Documentation> documentationList = Optional.ofNullable(CsvUtil.readFile(documentationsFilePath, Documentation.class))
                     .orElse(new ArrayList<>());
@@ -1086,6 +1099,10 @@ public class CsvDataProvider extends DataProvider {
 
     @Override
     public Result<List<Employee>> getProjectTeam(UUID projectId) {
+        Result<NoData> checkProjectResult = csvChecker.checkProjectExistence(projectId);
+        if (checkProjectResult.getCode() != ResultCode.SUCCESS)
+            return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, checkProjectResult.getMessage());
+
         try {
             // filter and get list of employee's id
             List<UUID> employeeLinks = Optional.ofNullable(
@@ -1096,16 +1113,10 @@ public class CsvDataProvider extends DataProvider {
                             .map(EmployeeProjectObject::getEmployeeId).toList())
                     .orElse(new ArrayList<>());
 
-
             return Optional.ofNullable(CsvUtil.readFile(employeesFilePath, Employee.class))
                     .map(employees -> employees.stream()
                             .filter(e -> employeeLinks.contains(e.getId())).collect(Collectors.toList()))
                     .map(employees -> {
-                        if (employees.isEmpty())
-                            return new Result<>(employees, ResultCode.NOT_FOUND, String.format(
-                                    "project with id %s has no team", projectId
-                            ));
-
                         List<Employee> result = new ArrayList<>(employees);
                         logger.debug("getProjectTeam[1]: received employees {}", result);
                         return new Result<>(result, ResultCode.SUCCESS);
@@ -1117,7 +1128,7 @@ public class CsvDataProvider extends DataProvider {
         }
         catch (Exception exception) {
             logger.error("getProjectTeam[2]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
+            return new Result<>(new ArrayList<>(), ResultCode.ERROR, exception.getMessage());
         }
     }
 

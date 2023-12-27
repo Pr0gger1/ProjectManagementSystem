@@ -5,6 +5,7 @@ import com.opencsv.bean.CsvDate;
 import com.opencsv.bean.CsvIgnore;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.model.enums.EntityType;
 import ru.sfedu.projectmanagement.core.utils.xml.adapters.XmlLocalDateAdapter;
 
@@ -41,7 +42,7 @@ public class Employee implements Entity {
     private String fullName;
 
     @CsvBindByName(column = "birthday", required = true)
-    @CsvDate("yyyy-MM-dd")
+    @CsvDate(Constants.LOCAL_DATE_FORMAT)
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(XmlLocalDateAdapter.class)
     private LocalDate birthday;

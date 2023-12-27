@@ -742,7 +742,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
             assertEquals(ResultCode.SUCCESS, result.getCode());
         });
 
-        Result<ArrayList<Task>> actual = postgresProvider.getTasksByEmployeeId(employee1.getId());
+        Result<List<Task>> actual = postgresProvider.getTasksByEmployeeId(employee1.getId());
 
         logger.debug("getTasksByEmployeeId[1]: expected tasks {}", tasks);
         logger.debug("getTasksByEmployeeId[2]: actual tasks {}", actual.getData());
@@ -753,7 +753,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Override
     @Test
     public void getTasksByNonExistentEmployeeId() {
-        Result<ArrayList<Task>> actual = postgresProvider.getTasksByEmployeeId(UUID.randomUUID());
+        Result<List<Task>> actual = postgresProvider.getTasksByEmployeeId(UUID.randomUUID());
 
         assertEquals(ResultCode.NOT_FOUND, actual.getCode());
         assertEquals(0, actual.getData().size());
@@ -815,7 +815,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     public void getTasksByTags() {
         tasks.forEach(postgresProvider::processNewTask);
         ArrayList<String> tags = new ArrayList<>(List.of("Tag1"));
-        Result<ArrayList<Task>> actual = postgresProvider.getTasksByTags(tags, project1.getId());
+        Result<List<Task>> actual = postgresProvider.getTasksByTags(tags, project1.getId());
 
         assertEquals(ResultCode.SUCCESS, actual.getCode());
         assertEquals(tasks, actual.getData());
@@ -826,7 +826,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     public void getTasksByNonExistentTags() {
         tasks.forEach(postgresProvider::processNewTask);
         ArrayList<String> tags = new ArrayList<>(List.of("Tag3"));
-        Result<ArrayList<Task>> actual = postgresProvider.getTasksByTags(tags, project1.getId());
+        Result<List<Task>> actual = postgresProvider.getTasksByTags(tags, project1.getId());
 
         assertEquals(ResultCode.NOT_FOUND, actual.getCode());
         assertEquals(0, actual.getData().size());
@@ -854,7 +854,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
             assertEquals(ResultCode.SUCCESS, createBugReportsResult.getCode());
         }
 
-        Result<ArrayList<BugReport>> actual = postgresProvider.getBugReportsByProjectId(project1.getId());
+        Result<List<BugReport>> actual = postgresProvider.getBugReportsByProjectId(project1.getId());
         logger.debug("getBugReportsByProjectId[1]: actual result code {}", actual.getCode());
         logger.debug("getBugReportsByProjectId[2]: expected result code {}", ResultCode.SUCCESS);
 
@@ -868,7 +868,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Override
     @Test
     public void getBugReportsByNonExistentProjectId() {
-        Result<ArrayList<BugReport>> actual = postgresProvider.getBugReportsByProjectId(UUID.randomUUID());
+        Result<List<BugReport>> actual = postgresProvider.getBugReportsByProjectId(UUID.randomUUID());
         logger.debug("getBugReportsByNonExistentProjectId[1]: actual result code {}", actual.getCode());
         logger.debug("getBugReportsByNonExistentProjectId[2]: expected result code {}", ResultCode.NOT_FOUND);
 
@@ -914,7 +914,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Test
     public void getEventsByProjectId() {
         processNewEvent();
-        Result<ArrayList<Event>> actual = postgresProvider.getEventsByProjectId(project1.getId());
+        Result<List<Event>> actual = postgresProvider.getEventsByProjectId(project1.getId());
 
         logger.debug("getEventsByProjectId[1]: actual result code {}", actual.getCode());
         logger.debug("getEventsByProjectId[2]: expected result code {}", ResultCode.SUCCESS);
@@ -929,7 +929,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
     @Override
     @Test
     public void getEventsByNonExistentProjectId() {
-        Result<ArrayList<Event>> actual = postgresProvider.getEventsByProjectId(UUID.randomUUID());
+        Result<List<Event>> actual = postgresProvider.getEventsByProjectId(UUID.randomUUID());
         logger.debug("getEventsByNonExistentProjectId[1]: actual result code {}", actual.getCode());
         logger.debug("getEventsByNonExistentProjectId[2]: expected result code {}", ResultCode.NOT_FOUND);
 
@@ -1045,7 +1045,7 @@ class PostgresDataProviderTest extends BaseProviderTest implements IDataProvider
 
     @Override
     @Test
-    public void getProjectTeamOfNonExistentProject() {
+    public void getTeamOfNonExistentProject() {
         Result<List<Employee>> actual = postgresProvider.getProjectTeam(UUID.randomUUID());
 
         logger.debug("getProjectTeamOfNonExistentProject[1]: actual result code {}", actual.getCode());
