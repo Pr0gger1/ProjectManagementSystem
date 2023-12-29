@@ -30,7 +30,7 @@ public class PostgresUtil {
         ResultSet resultSet = statement.executeQuery();
         resultSet.next();
 
-        int result =  resultSet.getInt("count");
+        int result =  resultSet.getInt(1);
         return result > 0;
     }
 
@@ -53,7 +53,7 @@ public class PostgresUtil {
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
             int rowCount = 0;
-            while (resultSet.next()) rowCount = resultSet.getInt("count");
+            while (resultSet.next()) rowCount = resultSet.getInt(1);
 
             if (rowCount == 0)
                 return new Result<>(ResultCode.ERROR, String.format(

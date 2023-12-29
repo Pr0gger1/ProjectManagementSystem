@@ -105,7 +105,7 @@ public class XmlDataChecker extends FileDataChecker {
         logger.debug("checkIfEmployeeBelongsToProject[1]: object {}", employeeId);
         TreeMap<String, String> errors = new TreeMap<>();
         if (XmlUtil.isRecordNotExists(employeesFilePath, employeeId))
-            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_DOES_NOT_EXISTS);
+            errors.put(Constants.EMPLOYEE_ERROR_KEY, String.format(Constants.EMPLOYEE_DOES_NOT_EXISTS, employeeId));
 
         Wrapper<EmployeeProjectObject> employeeLinks = XmlUtil.readFile(employeeProjectFilePath);
         Optional.of(employeeLinks.getList())
@@ -114,7 +114,7 @@ public class XmlDataChecker extends FileDataChecker {
                         .filter(link -> link.getEmployeeId().equals(employeeId) && link.getProjectId().equals(projectId))
                         .findAny()
                         .orElseGet(() -> {
-                            errors.put(Constants.EMPLOYEE_ERROR_KEY, Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT);
+                            errors.put(Constants.EMPLOYEE_ERROR_KEY, String.format(Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT, employeeId));
                             return null;
                         })
                 );

@@ -5,6 +5,11 @@ import org.apache.commons.cli.Options;
 import ru.sfedu.projectmanagement.core.CliConstants;
 import ru.sfedu.projectmanagement.core.Constants;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class CliUtils {
     public static Options getAllOptions() {
         Options options = new Options();
@@ -306,5 +311,24 @@ public class CliUtils {
                 .addOption(completeTaskOption);
 
         return options;
+    }
+
+    public static HashMap<String, String> parseDocBody(String[] args) {
+        final HashMap<String, String> body = new HashMap<>();
+
+        String regex = "([^{}]+),([^{}]+)";
+        Pattern pattern = Pattern.compile(regex);
+        args = Arrays.stream(args).map(arg -> arg.substring(1, arg.length() - 1))
+                .toArray(String[]::new)[0].split(";");
+
+        Arrays.stream(args).forEach(
+                entry -> {
+                    Matcher matcher = pattern.matcher(entry);
+                    if (matcher.matches()) {
+                        body.put(matcher.group(1), matcher.group(2));
+                    }
+                }
+        );
+        return body;
     }
 }

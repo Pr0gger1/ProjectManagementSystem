@@ -13,7 +13,9 @@ import ru.sfedu.projectmanagement.core.api.DataProvider;
 import ru.sfedu.projectmanagement.core.api.PostgresDataProvider;
 import ru.sfedu.projectmanagement.core.api.XmlDataProvider;
 import ru.sfedu.projectmanagement.core.model.*;
-import ru.sfedu.projectmanagement.core.model.builders.*;
+import ru.sfedu.projectmanagement.core.model.enums.BugStatus;
+import ru.sfedu.projectmanagement.core.model.enums.Priority;
+import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
 import ru.sfedu.projectmanagement.core.utils.CliUtils;
 import ru.sfedu.projectmanagement.core.utils.config.ConfigPropertiesUtil;
 import ru.sfedu.projectmanagement.core.utils.types.NoData;
@@ -21,19 +23,26 @@ import ru.sfedu.projectmanagement.core.utils.types.Result;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
 public class Main {
+    private static final CommandLineParser commandLineParser = new DefaultParser();
     private static final Logger logger = LogManager.getLogger(Main.class);
     private static DataProvider provider = null;
-    private static final CommandLineParser commandLineParser = new DefaultParser();
+
+    private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
+    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
 
     public static void main(String[] args) {
         String log4jConfigPath = System.getProperty(CliConstants.SYSTEM_VAR_LOG4J_CONFIG_PATH);
         if (log4jConfigPath != null) {
             File file = new File(log4jConfigPath);
-            logger.info("Main[1]: current log4j2 config path {}", file.getAbsolutePath());
+            logger.info("Main[1]: текущий путь до конфигурации log4j2 {}", file.getAbsolutePath());
         }
 
         try {
@@ -115,7 +124,7 @@ public class Main {
 
             ConfigPropertiesUtil.setConfigPath(arguments[0]);
             File propertiesFile = new File(ConfigPropertiesUtil.getConfigPath());
-            logger.debug("initPropertiesConfig[1]: current properties config file {}", propertiesFile.getAbsolutePath());
+            logger.debug("initPropertiesConfig[1]: текущий путь до файла конфигурации properties {}", propertiesFile.getAbsolutePath());
         }
     }
 
@@ -143,10 +152,15 @@ public class Main {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_CREATE_PROJECT_OPTION);
 
             Employee manager = arguments[2].equals("null") ? null : provider.getEmployeeById(UUID.fromString(arguments[2])).getData();
-            Project project = new ProjectBuilder().build(arguments, manager);
-            Result<NoData> result = provider.processNewProject(project);
+            Project project = new Project();
+            project.setManager(manager);
+            project.setName(arguments[0]);
+            project.setDescription(arguments[1]);
+            project.setStatus(WorkStatus.valueOf(arguments[3].toUpperCase()));
+            project.setDeadline(LocalDateTime.parse(arguments[4], dateFormatter));
 
-            logger.info("Main[4]: статус создания проекта {}", result);
+            Result<NoData> result = provider.processNewProject(project);
+            logger.info("createProjectOption[1]: статус создания проекта {}", result);
         }
     }
 
@@ -154,9 +168,17 @@ public class Main {
         if (cmd.hasOption(CliConstants.CLI_CREATE_EMPLOYEE_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_CREATE_EMPLOYEE_OPTION);
 
-            Employee employee = new EmployeeBuilder().build(arguments);
+            Employee employee = new Employee();
+            employee.setFirstName(arguments[0]);
+            employee.setLastName(arguments[1]);
+            employee.setPatronymic(arguments[2].equals("null") ? null : arguments[2]);
+            employee.setEmail(arguments[3]);
+            employee.setBirthday(LocalDate.parse(arguments[4], dateFormatter));
+            employee.setPhoneNumber(arguments[5]);
+            employee.setPosition(arguments[6]);
+
             Result<NoData> result = provider.processNewEmployee(employee);
-            logger.info("Main[5]: статус создания сотрудника {}", result);
+            logger.info("createEmployeeOption[1]: статус создания сотрудника {}", result);
         }
     }
 
@@ -164,9 +186,17 @@ public class Main {
         if (cmd.hasOption(CliConstants.CLI_CREATE_EVENT_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_CREATE_EVENT_OPTION);
 
-            Event event = new EventBuilder().build(arguments);
+            Event event = new Event();
+            event.setName(arguments[0]);
+            event.setDescription(arguments[1]);
+            event.setProjectId(UUID.fromString(arguments[2]));
+            event.setEmployeeId(UUID.fromString(arguments[3]));
+            event.setEmployeeFullName(arguments[4]);
+            event.setStartDate(LocalDateTime.parse(arguments[5], dateTimeFormatter));
+            event.setEndDate(LocalDateTime.parse(arguments[6], dateTimeFormatter));
+
             Result<NoData> result = provider.processNewEvent(event);
-            logger.info("Main[6]: статус создания события проекта {}", result);
+            logger.info("createEventOption[1]: статус создания события проекта {}", result);
         }
     }
 
@@ -174,9 +204,17 @@ public class Main {
         if (cmd.hasOption(CliConstants.CLI_CREATE_BUG_REPORT_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_CREATE_BUG_REPORT_OPTION);
 
-            BugReport bugReport = new BugReportBuilder().build(arguments);
+            BugReport bugReport = new BugReport();
+            bugReport.setName(arguments[0]);
+            bugReport.setDescription(arguments[1]);
+            bugReport.setStatus(BugStatus.valueOf(arguments[2].toUpperCase()));
+            bugReport.setPriority(Priority.valueOf(arguments[3].toUpperCase()));
+            bugReport.setProjectId(UUID.fromString(arguments[4]));
+            bugReport.setEmployeeId(UUID.fromString(arguments[5]));
+            bugReport.setEmployeeFullName(arguments[6]);
+
             Result<NoData> result = provider.processNewBugReport(bugReport);
-            logger.info("Main[7]: статус создания баг репорта проекта {}", result);
+            logger.info("createBugReportOption[1]: статус создания баг репорта проекта {}", result);
         }
     }
 
@@ -188,15 +226,19 @@ public class Main {
                 docArguments = cmd.getOptionValues(CliConstants.CLI_DOC_DATA_OPTION);
             }
 
-            Arrays.stream(arguments).forEach(logger::info);
-            logger.info("docArguments {}", Arrays.toString(docArguments));
+            HashMap<String, String> docBody = new HashMap<>();
+            if (docArguments.length != 0) docBody = CliUtils.parseDocBody(docArguments);
 
-            Documentation documentation = new DocumentationBuilder()
-                    .parseDocBody(docArguments)
-                    .build(arguments);
+            Documentation documentation = new Documentation();
+            documentation.setName(arguments[0]);
+            documentation.setDescription(arguments[1]);
+            documentation.setProjectId(UUID.fromString(arguments[2]));
+            documentation.setEmployeeId(UUID.fromString(arguments[3]));
+            documentation.setEmployeeFullName(arguments[4]);
+            documentation.setBody(docBody);
 
             Result<NoData> result = provider.processNewDocumentation(documentation);
-            logger.info("Main[8]: статус создания документации {}", result);
+            logger.info("createDocumentationOption[1]: статус создания документации {}", result);
         }
     }
 
@@ -209,11 +251,21 @@ public class Main {
                 tagArguments = cmd.getOptionValues(CliConstants.CLI_INCLUDE_TASK_TAGS_OPTION);
             }
 
-            Task task = new TaskBuilder()
-                    .setTags(tagArguments)
-                    .build(arguments);
+            Task task = new Task();
+            task.setName(arguments[0]);
+            task.setDescription(arguments[1]);
+            task.setStatus(WorkStatus.valueOf(arguments[2].toUpperCase()));
+            task.setTags(new ArrayList<>(List.of(tagArguments)));
+            task.setComment(arguments[3].equals("null") ? null : arguments[3]);
+            task.setProjectId(UUID.fromString(arguments[4]));
+            task.setCompletedAt(arguments[5].equals("null") ? null : LocalDateTime.parse(arguments[5], dateTimeFormatter));
+            task.setDeadline(LocalDateTime.parse(arguments[6], dateTimeFormatter));
+            task.setPriority(Priority.valueOf(arguments[7].toUpperCase()));
+            task.setEmployeeId(UUID.fromString(arguments[8]));
+            task.setEmployeeFullName(arguments[9]);
+
             Result<NoData> result = provider.processNewTask(task);
-            logger.info("Main[9]: статус создания задачи {}", result);
+            logger.info("createTaskOption[1]: статус создания задачи {}", result);
         }
     }
 
