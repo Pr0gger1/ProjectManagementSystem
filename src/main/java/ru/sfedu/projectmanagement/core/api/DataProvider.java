@@ -78,7 +78,7 @@ public abstract class DataProvider {
 
     /**
      * @param projectId id of the project
-     * @param checkLaborEfficiency boolean flag which includes information about employee's labor efficiency if true
+     * @param checkLaborEfficiency boolean flag which includes information about employees labor efficiency if true
      * @param trackBugs boolean flag which includes information about bug reports status if true
      * @return ProjectStatistics object
      */
@@ -100,7 +100,7 @@ public abstract class DataProvider {
 
     /**
      * @param projectId id of the project
-     * @return the percentage of project readiness. It is calculated by number of completed tasks
+     * @return the percentage of the project readiness. It is calculated by number of completed tasks
      */
     protected float calculateProjectReadiness(UUID projectId) {
         List<Task> tasks = getTasksByProjectId(projectId).getData();
@@ -161,7 +161,6 @@ public abstract class DataProvider {
      * @return TrackInfo with bug report and its status
      */
     protected TrackInfo<BugReport, String> trackBugReportStatus(UUID projectId) {
-//        Result<List<BugReport>> bgResult = getBugReportById(projectId);
         List<BugReport> bugReports = getBugReportsByProjectId(projectId).getData();
         return Optional.of(bugReports)
                 .filter(bg -> !bg.isEmpty())
@@ -222,31 +221,31 @@ public abstract class DataProvider {
     public abstract Result<NoData> deleteProject(UUID projectId);
 
     /**
-     * @param taskId id of task you want to delete
+     * @param taskId id of the task you want to delete
      * @return Result with execution code and message if it fails
      */
     public abstract Result<NoData> deleteTask(UUID taskId);
 
     /**
-     * @param bugReportId id of bug report you want to delete
+     * @param bugReportId id of the bug report you want to delete
      * @return Result with execution code and message if it fails
      */
     public abstract Result<NoData> deleteBugReport(UUID bugReportId);
 
     /**
-     * @param eventId id of event you want to delete
+     * @param eventId id of the event you want to delete
      * @return Result with execution code and message if it fails
      */
     public abstract Result<NoData> deleteEvent(UUID eventId);
 
     /**
-     * @param docId id of documentation you want to delete
+     * @param docId id of the documentation you want to delete
      * @return Result with execution code and message if it fails
      */
     public abstract Result<NoData> deleteDocumentation(UUID docId);
 
     /**
-     * @param employeeId id of employee you want to delete
+     * @param employeeId id of the employee you want to delete
      * @return Result with execution code and message if it fails
      */
     public abstract Result<NoData> deleteEmployee(UUID employeeId);
@@ -254,7 +253,7 @@ public abstract class DataProvider {
 
     /**
      * @param id id of the project
-     * @return Result with Project
+     * @return Result with Project, execution code and message if it fails
      */
     public abstract Result<Project> getProjectById(UUID id);
 
@@ -267,7 +266,7 @@ public abstract class DataProvider {
     public abstract Result<List<Task>> getTasksByTags(List<String> tags, UUID projectId);
 
     /**
-     * @param projectId id of Project
+     * @param projectId id of the project
      * @return Result with ArrayList of tasks, execution code and message if it fails
      */
     public abstract Result<List<Task>> getTasksByProjectId(UUID projectId);
@@ -279,7 +278,7 @@ public abstract class DataProvider {
     public abstract Result<List<Task>> getTasksByEmployeeId(UUID employeeId);
 
     /**
-     * @param taskId id of task you want to get by id
+     * @param taskId id of the task you want to get by id
      * @return Result with Task, execution code and message if it fails
      */
     public abstract Result<Task> getTaskById(UUID taskId);
@@ -315,7 +314,7 @@ public abstract class DataProvider {
     public abstract Result<List<Documentation>> getDocumentationsByProjectId(UUID projectId);
 
     /**
-     * @param docId UUID of documentation
+     * @param docId id of the documentation
      * @return Result  with Documentation, execution code and message if it fails
      */
     public abstract Result<Documentation> getDocumentationById(UUID docId);
@@ -331,6 +330,8 @@ public abstract class DataProvider {
      * @return Result with Employee, execution code and message if it fails
      */
     public abstract Result<Employee> getEmployeeById(UUID employeeId);
+
+    public abstract Result<NoData> completeTask(UUID taskId);
 
     protected Result<NoData> initProjectEntities(Project project) {
         ArrayList<Result<NoData>> results = new ArrayList<>();

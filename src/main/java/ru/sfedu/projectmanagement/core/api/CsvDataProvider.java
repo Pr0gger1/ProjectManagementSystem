@@ -115,7 +115,9 @@ public class CsvDataProvider extends DataProvider {
         }};
     }
 
-
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewProject(Project)}
+     */
     @Override
     public Result<NoData> processNewProject(Project project) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
@@ -197,6 +199,9 @@ public class CsvDataProvider extends DataProvider {
         );
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewTask(Task)}
+     */
     @Override
     public Result<NoData> processNewTask(Task task) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
@@ -231,6 +236,9 @@ public class CsvDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewBugReport(BugReport)}
+     */
     @Override
     public Result<NoData> processNewBugReport(BugReport bugReport) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
@@ -264,6 +272,9 @@ public class CsvDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewDocumentation(Documentation)}
+     */
     @Override
     public Result<NoData> processNewDocumentation(Documentation documentation) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
@@ -310,6 +321,9 @@ public class CsvDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEvent(Event)}
+     */
     @Override
     public Result<NoData> processNewEvent(Event event) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
@@ -343,6 +357,9 @@ public class CsvDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEmployee(Employee)}
+     */
     @Override
     public Result<NoData> processNewEmployee(Employee employee) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
@@ -370,6 +387,9 @@ public class CsvDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindEmployeeToProject(UUID, UUID)}
+     */
     @Override
     public Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
         try {
@@ -387,6 +407,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindProjectManager(UUID, UUID)}
+     */
     @Override
     public Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
@@ -420,6 +443,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteProject(UUID)}
+     */
     @Override
     public Result<NoData> deleteProject(UUID projectId) {
         AtomicReference<Project> projectBean = new AtomicReference<>(null);
@@ -461,7 +487,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
-
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteTask(UUID)}
+     */
     @Override
     public Result<NoData> deleteTask(UUID taskId) {
         AtomicReference<Task> taskBean = new AtomicReference<>(null);
@@ -511,6 +539,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteBugReport(UUID)}
+     */
     @Override
     public Result<NoData> deleteBugReport(UUID bugReportId) {
         AtomicReference<BugReport> bugReportBean = new AtomicReference<>(null);
@@ -549,6 +580,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteEvent(UUID)}
+     */
     @Override
     public Result<NoData> deleteEvent(UUID eventId) {
         AtomicReference<Event> eventBean = new AtomicReference<>(null);
@@ -591,6 +625,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteDocumentation(UUID)}
+     */
     @Override
     public Result<NoData> deleteDocumentation(UUID docId) {
         AtomicReference<Documentation> docBean = new AtomicReference<>(null);
@@ -636,6 +673,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteEmployee(UUID)}
+     */
     @Override
     public Result<NoData> deleteEmployee(UUID employeeId) {
         AtomicReference<Employee> employeeBean = new AtomicReference<>(null);
@@ -674,6 +714,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getProjectById(UUID)}
+     */
     @Override
     public Result<Project> getProjectById(UUID projectId) {
         try {
@@ -743,6 +786,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByProjectId(UUID)}
+     */
     @Override
     public Result<List<Task>> getTasksByProjectId(UUID projectId) {
         Result<NoData> checkProjectResult = csvChecker.checkProjectExistence(projectId);
@@ -771,10 +817,13 @@ public class CsvDataProvider extends DataProvider {
         }
         catch (Exception exception) {
             logger.error("getTasksByProjectId[3]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
+            return new Result<>(new ArrayList<>(), ResultCode.ERROR, exception.getMessage());
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByEmployeeId(UUID)}
+     */
     @Override
     public Result<List<Task>> getTasksByEmployeeId(UUID employeeId) {
         if (CsvUtil.isRecordNotExists(employeesFilePath, employeeId, Employee.class))
@@ -811,10 +860,13 @@ public class CsvDataProvider extends DataProvider {
         }
         catch (Exception exception) {
             logger.error("getTasksByEmployeeId[3]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
+            return new Result<>(new ArrayList<>(), ResultCode.ERROR, exception.getMessage());
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTaskById(UUID)}
+     */
     @Override
     public Result<Task> getTaskById(UUID taskId) {
         try {
@@ -847,6 +899,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByTags(List, UUID)}
+     */
     @Override
     public Result<List<Task>> getTasksByTags(List<String> tags, UUID projectId) {
         Result<NoData> checkProjectResult = csvChecker.checkProjectExistence(projectId);
@@ -882,6 +937,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getBugReportsByProjectId(UUID)}
+     */
     @Override
     public Result<List<BugReport>> getBugReportsByProjectId(UUID projectId) {
         Result<NoData> checkProjectResult = csvChecker.checkProjectExistence(projectId);
@@ -910,7 +968,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
-
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getBugReportById(UUID)}
+     */
     @Override
     public Result<BugReport> getBugReportById(UUID bugReportId) {
         try {
@@ -941,6 +1001,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEventsByProjectId(UUID)}
+     */
     @Override
     public Result<List<Event>> getEventsByProjectId(UUID projectId) {
         Result<NoData> checkProjectResult = csvChecker.checkProjectExistence(projectId);
@@ -972,6 +1035,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEventById(UUID)}
+     */
     @Override
     public Result<Event> getEventById(UUID eventId) {
         try {
@@ -1002,6 +1068,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getDocumentationById(UUID)}
+     */
     @Override
     public Result<Documentation> getDocumentationById(UUID docId) {
         try {
@@ -1043,6 +1112,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getDocumentationsByProjectId(UUID)}
+     */
     @Override
     public Result<List<Documentation>> getDocumentationsByProjectId(UUID projectId) {
         Result<NoData> checkProjectResult = csvChecker.checkProjectExistence(projectId);
@@ -1077,26 +1149,25 @@ public class CsvDataProvider extends DataProvider {
                             .filter(doc -> doc.getProjectId().equals(projectId))
                             .toList())
                     .map(docs -> {
-                        if (docs.isEmpty())
-                            return new Result<>(docs, ResultCode.NOT_FOUND, String.format(
-                                    "project with id %s has no documentations",
-                                    projectId
-                            ));
                         List<Documentation> result = new ArrayList<>(docs);
                         logger.debug("getDocumentationsByProjectId[1]: received documentations {}", result);
                         return new Result<>(result, ResultCode.SUCCESS);
                     })
                     .orElseGet(() -> {
-                        logger.error("");
-                        return new Result<>(ResultCode.ERROR, Constants.READ_ERROR);
+                        String message = String.format("project with id %s has no documentations", projectId);
+                        logger.debug("getDocumentationsByProjectId[2]: {}", message);
+                        return new Result<>(new ArrayList<>(), ResultCode.SUCCESS, message);
                     });
         }
         catch (Exception exception) {
-            logger.error("getDocumentationsByProjectId[]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
+            logger.error("getDocumentationsByProjectId[3]: {}", exception.getMessage());
+            return new Result<>(new ArrayList<>(), ResultCode.ERROR, exception.getMessage());
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getProjectTeam(UUID)}
+     */
     @Override
     public Result<List<Employee>> getProjectTeam(UUID projectId) {
         Result<NoData> checkProjectResult = csvChecker.checkProjectExistence(projectId);
@@ -1132,6 +1203,9 @@ public class CsvDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEmployeeById(UUID)}
+     */
     @Override
     public Result<Employee> getEmployeeById(UUID employeeId) {
         try {
@@ -1157,5 +1231,35 @@ public class CsvDataProvider extends DataProvider {
             logger.error("read[2]: {}", exception.getMessage());
             return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
+    }
+
+    @Override
+    public Result<NoData> completeTask(UUID taskId) {
+        Result<NoData> result = new Result<>(ResultCode.SUCCESS);
+        if (CsvUtil.isRecordNotExists(tasksFilePath, taskId, Task.class))
+            return new Result<>(ResultCode.NOT_FOUND, String.format(
+                    Constants.ENTITY_NOT_FOUND_MESSAGE,
+                    Task.class.getSimpleName(),
+                    taskId
+            ));
+
+        try {
+            List<Task> taskList = Optional.ofNullable(CsvUtil.readFile(tasksFilePath, Task.class))
+                    .map(tasks -> tasks
+                            .stream()
+                            .peek(t -> {
+                                if (t.getId().equals(taskId)) t.completeTask();
+                            }).toList())
+                    .orElse(new ArrayList<>());
+
+            CsvUtil.createRecords(tasksFilePath, taskList, Task.class);
+            logger.debug("completeTask[1]: task with id {} was completed", taskId);
+        }
+        catch (Exception exception) {
+            logger.debug("completeTask[2]: {}", exception.getMessage());
+            result.setCode(ResultCode.ERROR);
+            result.setMessage(exception.getMessage());
+        }
+        return result;
     }
 }

@@ -98,6 +98,9 @@ public class XmlDataProvider extends DataProvider {
     }
 
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewProject(Project)}
+     */
     @Override
     public Result<NoData> processNewProject(Project project) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
@@ -123,6 +126,9 @@ public class XmlDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewTask(Task)}
+     */
     @Override
     public Result<NoData> processNewTask(Task task) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
@@ -150,6 +156,9 @@ public class XmlDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewBugReport(BugReport)}
+     */
     @Override
     public Result<NoData> processNewBugReport(BugReport bugReport) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
@@ -177,6 +186,9 @@ public class XmlDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewDocumentation(Documentation)}
+     */
     @Override
     public Result<NoData> processNewDocumentation(Documentation documentation) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
@@ -204,6 +216,9 @@ public class XmlDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEmployee(Employee)}
+     */
     @Override
     public Result<NoData> processNewEmployee(Employee employee) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
@@ -231,6 +246,9 @@ public class XmlDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEvent(Event)}
+     */
     @Override
     public Result<NoData> processNewEvent(Event event) {
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
@@ -258,6 +276,9 @@ public class XmlDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getProjectById(UUID)}
+     */
     @Override
     public Result<Project> getProjectById(UUID projectId) {
         Wrapper<Project> projectWrapper = XmlUtil.readFile(projectsFilePath);
@@ -287,6 +308,9 @@ public class XmlDataProvider extends DataProvider {
             });
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTaskById(UUID)}
+     */
     @Override
     public Result<Task> getTaskById(UUID taskId) {
         Wrapper<Task> taskWrapper = XmlUtil.readFile(tasksFilePath);
@@ -304,6 +328,9 @@ public class XmlDataProvider extends DataProvider {
             });
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getBugReportById(UUID)}
+     */
     @Override
     public Result<BugReport> getBugReportById(UUID bugReportId) {
         Wrapper<BugReport> bugReportWrapper = XmlUtil.readFile(bugReportsFilePath);
@@ -321,6 +348,9 @@ public class XmlDataProvider extends DataProvider {
             });
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getDocumentationById(UUID)}
+     */
     @Override
     public Result<Documentation> getDocumentationById(UUID docId) {
         Wrapper<Documentation> documentationWrapper = XmlUtil.readFile(documentationsFilePath);
@@ -338,6 +368,9 @@ public class XmlDataProvider extends DataProvider {
             });
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEventById(UUID)}
+     */
     @Override
     public Result<Event> getEventById(UUID eventId) {
         Wrapper<Event> eventWrapper = XmlUtil.readFile(eventsFilePath);
@@ -355,6 +388,9 @@ public class XmlDataProvider extends DataProvider {
             });
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEmployeeById(UUID)}
+     */
     @Override
     public Result<Employee> getEmployeeById(UUID employeeId) {
         Wrapper<Employee> employeeWrapper = XmlUtil.readFile(employeesFilePath);
@@ -377,6 +413,41 @@ public class XmlDataProvider extends DataProvider {
             });
     }
 
+    @Override
+    public Result<NoData> completeTask(UUID taskId) {
+        Result<NoData> result = new Result<>(ResultCode.SUCCESS);
+        if (XmlUtil.isRecordNotExists(tasksFilePath, taskId))
+            return new Result<>(ResultCode.NOT_FOUND, String.format(
+                    Constants.ENTITY_NOT_FOUND_MESSAGE,
+                    Task.class.getSimpleName(),
+                    taskId
+            ));
+
+        try {
+            Wrapper<Task> taskWrapper = XmlUtil.readFile(tasksFilePath);
+            List<Task> taskList = taskWrapper.getList()
+                    .stream()
+                    .peek(task -> {
+                        if (task.getId().equals(taskId))
+                            task.completeTask();
+                    })
+                    .toList();
+
+            taskWrapper.setList(taskList);
+            XmlUtil.setContainer(tasksFilePath, taskWrapper);
+        }
+        catch (JAXBException exception) {
+            logger.error("completeTask[2]: {}", exception.getMessage());
+            result.setCode(ResultCode.ERROR);
+            result.setMessage(exception.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByTags(List, UUID)}
+     */
     @Override
     public Result<List<Task>> getTasksByTags(List<String> tags, UUID projectId) {
         Result<NoData> checkProjectResult = xmlChecker.checkProjectExistence(projectId);
@@ -402,6 +473,9 @@ public class XmlDataProvider extends DataProvider {
                 });
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByProjectId(UUID)}
+     */
     @Override
     public Result<List<Task>> getTasksByProjectId(UUID projectId) {
         Result<NoData> checkProjectResult = xmlChecker.checkProjectExistence(projectId);
@@ -417,6 +491,9 @@ public class XmlDataProvider extends DataProvider {
         return new Result<>(tasks, ResultCode.SUCCESS);
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByEmployeeId(UUID)}
+     */
     @Override
     public Result<List<Task>> getTasksByEmployeeId(UUID employeeId) {
         if (XmlUtil.isRecordNotExists(employeesFilePath, employeeId))
@@ -435,6 +512,9 @@ public class XmlDataProvider extends DataProvider {
         return new Result<>(tasks, ResultCode.SUCCESS);
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getBugReportsByProjectId(UUID)}
+     */
     @Override
     public Result<List<BugReport>> getBugReportsByProjectId(UUID projectId) {
         Result<NoData> checkProjectResult = xmlChecker.checkProjectExistence(projectId);
@@ -450,6 +530,9 @@ public class XmlDataProvider extends DataProvider {
         return new Result<>(bugReports, ResultCode.SUCCESS);
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEventsByProjectId(UUID)}
+     */
     @Override
     public Result<List<Event>> getEventsByProjectId(UUID projectId) {
         Result<NoData> checkProjectResult = xmlChecker.checkProjectExistence(projectId);
@@ -465,6 +548,9 @@ public class XmlDataProvider extends DataProvider {
         return new Result<>(events, ResultCode.SUCCESS);
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getDocumentationsByProjectId(UUID)}
+     */
     @Override
     public Result<List<Documentation>> getDocumentationsByProjectId(UUID projectId) {
         Result<NoData> checkProjectResult = xmlChecker.checkProjectExistence(projectId);
@@ -480,6 +566,9 @@ public class XmlDataProvider extends DataProvider {
         return new Result<>(documentations, ResultCode.SUCCESS);
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getProjectTeam(UUID)}
+     */
     @Override
     public Result<List<Employee>> getProjectTeam(UUID projectId) {
         Result<NoData> checkProjectResult = xmlChecker.checkProjectExistence(projectId);
@@ -497,6 +586,9 @@ public class XmlDataProvider extends DataProvider {
         return new Result<>(employees, ResultCode.SUCCESS);
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindEmployeeToProject(UUID, UUID)}
+     */
     @Override
     public Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
         try {
@@ -514,6 +606,9 @@ public class XmlDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindProjectManager(UUID, UUID)}
+     */
     @Override
     public Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
         Result<Employee> employeeResult = getEmployeeById(managerId);
@@ -547,6 +642,9 @@ public class XmlDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteProject(UUID)}
+     */
     @Override
     public Result<NoData> deleteProject(UUID projectId) {
         Wrapper<Project> projectWrapper = XmlUtil.readFile(projectsFilePath);
@@ -570,6 +668,9 @@ public class XmlDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteTask(UUID)}
+     */
     @Override
     public Result<NoData> deleteTask(UUID taskId) {
         if (XmlUtil.isRecordNotExists(tasksFilePath, taskId))
@@ -595,6 +696,9 @@ public class XmlDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteBugReport(UUID)}
+     */
     @Override
     public Result<NoData> deleteBugReport(UUID bugReportId) {
         if (XmlUtil.isRecordNotExists(bugReportsFilePath, bugReportId))
@@ -619,6 +723,9 @@ public class XmlDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteEvent(UUID)}
+     */
     @Override
     public Result<NoData> deleteEvent(UUID eventId) {
         if (XmlUtil.isRecordNotExists(eventsFilePath, eventId))
@@ -643,6 +750,9 @@ public class XmlDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteDocumentation(UUID)}
+     */
     @Override
     public Result<NoData> deleteDocumentation(UUID docId) {
         if (XmlUtil.isRecordNotExists(documentationsFilePath, docId))
@@ -667,6 +777,9 @@ public class XmlDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteEmployee(UUID)}
+     */
     @Override
     public Result<NoData> deleteEmployee(UUID employeeId) {
         if (XmlUtil.isRecordNotExists(employeesFilePath, employeeId))

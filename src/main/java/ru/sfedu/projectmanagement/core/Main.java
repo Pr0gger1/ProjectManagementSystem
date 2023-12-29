@@ -76,6 +76,7 @@ public class Main {
             getProjectTeamOption(cmd);
             helpOption(cmd);
             projectStatsOption(cmd);
+            completeTaskOption(cmd);
         }
         catch (ParseException | NullPointerException | IllegalArgumentException | DateTimeParseException e) {
             logger.error("Ошибка: {}", e.getMessage());
@@ -403,6 +404,14 @@ public class Main {
             Result<List<Employee>> result = provider.getProjectTeam(UUID.fromString(arguments[0]));
             logger.info("getProjectTeamOption[1]: статус выполнения {}", result.getCode());
             result.getData().forEach(Main::printResultData);
+        }
+    }
+
+    private static void completeTaskOption(CommandLine cmd) {
+        if (cmd.hasOption(CliConstants.CLI_COMPLETE_TASK_OPTION)) {
+            String[] arguments = cmd.getOptionValues(CliConstants.CLI_COMPLETE_TASK_OPTION);
+            Result<NoData> result = provider.completeTask(UUID.fromString(arguments[0]));
+            logger.info("completeTaskOption[1]: статус выполнения {}", result);
         }
     }
 

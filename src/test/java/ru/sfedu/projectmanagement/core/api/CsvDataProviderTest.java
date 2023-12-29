@@ -71,20 +71,6 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
                 .concat(Constants.MANAGER_PROJECT_FILE_PATH)
                 .concat(Constants.FILE_CSV_EXTENSION);
 
-
-//        HashMap<String, Class<? extends Entity>> list = new HashMap<>() {{
-//            put(projectsFilePath, Project.class);
-//            put(employeesFilePath, Employee.class);
-//            put(employeeProjectFilePath, EmployeeProjectObject.class);
-//            put(tasksFilePath, Task.class);
-//            put(bugReportsFilePath, BugReport.class);
-//            put(eventsFilePath, Event.class);
-//            put(documentationsFilePath, Documentation.class);
-//            put(taskTagsFilePath, TaskTag.class);
-//            put(documentationDataFilePath, DocumentationData.class);
-//            put(managerProjectFilePath, ManagerProjectObject.class);
-//        }};
-
         List<String> files = List.of(
                 projectsFilePath, employeesFilePath, employeeProjectFilePath,
                 tasksFilePath, bugReportsFilePath, eventsFilePath,
@@ -570,7 +556,33 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
         Result<NoData> actual = csvProvider.bindEmployeeToProject(employee2.getId(), project2.getId());
 
+        logger.debug("bindEmployeeToProject[1]: actual result code {}", actual.getCode());
+        logger.debug("bindEmployeeToProject[2]: expected result code {}", ResultCode.SUCCESS);
+        logger.debug("bindEmployeeToProject[3]: result {}", actual);
         assertEquals(ResultCode.SUCCESS, actual.getCode());
+    }
+
+    @Override
+    @Test
+    public void bindEmployeeToMultipleProjects() {
+        Result<NoData> createProject1Result = csvProvider.processNewProject(project1);
+        logger.debug("bindEmployeeToMultipleProjects[1]: create project1 result {}", createProject1Result);
+
+        Result<NoData> createProject2Result = csvProvider.processNewProject(project2);
+        assertEquals(ResultCode.SUCCESS, createProject2Result.getCode());
+        logger.debug("bindEmployeeToMultipleProjects[2]: create project2 result {}", createProject2Result);
+
+        Result<NoData> createEmployee2Result = csvProvider.processNewEmployee(employee2);
+        assertEquals(ResultCode.SUCCESS, createEmployee2Result.getCode());
+        logger.debug("bindEmployeeToMultipleProjects[3]: create employee2 result {}", createEmployee2Result);
+
+        Result<NoData> bindEmployeeResult = csvProvider.bindEmployeeToProject(employee2.getId(), project2.getId());
+
+        logger.debug("bindEmployeeToMultipleProjects[4]: actual result code {}", bindEmployeeResult.getCode());
+        logger.debug("bindEmployeeToMultipleProjects[5]: expected result code {}", ResultCode.SUCCESS);
+        logger.debug("bindEmployeeToMultipleProjects[6]: result {}", bindEmployeeResult);
+
+        assertEquals(ResultCode.SUCCESS, bindEmployeeResult.getCode());
     }
 
     @Override
@@ -1017,6 +1029,21 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
     @Override
     @Test
+    public void getBugReportsFromProjectWithNoBugReports() {
+        Result<NoData> createProjectResult = csvProvider.processNewProject(project1);
+        assertEquals(ResultCode.SUCCESS, createProjectResult.getCode());
+
+        Result<List<BugReport>> actual = csvProvider.getBugReportsByProjectId(project1.getId());
+
+        logger.debug("getBugReportsFromProjectWithNoBugReports[1]: actual result code {}", actual.getCode());
+        logger.debug("getBugReportsFromProjectWithNoBugReports[2]: expected result code {}", ResultCode.SUCCESS);
+        logger.debug("getBugReportsFromProjectWithNoBugReports[3]: result {}", actual);
+        assertEquals(ResultCode.SUCCESS, actual.getCode());
+        assertEquals(0, actual.getData().size());
+    }
+
+    @Override
+    @Test
     public void getBugReportsByNonExistentProjectId() {
         Result<List<BugReport>> actual = csvProvider.getBugReportsByProjectId(project1.getId());
 
@@ -1096,6 +1123,21 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
     @Override
     @Test
+    public void getEventsFromProjectWithNoEvents() {
+        Result<NoData> createProjectResult = csvProvider.processNewProject(project1);
+        assertEquals(ResultCode.SUCCESS, createProjectResult.getCode());
+
+        Result<List<Event>> actual = csvProvider.getEventsByProjectId(project1.getId());
+        logger.debug("getEventsFromProjectWithNoEvents[1]: actual result code {}", actual.getCode());
+        logger.debug("getEventsFromProjectWithNoEvents[2]: expected result code {}", ResultCode.SUCCESS);
+        logger.debug("getEventsFromProjectWithNoEvents[3]: result {}", actual);
+
+        assertEquals(ResultCode.SUCCESS, actual.getCode());
+        assertEquals(0, actual.getData().size());
+    }
+
+    @Override
+    @Test
     public void getEventById() {
         Result<NoData> createProjectResult = csvProvider.processNewProject(project1);
         assertEquals(ResultCode.SUCCESS, createProjectResult.getCode());
@@ -1147,6 +1189,20 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
         Result<List<Documentation>> actual = csvProvider.getDocumentationsByProjectId(project1.getId());
 
         assertEquals(ResultCode.NOT_FOUND, actual.getCode());
+        assertEquals(0, actual.getData().size());
+    }
+
+    @Override
+    @Test
+    public void getDocumentationsFromProjectWithNoDocumentations() {
+        Result<NoData> createProjectResult = csvProvider.processNewProject(project1);
+        assertEquals(ResultCode.SUCCESS, createProjectResult.getCode());
+
+        Result<List<Documentation>> actual = csvProvider.getDocumentationsByProjectId(project1.getId());
+        logger.debug("getDocumentationsFromProjectWithNoDocumentations[1]: actual result code {}", actual.getCode());
+        logger.debug("getDocumentationsFromProjectWithNoDocumentations[2]: expected result code {}", ResultCode.SUCCESS);
+        logger.debug("getDocumentationsFromProjectWithNoDocumentations[3]: result {}", actual);
+        assertEquals(ResultCode.SUCCESS, actual.getCode());
         assertEquals(0, actual.getData().size());
     }
 
@@ -1241,5 +1297,33 @@ class CsvDataProviderTest extends BaseProviderTest implements IDataProviderTest 
 
         assertEquals(ResultCode.NOT_FOUND, actual.getCode());
         assertNull(actual.getData());
+    }
+
+    @Override
+    @Test
+    public void completeTask() {
+        Result<NoData> createProjectResult = csvProvider.processNewProject(project1);
+        assertEquals(ResultCode.SUCCESS, createProjectResult.getCode());
+
+        Result<NoData> createTaskResult = csvProvider.processNewTask(task);
+        assertEquals(ResultCode.SUCCESS, createTaskResult.getCode());
+
+        Result<NoData> actual = csvProvider.completeTask(task.getId());
+
+        logger.debug("completeTask[1]: actual result code {}", actual.getCode());
+        logger.debug("completeTask[2]: expected result code {}", ResultCode.SUCCESS);
+        logger.debug("completeTask[3]: result {}", actual);
+        assertEquals(ResultCode.SUCCESS, actual.getCode());
+    }
+
+    @Override
+    @Test
+    public void completeNonExistentTask() {
+        Result<NoData> actual = csvProvider.completeTask(UUID.randomUUID());
+
+        logger.debug("completeTask[1]: actual result code {}", actual.getCode());
+        logger.debug("completeTask[2]: expected result code {}", ResultCode.NOT_FOUND);
+        logger.debug("completeTask[3]: result {}", actual);
+        assertEquals(ResultCode.NOT_FOUND, actual.getCode());
     }
 }

@@ -36,6 +36,7 @@ public interface IDataProviderTest {
     void bindEmployeeToProject();
     void bindNonExistentEmployeeToProject();
     void bindNonExistentProjectManager();
+    void bindEmployeeToMultipleProjects();
     void bindProjectManager();
 
     void deleteProject();
@@ -64,15 +65,18 @@ public interface IDataProviderTest {
     void getTaskById();
     void getNonExistentTask();
     void getBugReportsByProjectId();
+    void getBugReportsFromProjectWithNoBugReports();
     void getBugReportsByNonExistentProjectId();
     void getBugReportById();
     void getNonExistentBugReport();
     void getEventsByProjectId();
     void getEventsByNonExistentProjectId();
+    void getEventsFromProjectWithNoEvents();
     void getEventById();
     void getNonExistentEvent();
     void getDocumentationsByProjectId();
     void getDocumentationsByNonExistentProjectId();
+    void getDocumentationsFromProjectWithNoDocumentations();
     void getDocumentationById();
     void getNonExistentDocumentation();
     void getProjectTeam();
@@ -80,4 +84,6 @@ public interface IDataProviderTest {
     void getEmptyProjectTeam();
     void getEmployeeById();
     void getNonExistentEmployee();
+    void completeTask();
+    void completeNonExistentTask();
 }

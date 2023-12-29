@@ -154,4 +154,8 @@ public class CliConstants {
     public static final String CLI_INCLUDE_TASK_TAGS_OPTION = "tags";
     public static final String CLI_INCLUDE_TASK_TAGS_OPTION_ARGNAME = "tag1 tag2 ...";
     public static final String CLI_INCLUDE_TASK_TAGS_OPTION_DESCRIPTION = "Задает теги при создании задачи. Используется вместе с командой -ct";
+
+    public static final String CLI_COMPLETE_TASK_OPTION = "complete";
+    public static final String CLI_COMPLETE_TASK_OPTION_ARGNAME = "taskId";
+    public static final String CLI_COMPLETE_TASK_OPTION_DESCRIPTION = "выполнение задачи с заданным id";
 }

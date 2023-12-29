@@ -260,6 +260,14 @@ public class CliUtils {
                 .optionalArg(true)
                 .build();
 
+        Option completeTaskOption = Option.builder()
+                .longOpt(CliConstants.CLI_COMPLETE_TASK_OPTION)
+                .desc(CliConstants.CLI_COMPLETE_TASK_OPTION_DESCRIPTION)
+                .argName(CliConstants.CLI_COMPLETE_TASK_OPTION_ARGNAME)
+                .optionalArg(true)
+                .hasArg()
+                .build();
+
 
         options.addOption(dataSourceTypeOption)
                 .addOption(getTasksByEmployeeIdOption)
@@ -294,7 +302,8 @@ public class CliUtils {
                 .addOption(trackBugReportOption)
                 .addOption(employeeEfficiencyOption)
                 .addOption(projectStatsOption)
-                .addOption(includeTaskTagsOption);
+                .addOption(includeTaskTagsOption)
+                .addOption(completeTaskOption);
 
         return options;
     }

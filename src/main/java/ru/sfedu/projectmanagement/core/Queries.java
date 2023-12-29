@@ -25,9 +25,9 @@ public class Queries {
 
     public static final String INIT_PROJECT_EMPLOYEE_TABLE_QUERY = String.format("""
        CREATE TABLE IF NOT EXISTS %s (
+            id SERIAL PRIMARY KEY,
             employee_id UUID NOT NULL,
             project_id UUID NOT NULL,
-            PRIMARY KEY(employee_id, project_id),
             FOREIGN KEY(employee_id) REFERENCES employees(id) ON DELETE CASCADE,
             FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
        );
@@ -157,6 +157,11 @@ public class Queries {
     public static final String UPDATE_ENTITY = """
         UPDATE %s SET %s WHERE id = ?
     """;
+
+    public static final String UPDATE_TASK_STATUS = String.format(
+            "UPDATE %s SET status = ?, completed_at = ? WHERE id = ?",
+            TASKS_TABLE_NAME
+    );
 
     public static final String GET_ENTITY_BY_ID_QUERY = """
         SELECT * FROM %s WHERE id = ?

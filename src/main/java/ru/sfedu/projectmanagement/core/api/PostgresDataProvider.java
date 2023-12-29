@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import ru.sfedu.projectmanagement.core.Queries;
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.enums.ChangeType;
+import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
 import ru.sfedu.projectmanagement.core.utils.PostgresUtil;
 import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
@@ -16,6 +17,7 @@ import ru.sfedu.projectmanagement.core.utils.ResultSetUtils;
 
 import java.sql.*;
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -80,6 +82,10 @@ public class PostgresDataProvider extends DataProvider {
         return connection;
     }
 
+    /**
+     * closes database connection
+     * @param connection current database connection
+     */
     private void closeConnection(Connection connection) {
         try {
             connection.close();
@@ -118,6 +124,12 @@ public class PostgresDataProvider extends DataProvider {
        closeConnection(currentConnection);
     }
 
+    /**
+     *
+     * @param rawQuery string query which have ? symbol instead of data
+     * @param fields array of table fields data
+     * @return string query ready for execution
+     */
     public String generateSqlQuery(String rawQuery, Object ...fields) {
         List<String> formattedData = Arrays.stream(fields)
                 .map(Optional::ofNullable)
@@ -137,38 +149,10 @@ public class PostgresDataProvider extends DataProvider {
         return resultQuery;
     }
 
-    private Result<NoData> checkIfEmployeeBelongsToProject(UUID employeeId, UUID projectId) {
-        String query = String.format(
-                Queries.CHECK_EMPLOYEE_LINK_EXISTENCE_QUERY,
-                Queries.EMPLOYEE_PROJECT_TABLE_NAME, employeeId, projectId
-        );
 
-        Result<NoData> result = new Result<>(ResultCode.SUCCESS);
-        Connection connection = getConnection();
-
-        try {
-            PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet resultSet = statement.executeQuery();
-            int rowCount = 0;
-            while (resultSet.next()) rowCount = resultSet.getInt("count");
-
-            if (rowCount == 0)
-                return new Result<>(ResultCode.ERROR, String.format(
-                        Constants.EMPLOYEE_IS_NOT_LINKED_TO_PROJECT, employeeId)
-                );
-            return result;
-        }
-        catch (SQLException exception) {
-            logger.error("checkIfEmployeeBelongsToProject[2]: {}", exception.getMessage());
-            result.setCode(ResultCode.ERROR);
-            result.setMessage(exception.getMessage());
-        }
-        finally {
-            closeConnection(connection);
-        }
-        return result;
-    }
-
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewProject(Project)}
+     */
     @Override
     public Result<NoData> processNewProject(Project project) {
         Connection connection = getConnection();
@@ -191,7 +175,6 @@ public class PostgresDataProvider extends DataProvider {
                 return initEntitiesResult;
 
             logger.debug("processNewProject[1]: project {} was created successfully", project);
-            return result;
         }
         catch (SQLException exception) {
             logger.error("processNewProject[2]: {}", exception.getMessage());
@@ -210,7 +193,9 @@ public class PostgresDataProvider extends DataProvider {
         return result;
     }
 
-
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEmployee(Employee)}
+     */
     @Override
     public Result<NoData> processNewEmployee(Employee employee) {
         Connection connection = getConnection();
@@ -229,9 +214,7 @@ public class PostgresDataProvider extends DataProvider {
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
-
             logger.debug("processNewEmployee[1]: employee {} was created successfully", employee);
-            return result;
         }
         catch (SQLException exception) {
             logger.error("processNewEmployee[2]: {}", exception.getMessage());
@@ -250,12 +233,14 @@ public class PostgresDataProvider extends DataProvider {
         return result;
     }
 
-
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewTask(Task)}
+     */
     @Override
     public Result<NoData> processNewTask(Task task) {
         Connection connection = getConnection();
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
-        Result<NoData> validationResult = checkIfEmployeeBelongsToProject(task.getEmployeeId(), task.getProjectId());
+        Result<NoData> validationResult = PostgresUtil.checkIfEmployeeBelongsToProject(connection, task.getEmployeeId(), task.getProjectId());
 
         if (validationResult.getCode() != ResultCode.SUCCESS)
             return validationResult;
@@ -287,7 +272,6 @@ public class PostgresDataProvider extends DataProvider {
                     Constants.SUCCESSFUL_CREATED_ENTITY_MESSAGE,
                     "task", task
             ));
-            return result;
         }
         catch (SQLException exception) {
             logger.error("processNewTask[2]: {}", exception.getMessage());
@@ -306,6 +290,9 @@ public class PostgresDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewBugReport(BugReport)}
+     */
     @Override
     public Result<NoData> processNewBugReport(BugReport bugReport) {
         Connection connection = getConnection();
@@ -323,8 +310,8 @@ public class PostgresDataProvider extends DataProvider {
             bugReport.getCreatedAt()
         );
 
-        Result<NoData> checkConstraintResult = checkIfEmployeeBelongsToProject(
-                bugReport.getEmployeeId(), bugReport.getProjectId()
+        Result<NoData> checkConstraintResult = PostgresUtil.checkIfEmployeeBelongsToProject(
+                connection, bugReport.getEmployeeId(), bugReport.getProjectId()
         );
 
         if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
@@ -337,7 +324,6 @@ public class PostgresDataProvider extends DataProvider {
                     Constants.SUCCESSFUL_CREATED_ENTITY_MESSAGE,
                     "bug report", bugReport
             ));
-            return result;
 
         }
         catch (SQLException exception) {
@@ -357,15 +343,18 @@ public class PostgresDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewDocumentation(Documentation)}
+     */
     @Override
     public Result<NoData> processNewDocumentation(Documentation documentation) {
         Pair<String[], String[]> documentationBody = splitDocumentationToArrays(documentation.getBody());
         Connection connection = getConnection();
-        String query = "";
+        String query;
         Result<NoData> result = new Result<>(ResultCode.SUCCESS);
 
-        Result<NoData> checkConstraintResult = checkIfEmployeeBelongsToProject(
-                documentation.getEmployeeId(), documentation.getProjectId()
+        Result<NoData> checkConstraintResult = PostgresUtil.checkIfEmployeeBelongsToProject(
+                connection, documentation.getEmployeeId(), documentation.getProjectId()
         );
         if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
             return checkConstraintResult;
@@ -396,7 +385,6 @@ public class PostgresDataProvider extends DataProvider {
                     Constants.SUCCESSFUL_CREATED_ENTITY_MESSAGE,
                     "documentation", documentation
             ));
-            return result;
         }
         catch (SQLException exception) {
             logger.error("processNewDocumentation[3]: {}", exception.getMessage());
@@ -415,6 +403,9 @@ public class PostgresDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEvent(Event)}
+     */
     @Override
     public Result<NoData> processNewEvent(Event event) {
         Connection connection = getConnection();
@@ -432,7 +423,9 @@ public class PostgresDataProvider extends DataProvider {
             event.getCreatedAt()
         );
 
-        Result<NoData> checkConstraintResult = checkIfEmployeeBelongsToProject(event.getEmployeeId(), event.getProjectId());
+        Result<NoData> checkConstraintResult = PostgresUtil.checkIfEmployeeBelongsToProject(
+                connection, event.getEmployeeId(), event.getProjectId()
+        );
         if (checkConstraintResult.getCode() != ResultCode.SUCCESS)
             return checkConstraintResult;
 
@@ -443,7 +436,6 @@ public class PostgresDataProvider extends DataProvider {
                     Constants.SUCCESSFUL_CREATED_ENTITY_MESSAGE,
                     "event", event
             ));
-            return result;
         }
         catch (SQLException exception) {
             logger.error("processNewEvent[2]: {}", exception.getMessage());
@@ -467,8 +459,8 @@ public class PostgresDataProvider extends DataProvider {
      * @return Pair of two string arrays
      */
     private Pair<String[], String[]> splitDocumentationToArrays(HashMap<String, String> docBody) {
-        ArrayList<String> articleTitles = new ArrayList<>();
-        ArrayList<String> articles = new ArrayList<>();
+        List<String> articleTitles = new ArrayList<>();
+        List<String> articles = new ArrayList<>();
 
         for (Map.Entry<String, String> article : docBody.entrySet()) {
             articleTitles.add(article.getKey());
@@ -480,6 +472,9 @@ public class PostgresDataProvider extends DataProvider {
         return new Pair<>(articleTitles.toArray(new String[0]), articles.toArray(new String[0]));
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteProject(UUID)}
+     */
     @Override
     public Result<NoData> deleteProject(UUID projectId) {
         Connection connection = getConnection();
@@ -504,7 +499,6 @@ public class PostgresDataProvider extends DataProvider {
                     Constants.SUCCESSFUL_DELETED_ENTITY_MESSAGE,
                     "project", project.getData()
             ));
-            return result;
         }
         catch (SQLException exception) {
             logger.error("deleteProject[2]: {}", exception.getMessage());
@@ -523,6 +517,9 @@ public class PostgresDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteTask(UUID)}
+     */
     @Override
     public Result<NoData> deleteTask(UUID taskId) {
         Connection connection = getConnection();
@@ -536,7 +533,7 @@ public class PostgresDataProvider extends DataProvider {
         if (task.getCode() != ResultCode.SUCCESS)
             return new Result<>(ResultCode.NOT_FOUND, String.format(
                 Constants.ENTITY_NOT_FOUND_MESSAGE,
-                "task", taskId
+                Task.class.getSimpleName(), taskId
             ));
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
@@ -544,15 +541,13 @@ public class PostgresDataProvider extends DataProvider {
 
             logger.debug("deleteTask[1]: {}", String.format(
                     Constants.SUCCESSFUL_DELETED_ENTITY_MESSAGE,
-                    "task", task
+                    Task.class.getSimpleName(), task
             ));
-            return result;
         }
         catch (SQLException exception) {
             logger.error("deleteTask[2]: {}", exception.getMessage());
             result.setCode(ResultCode.ERROR);
             result.setMessage(exception.getMessage());
-            return result;
         }
         finally {
             closeConnection(connection);
@@ -563,8 +558,12 @@ public class PostgresDataProvider extends DataProvider {
                 ChangeType.DELETE
             );
         }
+        return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteBugReport(UUID)}
+     */
     @Override
     public Result<NoData> deleteBugReport(UUID bugReportId) {
         Connection connection = getConnection();
@@ -588,13 +587,11 @@ public class PostgresDataProvider extends DataProvider {
                     Constants.SUCCESSFUL_DELETED_ENTITY_MESSAGE,
                     "bug report", bugReportResult.getData()
             ));
-            return result;
         }
         catch (SQLException exception) {
             logger.error("deleteBugReport[2]: {}", exception.getMessage());
             result.setCode(ResultCode.ERROR);
             result.setMessage(exception.getMessage());
-            return result;
         }
         finally {
             closeConnection(connection);
@@ -605,8 +602,12 @@ public class PostgresDataProvider extends DataProvider {
                 ChangeType.DELETE
             );
         }
+        return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteEvent(UUID)}
+     */
     @Override
     public Result<NoData> deleteEvent(UUID eventId) {
         Connection connection = getConnection();
@@ -627,13 +628,11 @@ public class PostgresDataProvider extends DataProvider {
                     Constants.SUCCESSFUL_DELETED_ENTITY_MESSAGE,
                     "event", eventResult.getData()
             ));
-            return result;
         }
         catch (SQLException exception) {
             logger.error("deleteEvent[2]: {}", exception.getMessage());
             result.setCode(ResultCode.ERROR);
             result.setMessage(exception.getMessage());
-            return result;
         }
         finally {
             closeConnection(connection);
@@ -644,6 +643,7 @@ public class PostgresDataProvider extends DataProvider {
                 ChangeType.DELETE
             );
         }
+        return result;
     }
 
 
@@ -667,13 +667,11 @@ public class PostgresDataProvider extends DataProvider {
                     Constants.SUCCESSFUL_DELETED_ENTITY_MESSAGE,
                     "documentation", documentationResult.getData()
             ));
-            return result;
         }
         catch (SQLException exception) {
             logger.error("deleteDocumentation[2]: {}", exception.getMessage());
             result.setCode(ResultCode.ERROR);
             result.setMessage(exception.getMessage());
-            return result;
         }
         finally {
             closeConnection(connection);
@@ -684,8 +682,12 @@ public class PostgresDataProvider extends DataProvider {
                 ChangeType.DELETE
             );
         }
+        return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteEmployee(UUID)}
+     */
     @Override
     public Result<NoData> deleteEmployee(UUID employeeId) {
         Connection connection = getConnection();
@@ -706,12 +708,11 @@ public class PostgresDataProvider extends DataProvider {
                     Constants.SUCCESSFUL_DELETED_ENTITY_MESSAGE,
                     "employee", employeeId
             ));
-
-            return result;
         }
         catch (SQLException exception) {
             logger.error("deleteEmployee[2]: {}", exception.getMessage());
-            return new Result<>(ResultCode.ERROR, exception.getMessage());
+            result.setCode(ResultCode.ERROR);
+            result.setMessage(exception.getMessage());
         }
         finally {
             closeConnection(connection);
@@ -722,8 +723,12 @@ public class PostgresDataProvider extends DataProvider {
                     ChangeType.DELETE
             );
         }
+        return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindProjectManager(UUID, UUID)}
+     */
     @Override
     public Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
         Connection connection = getConnection();
@@ -738,7 +743,10 @@ public class PostgresDataProvider extends DataProvider {
                 projectId
         );
 
-        Result<NoData> validationResult = checkIfEmployeeBelongsToProject(managerId, projectId);
+        Result<NoData> validationResult = PostgresUtil.checkIfEmployeeBelongsToProject(
+                connection, managerId, projectId
+        );
+
         if (validationResult.getCode() != ResultCode.SUCCESS)
             return validationResult;
 
@@ -775,7 +783,6 @@ public class PostgresDataProvider extends DataProvider {
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.executeUpdate();
-
             logger.debug("bindEmployeeToProject[1]: employee[{}] was attached to the project[{}] successfully", employeeId, projectId);
         }
         catch (SQLException exception) {
@@ -789,6 +796,9 @@ public class PostgresDataProvider extends DataProvider {
         return result;
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getProjectById(UUID)}
+     */
     @Override
     public Result<Project> getProjectById(UUID id) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.PROJECT_TABLE_NAME);
@@ -821,6 +831,9 @@ public class PostgresDataProvider extends DataProvider {
     }
 
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByProjectId(UUID)}
+     */
     @Override
     public Result<List<Task>> getTasksByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.TASKS_TABLE_NAME);
@@ -853,6 +866,9 @@ public class PostgresDataProvider extends DataProvider {
     }
 
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByEmployeeId(UUID)}
+     */
     @Override
     public Result<List<Task>> getTasksByEmployeeId(UUID employeeId) {
         Connection connection = getConnection();
@@ -884,6 +900,9 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByTags(List, UUID)}
+     */
     @Override
     public Result<List<Task>> getTasksByTags(List<String> tags, UUID projectId) {
         List<Task> tasks = getTasksByProjectId(projectId).getData();
@@ -897,7 +916,9 @@ public class PostgresDataProvider extends DataProvider {
                 .orElse(new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND));
     }
 
-
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTaskById(UUID)}
+     */
     @Override
     public Result<Task> getTaskById(UUID taskId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.TASKS_TABLE_NAME);
@@ -924,12 +945,22 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getBugReportsByProjectId(UUID)}
+     */
     @Override
     public Result<List<BugReport>> getBugReportsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.BUG_REPORTS_TABLE_NAME);
         Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
+            boolean checkProjectResult = PostgresUtil.isRecordExists(connection, Queries.PROJECT_TABLE_NAME, projectId);
+            if (!checkProjectResult)
+                return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, String.format(
+                        Constants.ENTITY_NOT_FOUND_MESSAGE,
+                        Project.class.getSimpleName(), projectId
+                ));
+
             statement.setObject(1, projectId);
             ResultSet resultSet = statement.executeQuery();
             List<BugReport> bugReports = new ArrayList<>();
@@ -937,16 +968,7 @@ public class PostgresDataProvider extends DataProvider {
             while (resultSet.next())
                 bugReports.add(ResultSetUtils.extractBugReport(resultSet));
 
-            return Optional.of(bugReports)
-                .filter(bg -> !bg.isEmpty())
-                .map(bg -> {
-                    logger.debug("getBugReportsByProjectId[1]: received BugReport list {}", bugReports);
-                    return new Result<>(bg, ResultCode.SUCCESS);
-                })
-                .orElseGet(() -> {
-                    logger.debug("getBugReportsByProjectId[2]: bug reports were not found");
-                    return new Result<>(bugReports, ResultCode.NOT_FOUND);
-                });
+            return new Result<>(bugReports, ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("getBugReportsByProjectId[3]: {}", exception.getMessage());
@@ -957,7 +979,9 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
-
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getBugReportById(UUID)}
+     */
     @Override
     public Result<BugReport> getBugReportById(UUID bugReportId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.BUG_REPORTS_TABLE_NAME);
@@ -988,30 +1012,28 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEventsByProjectId(UUID)}
+     */
     @Override
     public Result<List<Event>> getEventsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.EVENTS_TABLE_NAME);
         Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
+            if (!PostgresUtil.isRecordExists(connection, Queries.PROJECT_TABLE_NAME, projectId))
+                return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, String.format(
+                        Constants.ENTITY_NOT_FOUND_MESSAGE,
+                        Project.class.getSimpleName(),
+                        projectId
+                ));
+
             statement.setObject(1, projectId);
             ResultSet resultSet = statement.executeQuery();
             List<Event> events = new ArrayList<>();
 
             while (resultSet.next()) events.add(ResultSetUtils.extractEvent(resultSet));
-
-            return Optional.of(events)
-                .filter(e -> !e.isEmpty())
-                .map(e -> {
-                    logger.debug("getEventsByProjectId[1]: received {}", events);
-                    return new Result<>(events, ResultCode.SUCCESS);
-                })
-                .orElseGet(() -> {
-                    logger.debug("getEventsByProjectId[2]: events were not found");
-                    return new Result<>(events, ResultCode.NOT_FOUND);
-
-                });
-
+            return new Result<>(events, ResultCode.SUCCESS);
         }
         catch (SQLException exception) {
             logger.error("getEventsByProjectId[3]: {}", exception.getMessage());
@@ -1022,6 +1044,9 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEventById(UUID)}
+     */
     @Override
     public Result<Event> getEventById(UUID eventId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.EVENTS_TABLE_NAME);
@@ -1053,6 +1078,9 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getDocumentationById(UUID)}
+     */
     @Override
     public Result<Documentation> getDocumentationById(UUID docId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.DOCUMENTATIONS_TABLE_NAME);
@@ -1084,31 +1112,32 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getDocumentationsByProjectId(UUID)}
+     */
     @Override
     public Result<List<Documentation>> getDocumentationsByProjectId(UUID projectId) {
         String query = String.format(Queries.GET_ENTITY_BY_PROJECT_ID_QUERY, Queries.DOCUMENTATIONS_TABLE_NAME);
         Connection connection = getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
+            if (!PostgresUtil.isRecordExists(connection, Queries.PROJECT_TABLE_NAME, projectId))
+                return new Result<>(new ArrayList<>(), ResultCode.NOT_FOUND, String.format(
+                        Constants.ENTITY_NOT_FOUND_MESSAGE,
+                        Project.class.getSimpleName(),
+                        projectId
+                ));
+
             statement.setObject(1, projectId);
             ResultSet resultSet = statement.executeQuery();
             List<Documentation> documentations = new ArrayList<>();
 
             while (resultSet.next()) documentations.add(ResultSetUtils.extractDocumentation(resultSet));
-
-            return Optional.of(documentations)
-                .filter(docs -> !docs.isEmpty())
-                .map(docs -> {
-                    logger.debug("getDocumentationByProjectId[1]: received {}", documentations);
-                    return new Result<>(documentations, ResultCode.SUCCESS);
-                })
-                .orElseGet(() -> {
-                    logger.debug("getDocumentationsByProjectId[2]: documentations were not found");
-                    return new Result<>(documentations, ResultCode.NOT_FOUND);
-                });
+            logger.debug("getDocumentationsByProjectId[1]: received documentations {}", documentations);
+            return new Result<>(documentations, ResultCode.SUCCESS);
         }
         catch (SQLException | IllegalArgumentException exception) {
-            logger.error("getDocumentationByProjectId[3]: {}", exception.getMessage());
+            logger.error("getDocumentationsByProjectId[2]: {}", exception.getMessage());
             return new Result<>(ResultCode.ERROR, exception.getMessage());
         }
         finally {
@@ -1116,6 +1145,9 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getProjectTeam(UUID)}
+     */
     @Override
     public Result<List<Employee>> getProjectTeam(UUID projectId) {
         Connection connection = getConnection();
@@ -1149,6 +1181,9 @@ public class PostgresDataProvider extends DataProvider {
         }
     }
 
+    /**
+     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEmployeeById(UUID)}
+     */
     @Override
     public Result<Employee> getEmployeeById(UUID employeeId) {
         String query = String.format(Queries.GET_ENTITY_BY_ID_QUERY, Queries.EMPLOYEES_TABLE_NAME);
@@ -1179,5 +1214,49 @@ public class PostgresDataProvider extends DataProvider {
         finally {
             closeConnection(connection);
         }
+    }
+
+    @Override
+    public Result<NoData> completeTask(UUID taskId) {
+        Result<NoData> result = new Result<>(ResultCode.SUCCESS);
+        Task task = null;
+        Connection connection = getConnection();
+        String query = generateSqlQuery(
+                Queries.UPDATE_TASK_STATUS,
+                WorkStatus.COMPLETED,
+                LocalDateTime.now().withNano(0),
+                taskId
+        );
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            int updatedRows = statement.executeUpdate();
+            task = getTaskById(taskId).getData();
+
+            if (updatedRows == 0) {
+                result.setCode(ResultCode.NOT_FOUND);
+                result.setMessage(String.format(
+                        Constants.ENTITY_NOT_FOUND_MESSAGE,
+                        Task.class.getSimpleName(),
+                        taskId
+                ));
+            }
+
+            logger.debug("completeTask[1]: task with id {} was completed", taskId);
+        }
+        catch (SQLException exception) {
+            logger.error("completeTask[2]: {}", exception.getMessage());
+            result.setCode(ResultCode.ERROR);
+            result.setMessage(exception.getMessage());
+        }
+        finally {
+            closeConnection(connection);
+            logEntity(
+                task,
+                "completeTask",
+                result.getCode(),
+                ChangeType.UPDATE
+            );
+        }
+        return result;
     }
 }
