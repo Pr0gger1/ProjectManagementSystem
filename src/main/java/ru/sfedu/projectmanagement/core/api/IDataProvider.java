@@ -16,8 +16,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
-public abstract class DataProvider {
-    private final Logger logger = LogManager.getLogger(DataProvider.class);
+public interface IDataProvider {
+    Logger logger = LogManager.getLogger(IDataProvider.class);
 
     /**
      *
@@ -26,7 +26,7 @@ public abstract class DataProvider {
      * @param queryResult execution result of entity operation
      * @param changeType type of what happened with entity
      */
-    protected final void logEntity(Object entity, String methodName, ResultCode queryResult, ChangeType changeType) {
+    default void logEntity(Object entity, String methodName, ResultCode queryResult, ChangeType changeType) {
         ActionStatus status = queryResult == ResultCode.SUCCESS ? ActionStatus.SUCCESS : ActionStatus.FAULT;
         HistoryRecord<Object> historyRecord =  new HistoryRecord<>(
                 entity,
@@ -43,37 +43,37 @@ public abstract class DataProvider {
      * @param project Project instance
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<NoData> processNewProject(Project project);
+    Result<NoData> processNewProject(Project project);
 
     /**
      * @param task Task instance
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<NoData> processNewTask(Task task);
+    Result<NoData> processNewTask(Task task);
 
     /**
      * @param bugReport BugReport instance
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<NoData> processNewBugReport(BugReport bugReport);
+    Result<NoData> processNewBugReport(BugReport bugReport);
 
     /**
      * @param documentation Documentation instance
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<NoData> processNewDocumentation(Documentation documentation);
+    Result<NoData> processNewDocumentation(Documentation documentation);
 
     /**
      * @param event Event instance
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<NoData> processNewEvent(Event event);
+    Result<NoData> processNewEvent(Event event);
 
     /**
      * @param employee Employee instance
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<NoData> processNewEmployee(Employee employee);
+    Result<NoData> processNewEmployee(Employee employee);
 
 
     /**
@@ -82,7 +82,7 @@ public abstract class DataProvider {
      * @param trackBugs boolean flag which includes information about bug reports status if true
      * @return ProjectStatistics object
      */
-    public ProjectStatistics monitorProjectCharacteristics(
+    default ProjectStatistics monitorProjectCharacteristics(
             UUID projectId, boolean checkLaborEfficiency, boolean trackBugs
     ) {
         ProjectStatistics statistics = new ProjectStatistics();
@@ -102,7 +102,7 @@ public abstract class DataProvider {
      * @param projectId id of the project
      * @return the percentage of the project readiness. It is calculated by number of completed tasks
      */
-    protected float calculateProjectReadiness(UUID projectId) {
+    default float calculateProjectReadiness(UUID projectId) {
         List<Task> tasks = getTasksByProjectId(projectId).getData();
         if (!tasks.isEmpty()) {
             int countOfCompletedTasks = (int) tasks.stream()
@@ -119,7 +119,7 @@ public abstract class DataProvider {
      * @return TrackInfo with employee and his percentage of labor.
      * Efficiency is calculated based on tasks completed on time
      */
-    protected TrackInfo<Employee, Float> calculateLaborEfficiency(UUID projectId) {
+    default TrackInfo<Employee, Float> calculateLaborEfficiency(UUID projectId) {
         List<Employee> team = getProjectTeam(projectId).getData();
         TrackInfo<Employee, Float> result = new TrackInfo<>();
 
@@ -143,7 +143,7 @@ public abstract class DataProvider {
      * @param projectId id of the project
      * @return TrackInfo with task and its status
      */
-    protected TrackInfo<Task, String> trackTaskStatus(UUID projectId) {
+    default TrackInfo<Task, String> trackTaskStatus(UUID projectId) {
         List<Task> tasks = getTasksByProjectId(projectId).getData();
         return Optional.of(tasks)
                 .filter(t -> !t.isEmpty())
@@ -160,7 +160,7 @@ public abstract class DataProvider {
      * @param projectId id of the project
      * @return TrackInfo with bug report and its status
      */
-    protected TrackInfo<BugReport, String> trackBugReportStatus(UUID projectId) {
+    default TrackInfo<BugReport, String> trackBugReportStatus(UUID projectId) {
         List<BugReport> bugReports = getBugReportsByProjectId(projectId).getData();
         return Optional.of(bugReports)
                 .filter(bg -> !bg.isEmpty())
@@ -177,7 +177,7 @@ public abstract class DataProvider {
      * @param tasks list with tasks
      * @return the percentage of efficiency of a particular employee
      */
-    protected float calculateEmployeeEfficiency(List<Task> tasks) {
+    default float calculateEmployeeEfficiency(List<Task> tasks) {
         int tasksCount = tasks.size();
         // percentage of execution tasks efficiency
         int taskEffectivenessSum = 0;
@@ -206,56 +206,56 @@ public abstract class DataProvider {
         return (taskEffectivenessSum * 1.0f) / tasksCount;
     }
 
-    public abstract Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId);
+    Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId);
 
     /**
      * @param managerId id of the manager who binds to the project
      * @param projectId id of the project to which the manager is attached
      */
-    public abstract Result<NoData> bindProjectManager(UUID managerId, UUID projectId);
+    Result<NoData> bindProjectManager(UUID managerId, UUID projectId);
 
     /**
      * @param projectId id of the project you want to delete
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<NoData> deleteProject(UUID projectId);
+    Result<NoData> deleteProject(UUID projectId);
 
     /**
      * @param taskId id of the task you want to delete
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<NoData> deleteTask(UUID taskId);
+    Result<NoData> deleteTask(UUID taskId);
 
     /**
      * @param bugReportId id of the bug report you want to delete
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<NoData> deleteBugReport(UUID bugReportId);
+    Result<NoData> deleteBugReport(UUID bugReportId);
 
     /**
      * @param eventId id of the event you want to delete
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<NoData> deleteEvent(UUID eventId);
+    Result<NoData> deleteEvent(UUID eventId);
 
     /**
      * @param docId id of the documentation you want to delete
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<NoData> deleteDocumentation(UUID docId);
+    Result<NoData> deleteDocumentation(UUID docId);
 
     /**
      * @param employeeId id of the employee you want to delete
      * @return Result with execution code and message if it fails
      */
-    public abstract Result<NoData> deleteEmployee(UUID employeeId);
+    Result<NoData> deleteEmployee(UUID employeeId);
 
 
     /**
      * @param id id of the project
      * @return Result with Project, execution code and message if it fails
      */
-    public abstract Result<Project> getProjectById(UUID id);
+    Result<Project> getProjectById(UUID id);
 
 
     /**
@@ -263,77 +263,77 @@ public abstract class DataProvider {
      * @param projectId id of the project
      * @return Result with ArrayList of tasks, execution code and message if it fails
      */
-    public abstract Result<List<Task>> getTasksByTags(List<String> tags, UUID projectId);
+    Result<List<Task>> getTasksByTags(List<String> tags, UUID projectId);
 
     /**
      * @param projectId id of the project
      * @return Result with ArrayList of tasks, execution code and message if it fails
      */
-    public abstract Result<List<Task>> getTasksByProjectId(UUID projectId);
+    Result<List<Task>> getTasksByProjectId(UUID projectId);
 
     /**
      * @param employeeId id of the employee
      * @return Result with ArrayList of tasks, execution code and message if it fails
      */
-    public abstract Result<List<Task>> getTasksByEmployeeId(UUID employeeId);
+    Result<List<Task>> getTasksByEmployeeId(UUID employeeId);
 
     /**
      * @param taskId id of the task you want to get by id
      * @return Result with Task, execution code and message if it fails
      */
-    public abstract Result<Task> getTaskById(UUID taskId);
+    Result<Task> getTaskById(UUID taskId);
 
     /**
      * @param projectId id of project where bug reports are loaded from
      * @return Result with ArrayList of BugReport, execution code and message if it fails
      */
-    public abstract Result<List<BugReport>> getBugReportsByProjectId(UUID projectId);
+    Result<List<BugReport>> getBugReportsByProjectId(UUID projectId);
 
     /**
      * @param bugReportId id of BugReport you want to get
      * @return Result with BugReport, execution code and message if it fails
      */
-    public abstract Result<BugReport> getBugReportById(UUID bugReportId);
+    Result<BugReport> getBugReportById(UUID bugReportId);
 
     /**
      * @param projectId id of the project for which events are selected
      * @return Result with ArrayList of Event, execution code and message if it fails
      */
-    public abstract Result<List<Event>> getEventsByProjectId(UUID projectId);
+    Result<List<Event>> getEventsByProjectId(UUID projectId);
 
     /**
      * @param eventId id of the event
      * @return Result with Event, execution code and message if it fails
      */
-    public abstract Result<Event> getEventById(UUID eventId);
+    Result<Event> getEventById(UUID eventId);
 
     /**
      * @param projectId id of the project for which documentation is selected
      * @return Result with ArrayList of Documentation, execution code and message if it fails
      */
-    public abstract Result<List<Documentation>> getDocumentationsByProjectId(UUID projectId);
+    Result<List<Documentation>> getDocumentationsByProjectId(UUID projectId);
 
     /**
      * @param docId id of the documentation
      * @return Result  with Documentation, execution code and message if it fails
      */
-    public abstract Result<Documentation> getDocumentationById(UUID docId);
+    Result<Documentation> getDocumentationById(UUID docId);
 
     /**
      * @param projectId id of project for which team is selected
      * @return Result with ArrayList of Employee, execution code and message if it fails
      */
-    public abstract Result<List<Employee>> getProjectTeam(UUID projectId);
+    Result<List<Employee>> getProjectTeam(UUID projectId);
 
     /**
      * @param employeeId id of the employee whose data is being extracted
      * @return Result with Employee, execution code and message if it fails
      */
-    public abstract Result<Employee> getEmployeeById(UUID employeeId);
+    Result<Employee> getEmployeeById(UUID employeeId);
 
-    public abstract Result<NoData> completeTask(UUID taskId);
+    Result<NoData> completeTask(UUID taskId);
 
-    protected Result<NoData> initProjectEntities(Project project) {
+    default Result<NoData> initProjectEntities(Project project) {
         ArrayList<Result<NoData>> results = new ArrayList<>();
 
         project.getTeam().forEach(employee -> {

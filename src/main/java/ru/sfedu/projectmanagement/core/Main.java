@@ -5,17 +5,22 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import org.apache.commons.cli.*;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import ru.sfedu.projectmanagement.core.api.CsvDataProvider;
-import ru.sfedu.projectmanagement.core.api.DataProvider;
+import ru.sfedu.projectmanagement.core.api.IDataProvider;
 import ru.sfedu.projectmanagement.core.api.PostgresDataProvider;
 import ru.sfedu.projectmanagement.core.api.XmlDataProvider;
+
 import ru.sfedu.projectmanagement.core.model.*;
 import ru.sfedu.projectmanagement.core.model.enums.BugStatus;
 import ru.sfedu.projectmanagement.core.model.enums.Priority;
 import ru.sfedu.projectmanagement.core.model.enums.WorkStatus;
+
 import ru.sfedu.projectmanagement.core.utils.CliUtils;
 import ru.sfedu.projectmanagement.core.utils.config.ConfigPropertiesUtil;
 import ru.sfedu.projectmanagement.core.utils.types.NoData;
@@ -23,6 +28,7 @@ import ru.sfedu.projectmanagement.core.utils.types.Result;
 
 import java.io.File;
 import java.io.PrintWriter;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -32,7 +38,7 @@ import java.util.*;
 public class Main {
     private static final CommandLineParser commandLineParser = new DefaultParser();
     private static final Logger logger = LogManager.getLogger(Main.class);
-    private static DataProvider provider = null;
+    private static IDataProvider provider = null;
 
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
@@ -113,7 +119,7 @@ public class Main {
                 case "csv" -> provider = new CsvDataProvider();
                 case "xml" -> provider = new XmlDataProvider();
                 case "postgres" -> provider = new PostgresDataProvider();
-                default -> logger.error("Main[3]: Выбран несуществующий источник данных");
+                default -> logger.error("chooseDatasourceOption[1]: Выбран несуществующий источник данных");
             }
         }
     }
@@ -274,7 +280,7 @@ public class Main {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_BIND_EMPLOYEE_TO_PROJECT_OPTION);
 
             Result<NoData> result = provider.bindEmployeeToProject(UUID.fromString(arguments[0]), UUID.fromString(arguments[1]));
-            logger.info("Main[10]: статус привязки сотрудника к проекту {}", result);
+            logger.info("bindEmployeeToProjectOption[1]: статус привязки сотрудника к проекту {}", result);
         }
     }
 
@@ -282,7 +288,7 @@ public class Main {
         if (cmd.hasOption(CliConstants.CLI_DELETE_PROJECT_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_DELETE_PROJECT_OPTION);
             Result<NoData> result = provider.deleteProject(UUID.fromString(arguments[0]));
-            logger.info("Main[11]: статус удаления проекта {}", result);
+            logger.info("deleteProjectOption[1]: статус удаления проекта {}", result);
         }
     }
 
@@ -290,7 +296,7 @@ public class Main {
         if (cmd.hasOption(CliConstants.CLI_DELETE_EMPLOYEE_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_DELETE_EMPLOYEE_OPTION);
             Result<NoData> result = provider.deleteEmployee(UUID.fromString(arguments[0]));
-            logger.info("Main[12]: статус удаления сотрудника {}", result);
+            logger.info("deleteEmployeeOption[1]: статус удаления сотрудника {}", result);
         }
     }
 
@@ -298,7 +304,7 @@ public class Main {
         if (cmd.hasOption(CliConstants.CLI_DELETE_EVENT_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_DELETE_EVENT_OPTION);
             Result<NoData> result = provider.deleteEvent(UUID.fromString(arguments[0]));
-            logger.info("Main[13]: статус удаления события {}", result);
+            logger.info("deleteEventOption[1]: статус удаления события {}", result);
         }
     }
 
@@ -306,7 +312,7 @@ public class Main {
         if (cmd.hasOption(CliConstants.CLI_DELETE_BUG_REPORT_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_DELETE_BUG_REPORT_OPTION);
             Result<NoData> result = provider.deleteBugReport(UUID.fromString(arguments[0]));
-            logger.info("Main[14]: статус удаления баг репорта проекта {}", result);
+            logger.info("deleteBugReportOption[1]: статус удаления баг репорта проекта {}", result);
         }
     }
 
@@ -314,7 +320,7 @@ public class Main {
         if (cmd.hasOption(CliConstants.CLI_DELETE_DOCUMENTATION_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_DELETE_DOCUMENTATION_OPTION);
             Result<NoData> result = provider.deleteDocumentation(UUID.fromString(arguments[0]));
-            logger.info("Main[15]: статус удаления документации проекта {}", result);
+            logger.info("deleteDocumentationOption[1]: статус удаления документации проекта {}", result);
         }
     }
 
@@ -322,7 +328,7 @@ public class Main {
         if (cmd.hasOption(CliConstants.CLI_DELETE_TASK_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_DELETE_TASK_OPTION);
             Result<NoData> result = provider.deleteTask(UUID.fromString(arguments[0]));
-            logger.info("Main[16]: статус удаления задачи {}", result);
+            logger.info("deleteTaskOption[1]: статус удаления задачи {}", result);
         }
     }
 
@@ -330,6 +336,7 @@ public class Main {
         if (cmd.hasOption(CliConstants.CLI_GET_PROJECT_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_GET_PROJECT_OPTION);
             Result<Project> result = provider.getProjectById(UUID.fromString(arguments[0]));
+            logger.info("getProjectOption[1]: статус выполнения запроса {}", result);
             printResultData(result.getData());
         }
     }
@@ -338,6 +345,7 @@ public class Main {
         if (cmd.hasOption(CliConstants.CLI_GET_TASK_OPTION)) {
             String[] arguments = cmd.getOptionValues(CliConstants.CLI_GET_TASK_OPTION);
             Result<Task> result = provider.getTaskById(UUID.fromString(arguments[0]));
+            logger.info("getTaskOption[1]: статус выполнения запроса {}", result);
             printResultData(result.getData());
         }
     }

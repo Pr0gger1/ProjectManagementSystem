@@ -2,8 +2,10 @@ package ru.sfedu.projectmanagement.core.utils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.Queries;
+
 import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
 

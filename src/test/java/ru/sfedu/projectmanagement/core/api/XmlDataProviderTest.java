@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class XmlDataProviderTest extends BaseProviderTest implements IDataProviderTest  {
     private static final Logger logger = LogManager.getLogger(XmlDataProviderTest.class);
-    private static final DataProvider xmlDataProvider = new XmlDataProvider();
+    private static final IDataProvider xmlDataProvider = new XmlDataProvider();
 
     @BeforeEach
     void resetDb() throws JAXBException {

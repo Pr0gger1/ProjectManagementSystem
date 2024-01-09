@@ -2,15 +2,18 @@ package ru.sfedu.projectmanagement.core.api;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import ru.sfedu.projectmanagement.core.Constants;
 import ru.sfedu.projectmanagement.core.model.*;
-import ru.sfedu.projectmanagement.core.model.enums.ChangeType;
-import ru.sfedu.projectmanagement.core.utils.ResultCode;
 import ru.sfedu.projectmanagement.core.utils.config.ConfigPropertiesUtil;
+
 import ru.sfedu.projectmanagement.core.utils.csv.CsvDataChecker;
 import ru.sfedu.projectmanagement.core.utils.csv.CsvUtil;
+
 import ru.sfedu.projectmanagement.core.utils.types.NoData;
 import ru.sfedu.projectmanagement.core.utils.types.Result;
+import ru.sfedu.projectmanagement.core.utils.ResultCode;
+import ru.sfedu.projectmanagement.core.model.enums.ChangeType;
 
 import java.io.IOException;
 import java.util.*;
@@ -20,7 +23,7 @@ import java.util.stream.Collectors;
 import static ru.sfedu.projectmanagement.core.utils.FileUtil.createFileIfNotExists;
 import static ru.sfedu.projectmanagement.core.utils.FileUtil.createFolderIfNotExists;
 
-public class CsvDataProvider extends DataProvider {
+public class CsvDataProvider implements IDataProvider {
     private final Logger logger = LogManager.getLogger(CsvDataProvider.class);
     private final CsvDataChecker csvChecker;
     private final String projectsFilePath;
@@ -116,7 +119,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewProject(Project)}
+     * {@link IDataProvider#processNewProject(Project)}
      */
     @Override
     public Result<NoData> processNewProject(Project project) {
@@ -200,7 +203,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewTask(Task)}
+     * {@link IDataProvider#processNewTask(Task)}
      */
     @Override
     public Result<NoData> processNewTask(Task task) {
@@ -237,7 +240,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewBugReport(BugReport)}
+     * {@link IDataProvider#processNewBugReport(BugReport)}
      */
     @Override
     public Result<NoData> processNewBugReport(BugReport bugReport) {
@@ -273,7 +276,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewDocumentation(Documentation)}
+     * {@link IDataProvider#processNewDocumentation(Documentation)}
      */
     @Override
     public Result<NoData> processNewDocumentation(Documentation documentation) {
@@ -322,7 +325,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEvent(Event)}
+     * {@link IDataProvider#processNewEvent(Event)}
      */
     @Override
     public Result<NoData> processNewEvent(Event event) {
@@ -358,7 +361,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#processNewEmployee(Employee)}
+     * {@link IDataProvider#processNewEmployee(Employee)}
      */
     @Override
     public Result<NoData> processNewEmployee(Employee employee) {
@@ -388,7 +391,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindEmployeeToProject(UUID, UUID)}
+     * {@link IDataProvider#bindEmployeeToProject(UUID, UUID)}
      */
     @Override
     public Result<NoData> bindEmployeeToProject(UUID employeeId, UUID projectId) {
@@ -408,7 +411,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#bindProjectManager(UUID, UUID)}
+     * {@link IDataProvider#bindProjectManager(UUID, UUID)}
      */
     @Override
     public Result<NoData> bindProjectManager(UUID managerId, UUID projectId) {
@@ -444,7 +447,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteProject(UUID)}
+     * {@link IDataProvider#deleteProject(UUID)}
      */
     @Override
     public Result<NoData> deleteProject(UUID projectId) {
@@ -488,7 +491,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteTask(UUID)}
+     * {@link IDataProvider#deleteTask(UUID)}
      */
     @Override
     public Result<NoData> deleteTask(UUID taskId) {
@@ -540,7 +543,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteBugReport(UUID)}
+     * {@link IDataProvider#deleteBugReport(UUID)}
      */
     @Override
     public Result<NoData> deleteBugReport(UUID bugReportId) {
@@ -581,7 +584,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteEvent(UUID)}
+     * {@link IDataProvider#deleteEvent(UUID)}
      */
     @Override
     public Result<NoData> deleteEvent(UUID eventId) {
@@ -626,7 +629,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteDocumentation(UUID)}
+     * {@link IDataProvider#deleteDocumentation(UUID)}
      */
     @Override
     public Result<NoData> deleteDocumentation(UUID docId) {
@@ -674,7 +677,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#deleteEmployee(UUID)}
+     * {@link IDataProvider#deleteEmployee(UUID)}
      */
     @Override
     public Result<NoData> deleteEmployee(UUID employeeId) {
@@ -715,7 +718,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getProjectById(UUID)}
+     * {@link IDataProvider#getProjectById(UUID)}
      */
     @Override
     public Result<Project> getProjectById(UUID projectId) {
@@ -787,7 +790,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByProjectId(UUID)}
+     * {@link IDataProvider#getTasksByProjectId(UUID)}
      */
     @Override
     public Result<List<Task>> getTasksByProjectId(UUID projectId) {
@@ -822,7 +825,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByEmployeeId(UUID)}
+     * {@link IDataProvider#getTasksByEmployeeId(UUID)}
      */
     @Override
     public Result<List<Task>> getTasksByEmployeeId(UUID employeeId) {
@@ -865,7 +868,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTaskById(UUID)}
+     * {@link IDataProvider#getTaskById(UUID)}
      */
     @Override
     public Result<Task> getTaskById(UUID taskId) {
@@ -900,7 +903,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getTasksByTags(List, UUID)}
+     * {@link IDataProvider#getTasksByTags(List, UUID)}
      */
     @Override
     public Result<List<Task>> getTasksByTags(List<String> tags, UUID projectId) {
@@ -938,7 +941,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getBugReportsByProjectId(UUID)}
+     * {@link IDataProvider#getBugReportsByProjectId(UUID)}
      */
     @Override
     public Result<List<BugReport>> getBugReportsByProjectId(UUID projectId) {
@@ -969,7 +972,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getBugReportById(UUID)}
+     * {@link IDataProvider#getBugReportById(UUID)}
      */
     @Override
     public Result<BugReport> getBugReportById(UUID bugReportId) {
@@ -1002,7 +1005,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEventsByProjectId(UUID)}
+     * {@link IDataProvider#getEventsByProjectId(UUID)}
      */
     @Override
     public Result<List<Event>> getEventsByProjectId(UUID projectId) {
@@ -1036,7 +1039,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEventById(UUID)}
+     * {@link IDataProvider#getEventById(UUID)}
      */
     @Override
     public Result<Event> getEventById(UUID eventId) {
@@ -1069,7 +1072,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getDocumentationById(UUID)}
+     * {@link IDataProvider#getDocumentationById(UUID)}
      */
     @Override
     public Result<Documentation> getDocumentationById(UUID docId) {
@@ -1113,7 +1116,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getDocumentationsByProjectId(UUID)}
+     * {@link IDataProvider#getDocumentationsByProjectId(UUID)}
      */
     @Override
     public Result<List<Documentation>> getDocumentationsByProjectId(UUID projectId) {
@@ -1166,7 +1169,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getProjectTeam(UUID)}
+     * {@link IDataProvider#getProjectTeam(UUID)}
      */
     @Override
     public Result<List<Employee>> getProjectTeam(UUID projectId) {
@@ -1204,7 +1207,7 @@ public class CsvDataProvider extends DataProvider {
     }
 
     /**
-     * {@link ru.sfedu.projectmanagement.core.api.DataProvider#getEmployeeById(UUID)}
+     * {@link IDataProvider#getEmployeeById(UUID)}
      */
     @Override
     public Result<Employee> getEmployeeById(UUID employeeId) {
